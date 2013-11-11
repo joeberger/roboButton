@@ -7,6 +7,8 @@
     <uses-sdk android:minSdkVersion="18"
               android:targetSdkVersion="18"/>
 
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+
     <application android:name=".RoboLiftApplication">
 
         <activity android:name=".activity.RoboLiftActivity" android:screenOrientation="portrait">
