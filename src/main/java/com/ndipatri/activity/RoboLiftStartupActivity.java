@@ -10,16 +10,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ndipatri.R;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import butterknife.InjectView;
 import butterknife.Views;
@@ -29,8 +29,6 @@ public class RoboLiftStartupActivity extends Activity {
     private static final String TAG = RoboLiftStartupActivity.class.getCanonicalName();
 
     private static final int REQUEST_ENABLE_BT = 1;
-
-    private static final Pattern bluetoothNamePattern = Pattern.compile("^(.*?)\\(.*?\\)$");
 
     private BluetoothAdapter mBluetoothAdapter;
 
@@ -73,7 +71,6 @@ public class RoboLiftStartupActivity extends Activity {
     private boolean selectedOnce = false;
     private void setupBluetoothDeviceSpinner() {
 
-
         textView.setText(R.string.select_paired_device);
         progressBar.setVisibility(View.GONE);
         spinner.setVisibility(View.VISIBLE);
@@ -82,18 +79,12 @@ public class RoboLiftStartupActivity extends Activity {
         if (pairedDevices.isEmpty()) {
             textView.setText(getString(R.string.no_paired_bluetooth_devices));
         } else {
-            String[] deviceNames = new String[pairedDevices.size()];
-            int index=0;
-            for (BluetoothDevice bluetoothDevice : pairedDevices) {
-                deviceNames[index++] = bluetoothDevice.getName() + "(" + bluetoothDevice.getAddress() + ")";
-            }
 
             SpinnerAdapter adapter = new SpinnerAdapter(this,
                                                         R.layout.spinner_layout,
                                                         R.id.textView,
-                                                        deviceNames);
+                                                        new ArrayList<BluetoothDevice>(pairedDevices));
 
-            adapter.setDropDownViewResource(R.layout.spinner_layout);
             spinner.setAdapter(adapter);
             spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
@@ -102,10 +93,8 @@ public class RoboLiftStartupActivity extends Activity {
 
                         ViewHolder viewHolder = (ViewHolder) view.getTag();
 
-                        Toast.makeText(RoboLiftStartupActivity.this, "Bluetooth device selected:" + viewHolder.deviceName, Toast.LENGTH_SHORT).show();
-
                         Intent controllerIntent = new Intent(RoboLiftStartupActivity.this, MainControllerActivity.class);
-                        controllerIntent.putExtra(MainControllerActivity.EXTERNAL_BLUETOOTH_DEVICE_MAC, viewHolder.deviceMacAddress);
+                        controllerIntent.putExtra(MainControllerActivity.EXTERNAL_BLUETOOTH_DEVICE_MAC, viewHolder.bluetoothDevice);
                         startActivity(controllerIntent);
                         finish();
                     } else {
@@ -121,20 +110,38 @@ public class RoboLiftStartupActivity extends Activity {
 
     private static class ViewHolder {
         TextView deviceTextView;
-        String deviceName;
-        String deviceMacAddress;
+        BluetoothDevice bluetoothDevice;
 
     }
 
-    private static class SpinnerAdapter extends ArrayAdapter<String> {
+    private static class SpinnerAdapter extends BaseAdapter {
 
+        private LayoutInflater inflater;
         private int selectionLayoutId;
         private int textViewId;
+        private List<BluetoothDevice> bluetoothDevices;
 
-        public SpinnerAdapter(Context context, int selectionLayoutId, int textViewId, String[] deviceDescriptions) {
-            super(context, 0, deviceDescriptions);
+        public SpinnerAdapter(Context context, int selectionLayoutId, int textViewId, List<BluetoothDevice> bluetoothDevices) {
+            inflater = LayoutInflater.from(context);
+
+            this.bluetoothDevices = bluetoothDevices;
             this.selectionLayoutId = selectionLayoutId;
             this.textViewId = textViewId;
+        }
+
+        @Override
+        public int getCount() {
+            return bluetoothDevices.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return bluetoothDevices.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
         }
 
         @Override
@@ -142,7 +149,7 @@ public class RoboLiftStartupActivity extends Activity {
             View view = convertView;
             ViewHolder holder;
             if (view == null) {
-                view = LayoutInflater.from(getContext()).inflate(selectionLayoutId , parent, false);
+                view = inflater.inflate(selectionLayoutId , parent, false);
 
                 holder = new ViewHolder();
                 holder.deviceTextView = (TextView) view.findViewById(textViewId);
@@ -150,26 +157,10 @@ public class RoboLiftStartupActivity extends Activity {
             }
             holder = (ViewHolder) view.getTag();
 
-            String deviceDescription = getItem(position);
-            Matcher matcher = bluetoothNamePattern.matcher(deviceDescription);
-            if (matcher.find())
-            {
-                holder.deviceMacAddress = matcher.group(1);
-                holder.deviceName = matcher.group(0);
-            }
-            holder.deviceTextView.setText(deviceDescription);
+            holder.bluetoothDevice = (BluetoothDevice) getItem(position);
+            holder.deviceTextView.setText(holder.bluetoothDevice.getName());
 
             return view;
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            return -1;
-        }
-
-        @Override
-        public int getViewTypeCount() {
-            return 1;
         }
     }
 }

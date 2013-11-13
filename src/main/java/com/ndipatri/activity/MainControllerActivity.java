@@ -31,10 +31,6 @@ public class MainControllerActivity extends Activity {
 
     private static final String TAG = MainControllerActivity.class.getCanonicalName();
 
-    private static final int REQUEST_ENABLE_BT = 1;
-
-    private static final Pattern bluetoothNamePattern = Pattern.compile("^(.*?)\\(.*?\\)$");
-
     private BluetoothAdapter mBluetoothAdapter;
 
     protected @InjectView(R.id.textView) TextView textView;
@@ -49,5 +45,7 @@ public class MainControllerActivity extends Activity {
 
         Views.inject(this);
 
+        BluetoothDevice selectedBluetoothDevice = getIntent().getParcelableExtra(EXTERNAL_BLUETOOTH_DEVICE_MAC);
+        Toast.makeText(this, "Bluetooth Device Selected: '" + selectedBluetoothDevice + "'.", Toast.LENGTH_SHORT).show();
     }
 }
