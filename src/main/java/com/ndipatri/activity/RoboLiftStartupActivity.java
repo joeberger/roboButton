@@ -52,6 +52,9 @@ public class RoboLiftStartupActivity extends Activity {
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             } else {
                 setupBluetoothDeviceSpinner();
+
+
+                // NJD TODO - from this point on, we should use broadcast receiver to detect bluetooth disable...
             }
         }
     }
