@@ -5,4 +5,8 @@
     <string name="select_paired_device">Select a Paired Bluetooth Device</string>
     <string name="main_controller">Main Controller</string>
     <string name="opening_bluetooth_socket">Opening Bluetooth Socket ...</string>
+    <string name="communication_established">Communication Established</string>
+    <string name="transmitting_data">Transmitting Data ...</string>
+    <string name="transmission_failure">Transmission Failure ...</string>
+    <string name="transmission_success">Transmission Success</string>
 </resources>
