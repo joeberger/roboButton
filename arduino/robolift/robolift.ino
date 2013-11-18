@@ -45,18 +45,18 @@ void loop()
      
     if (inputBuffer.startsWith("@@@")) {
   
-      Serial.print("Received StateReport request!);      
+      Serial.print("Received StateReport request!");      
 
       // we've received a request for local state report!
-      bluetooth.print("@@@" + localState1);
+      bluetooth.print(localState1); // the print command encodes in ASCII
       inputBuffer = "";
     }  
     
     if (inputBuffer.startsWith("XXX") && inputBuffer.length() == 4) {
   
-      localState1 = inputBuffer.chatAt(3).toInt();
+      localState1 = String(inputBuffer.charAt(3)).toInt();
       
-      Serial.print("Received StateChange request! Changed to '" + localState1 + "'.");      
+      Serial.print("Received StateChange request! Changed to '" + String(localState1) + "'.");      
 
       // NJD TODO  - send acknowledgement
       
