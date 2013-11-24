@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -36,6 +37,8 @@ public class MainControllerActivity extends Activity {
     private BluetoothSocket bluetoothSocket;
     private BluetoothDevice selectedBluetoothDevice;
 
+    private boolean firstChange = true;
+
     protected @InjectView(R.id.textView) TextView textView;
     protected @InjectView(R.id.progressBar) android.widget.ProgressBar progressBar;
     protected @InjectView(R.id.toggleButton) ToggleButton toggleButton;
@@ -51,6 +54,16 @@ public class MainControllerActivity extends Activity {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         selectedBluetoothDevice = getIntent().getParcelableExtra(EXTERNAL_BLUETOOTH_DEVICE_MAC);
 
+        if (selectedBluetoothDevice == null)  {
+            // presumably, the only way this would happen is if we are destroyed by OS and recreated..or due to orientation change..
+            // alternatively, we could implement onSaveInstancestate() and remember selected bluetooth, but if we've been
+            // recreated, might as well make them re-select desired bluetooth
+
+            Intent controllerIntent = new Intent(MainControllerActivity.this, RoboLiftStartupActivity.class);
+            startActivity(controllerIntent);
+            finish();
+        }
+
         Toast.makeText(this, "Bluetooth Device Selected: '" + selectedBluetoothDevice + "'.", Toast.LENGTH_SHORT).show();
 
         setupViews();
@@ -58,11 +71,20 @@ public class MainControllerActivity extends Activity {
         new RetrieveRemoteStateTask().execute();
     }
 
+    protected void onSaveInstanceState (Bundle outState) {
+        // We want to preserve the selected
+
+    }
+
     private void setupViews() {
         toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                new UdpateRemoteStateTask().execute();
+                if (!firstChange) {
+                    new UdpateRemoteStateTask().execute();
+                } else {
+                    firstChange = false;
+                }
             }
         });
     }
@@ -81,7 +103,7 @@ public class MainControllerActivity extends Activity {
             ByteBuffer byteBuffer = null;
 
             try {
-                if (bluetoothSocket != null && bluetoothSocket.isConnected()) {
+                if (bluetoothSocket == null || !bluetoothSocket.isConnected()) {
                     publishProgress(getString(R.string.opening_bluetooth_socket));
                     bluetoothSocket = createConnectionToBluetoothDevice(bluetoothAdapter, selectedBluetoothDevice);
                 }
@@ -159,7 +181,7 @@ public class MainControllerActivity extends Activity {
         protected Void doInBackground(Void... Void) {
 
             try {
-                if (bluetoothSocket != null && bluetoothSocket.isConnected()) {
+                if (bluetoothSocket == null || !bluetoothSocket.isConnected()) {
                     publishProgress(getString(R.string.opening_bluetooth_socket));
                     bluetoothSocket = createConnectionToBluetoothDevice(bluetoothAdapter, selectedBluetoothDevice);
                 }
