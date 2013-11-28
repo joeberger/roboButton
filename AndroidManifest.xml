@@ -4,24 +4,30 @@
           android:versionName="1.0.0-SNAPSHOT"
           package="com.ndipatri">
 
-    <uses-sdk android:minSdkVersion="17"
-              android:targetSdkVersion="17"/>
+    <uses-sdk
+            android:minSdkVersion="17"
+            android:targetSdkVersion="17"/>
 
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
-    <application android:name=".RoboLiftApplication"
-                 android:debuggable="true"
-                 android:label="RoboLift">
+    <application
+            android:name=".RoboLiftApplication"
+            android:debuggable="true"
+            android:label="RoboLift">
 
-        <activity android:name=".activity.RoboLiftStartupActivity" android:screenOrientation="portrait">
+        <activity
+                android:name=".activity.BluetoothSetupActivity"
+                android:screenOrientation="portrait"/>
+
+        <activity
+                android:name=".activity.MainControllerActivity"
+                android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
-        <activity android:name=".activity.MainControllerActivity" android:screenOrientation="portrait"/>
 
     </application>
 </manifest>

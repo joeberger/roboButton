@@ -9,4 +9,5 @@
     <string name="transmitting_data">Transmitting Data ...</string>
     <string name="transmission_failure">Transmission Failure ...</string>
     <string name="transmission_success">Transmission Success</string>
+    <string name="setup_bluetooth">Setup Bluetooth</string>
 </resources>

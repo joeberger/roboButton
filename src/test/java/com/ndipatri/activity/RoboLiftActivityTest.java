@@ -14,7 +14,7 @@ public class RoboLiftActivityTest {
 
     @Test
     public void testSomething() throws Exception {
-        Activity activity = Robolectric.buildActivity(RoboLiftStartupActivity.class).create().get();
+        Activity activity = Robolectric.buildActivity(BluetoothSetupActivity.class).create().get();
         assertTrue(activity != null);
     }
 
