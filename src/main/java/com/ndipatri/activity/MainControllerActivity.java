@@ -45,9 +45,6 @@ public class MainControllerActivity extends Activity {
     private boolean firstChange = true;
 
     protected
-    @InjectView(R.id.textView)
-    TextView textView;
-    protected
     @InjectView(R.id.progressBar)
     android.widget.ProgressBar progressBar;
     protected
@@ -85,7 +82,6 @@ public class MainControllerActivity extends Activity {
     }
 
     private void setupViews() {
-        textView.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
         toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -106,14 +102,14 @@ public class MainControllerActivity extends Activity {
         });
     }
 
-    private void scheduleNextRemoteStateUpdate() {
+    private void scheduleNextLocalStateUpdate() {
         remoteStateRequestHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (updateRemoteStateTask == null || updateRemoteStateTask.getStatus() == AsyncTask.Status.FINISHED) {
-                    updateLocalStateTask = new UpdateLocalStateTask();
-                    updateLocalStateTask.execute();
-                }
+                Log.d(TAG, "UpdateLocalStateTask() awake...");
+
+                updateLocalStateTask = new UpdateLocalStateTask();
+                updateLocalStateTask.execute();
             }
         }, getResources().getInteger(R.integer.remote_state_check_interval_millis));
     }
@@ -125,35 +121,47 @@ public class MainControllerActivity extends Activity {
 
             ByteBuffer byteBuffer = null;
 
-            try {
-                if (bluetoothSocket == null || !bluetoothSocket.isConnected()) {
-                    publishProgress(getString(R.string.opening_bluetooth_socket));
-                    bluetoothSocket = createConnectionToBluetoothDevice(bluetoothAdapter, selectedBluetoothDevice);
-                }
+            if (updateRemoteStateTask == null || updateRemoteStateTask.getStatus() == AsyncTask.Status.FINISHED) {
 
-                // Tell Arduino to send us StateReport
-                OutputStream outputStream = bluetoothSocket.getOutputStream();
-                outputStream.write(new byte[]{0x40, 0x40, 0x40}); // '@@@'
-
-                // For now, assume one byte state response...
-                final byte[] remoteStateBytes = new byte[1];
-                final int bytesRead = bluetoothSocket.getInputStream().read(remoteStateBytes);
-
-                if (bytesRead != 1) {
-                    publishProgress(getString(R.string.transmission_failure));
-                    return null;
-                }
-                byteBuffer = ByteBuffer.allocate(1);
-                byteBuffer.put(remoteStateBytes);
-                byteBuffer.flip();  // prepare for reading.
-
-            } catch (IOException connectException) {
-                // Unable to connect; close the socket and get out
-                publishProgress(getString(R.string.transmission_failure));
-                Log.d(TAG, "Socket connect exception!", connectException);
                 try {
-                    bluetoothSocket.close();
-                } catch (IOException closeException) {
+                    if (bluetoothSocket == null || !bluetoothSocket.isConnected()) {
+                        Log.d(TAG, "Trying to create bluetooth connection...");
+                        publishProgress(getString(R.string.opening_bluetooth_socket));
+                        bluetoothSocket = createConnectionToBluetoothDevice(bluetoothAdapter, selectedBluetoothDevice);
+                    }
+
+                    if (bluetoothSocket != null) {
+                        Log.d(TAG, "Bluetooth connect. Getting output stream ...");
+                        // Tell Arduino to send us StateReport
+                        OutputStream outputStream = bluetoothSocket.getOutputStream();
+                        outputStream.write(new byte[]{0x40, 0x40, 0x40}); // '@@@'
+                        Log.d(TAG, "StateRequestUpdate sent! Waiting for reply...");
+                        seen cases where it just blocks here indefinitely.. need a watchdog that can call bluetoohSocket.close()...
+
+                        // For now, assume one byte state response...
+                        final byte[] remoteStateBytes = new byte[1];
+                        final int bytesRead = bluetoothSocket.getInputStream().read(remoteStateBytes);
+
+                        if (bytesRead != 1) {
+                            publishProgress(getString(R.string.transmission_failure));
+                            return null;
+                        }
+                        byteBuffer = ByteBuffer.allocate(1);
+                        byteBuffer.put(remoteStateBytes);
+                        byteBuffer.flip();  // prepare for reading.
+                    } else {
+                        Log.d(TAG, "Cannot create bluetooth socket!");
+                        byteBuffer = null; // for clarify
+                    }
+
+                } catch (IOException connectException) {
+                    // Unable to connect; close the socket and get out
+                    publishProgress(getString(R.string.transmission_failure));
+                    Log.d(TAG, "Socket connect exception!", connectException);
+                    try {
+                        bluetoothSocket.close();
+                    } catch (IOException closeException) {
+                    }
                 }
             }
 
@@ -161,24 +169,24 @@ public class MainControllerActivity extends Activity {
         }
 
         protected void onProgressUpdate(String... progress) {
-            textView.setVisibility(View.VISIBLE);
-            textView.setText(progress[0]);
+            Toast.makeText(MainControllerActivity.this, progress[0], Toast.LENGTH_SHORT).show();
         }
 
         @Override
         protected void onPostExecute(ByteBuffer byteBuffer) {
             super.onPostExecute(byteBuffer);
 
-            // It's possible a local change was made while retrieving local state, so make sure
+            // It's possible a local change was made while retrieving remote state, so make sure
             // we aren't in teh middle of local change...
             if (updateRemoteStateTask == null || updateRemoteStateTask.getStatus() == AsyncTask.Status.FINISHED) {
                 // We only want to update state if we're NOT pending a transmission of new state
-                textView.setVisibility(View.GONE);
 
-                renderLocalViewsFromRemoteState(byteBuffer);
-
-                scheduleNextRemoteStateUpdate();
+                if (byteBuffer != null) {
+                    renderLocalViewsFromRemoteState(byteBuffer);
+                }
             }
+
+            scheduleNextLocalStateUpdate();
         }
     }
 
@@ -203,7 +211,6 @@ public class MainControllerActivity extends Activity {
         toggleButton.setActivated(true);
         toggleButton.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.GONE);
-        textView.setText(getString(R.string.main_controller));
     }
 
     private class UpdateRemoteStateTask extends AsyncTask<Void, String, Void> {
@@ -220,7 +227,7 @@ public class MainControllerActivity extends Activity {
                 ByteBuffer desiredState = renderRemoteStateFromLocalViews();
 
                 OutputStream outputStream = bluetoothSocket.getOutputStream();
-                outputStream.write(new byte[]{0x58, 0x58, 0x58}); // 'XXX'
+                outputStream.write(new byte[]{0x58, 0x58, 0x58}); // 'XXX' - StateChangeRequest
                 outputStream.write(desiredState.array());
             } catch (IOException connectException) {
                 // Unable to connect; close the socket and get out
@@ -231,6 +238,8 @@ public class MainControllerActivity extends Activity {
                 } catch (IOException closeException) {
                 }
             }
+
+            updateRemoteStateTask = null;
 
             return null;
         }

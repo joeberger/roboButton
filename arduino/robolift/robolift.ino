@@ -26,13 +26,16 @@ long debounce = 50;                // the debounce time in milliseconds.. This i
 
 void setup()
 {
+  delay(2000);
+  
   // BLuetooth Setup
   Serial.begin(9600);  // Begin the serial monitor at 9600bps
+  
   bluetooth.begin(115200);  // The Bluetooth Mate defaults to 115200bps
   bluetooth.print("$");  // Print three times individually
   bluetooth.print("$");
   bluetooth.print("$");  // Enter command mode
-  delay(100);  // Short delay, wait for the Mate to send back CMD
+  delay(2000);  // Short delay, wait for the Mate to send back CMD
   bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
   // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
   bluetooth.begin(9600);  // Start bluetooth serial at 9600
@@ -47,7 +50,7 @@ void setup()
 
 void loop()
 {    
-     debounceAndProcessSwitch();
+     //debounceAndProcessSwitch();
   
      processBluetooth();
 
