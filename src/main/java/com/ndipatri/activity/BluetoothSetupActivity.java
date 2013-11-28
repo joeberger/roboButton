@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ndipatri.R;
+import com.ndipatri.RoboLiftApplication;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +25,9 @@ import java.util.Set;
 import butterknife.InjectView;
 import butterknife.Views;
 
-public class RoboLiftStartupActivity extends Activity {
+public class BluetoothSetupActivity extends Activity {
 
-    private static final String TAG = RoboLiftStartupActivity.class.getCanonicalName();
+    private static final String TAG = BluetoothSetupActivity.class.getCanonicalName();
 
     private static final int REQUEST_ENABLE_BT = 1;
 
@@ -96,8 +97,9 @@ public class RoboLiftStartupActivity extends Activity {
 
                         ViewHolder viewHolder = (ViewHolder) view.getTag();
 
-                        Intent controllerIntent = new Intent(RoboLiftStartupActivity.this, MainControllerActivity.class);
-                        controllerIntent.putExtra(MainControllerActivity.EXTERNAL_BLUETOOTH_DEVICE_MAC, viewHolder.bluetoothDevice);
+                        RoboLiftApplication.getInstance().selectBluetoothDevice(viewHolder.bluetoothDevice.getAddress());
+
+                        Intent controllerIntent = new Intent(BluetoothSetupActivity.this, MainControllerActivity.class);
                         startActivity(controllerIntent);
                         finish();
                     } else {
