@@ -25,21 +25,68 @@ long debounce = 50;                // the debounce time in milliseconds.. This i
                                     // physical switch used.
 
 void setup()
-{
-  delay(2000);
-  
+{  
   // BLuetooth Setup
   Serial.begin(9600);  // Begin the serial monitor at 9600bps
   
+  Serial.print("Requesting bluetooth command mode...");      
+
   bluetooth.begin(115200);  // The Bluetooth Mate defaults to 115200bps
-  bluetooth.print("$");  // Print three times individually
-  bluetooth.print("$");
-  bluetooth.print("$");  // Enter command mode
-  delay(2000);  // Short delay, wait for the Mate to send back CMD
-  bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
-  // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
+
+  boolean initialized = false;
   
-  bluetooth.begin(9600);  // Start bluetooth serial at 9600
+  bluetooth.print("$"); bluetooth.print("$"); bluetooth.print("$"); 
+  
+  // No wait for 'CMD' response...
+  do
+  {
+       if(bluetooth.available())  // If the bluetooth sent any characters
+       {
+            char incomingByte = (char)bluetooth.read();
+            inputBuffer += incomingByte; 
+         
+            Serial.print("Current Buffer: '" + String(inputBuffer) + "'.");      
+     
+            int bufferLength = inputBuffer.length();
+            switch (bufferLength) {
+            
+            case 1:
+          
+                 if (!inputBuffer.startsWith("C")) {
+                      // incoming garbage.. ignore.
+                      inputBuffer = "";
+                      bluetooth.print("$");bluetooth.print("$");bluetooth.print("$");   
+                 }
+                 break;
+            
+            case 2:
+                
+                 if (!inputBuffer.startsWith("CM")) {
+                      // incoming garbage.. ignore.
+                      inputBuffer = "";
+                      bluetooth.print("$");bluetooth.print("$");bluetooth.print("$"); 
+                 }
+                 break;  
+                 
+            case 3:
+                
+                if (inputBuffer.startsWith("CMD")) {
+                     Serial.print("CommandMode Achieved!");      
+
+                     // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
+                     bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
+                     bluetooth.begin(9600);  // Start bluetooth serial at 9600
+
+                     inputBuffer = "";
+                     initialized = true;
+                } else 
+                      inputBuffer = "";
+                      bluetooth.print("$");bluetooth.print("$");bluetooth.print("$");                 
+                }
+                break; 
+       }
+       
+  } while (!initialized);
 
   // Switch Setup
   //pinMode(switchPinIn, INPUT_PULLUP); // This means there's an internal pull-up resistor which sets the input high.  The physical
@@ -56,47 +103,6 @@ void loop()
      processBluetooth();
 
      // and loop forever and ever!
-}
-
-
-void debounceAndProcessSwitch()
-{
-     int switchReading = digitalRead(switchPinIn);
- 
-     // If the switch changed, due to bounce or pressing...
-     if (switchReading != previousSwitchReading)
-     {
-          // reset the debouncing timer
-          lastReadingChangeTime = millis();
-     } 
- 
-     if ((millis() - lastReadingChangeTime) > debounce)
-     {
-          // Switch has maintained its state long enough to consider valid        
-          if (switchReading != switchSteadyState)
-          { 
-               // The debounced position is different than the current switch state...
-               if (switchReading == LOW) 
-               {
-                    // Since the input has pull-up resistor, a LOW state indicates the switch is closed.. which
-                    // is what we want to trigger an internal state change..
-                    if (localState == 1)
-                    {
-                         localState = 0;
-                    }
-                    else
-                    {
-                         localState = 1;
-                    } 
-                    
-                    Serial.print("LocalStateChange: '" + String(localState) + "'.\n");      
-                    digitalWrite(13, localState); 
-               } 
-               switchSteadyState = switchReading; // since the reading is valid and different, let's consider it our new state!
-          }
-     }
-    
-     previousSwitchReading = switchReading; 
 }
 
 void processBluetooth()
@@ -162,4 +168,44 @@ void processBluetooth()
           // Send any characters the Serial monitor prints to the bluetooth
           bluetooth.print((char)Serial.read());
      }  
+}
+
+void debounceAndProcessSwitch()
+{
+     int switchReading = digitalRead(switchPinIn);
+ 
+     // If the switch changed, due to bounce or pressing...
+     if (switchReading != previousSwitchReading)
+     {
+          // reset the debouncing timer
+          lastReadingChangeTime = millis();
+     } 
+ 
+     if ((millis() - lastReadingChangeTime) > debounce)
+     {
+          // Switch has maintained its state long enough to consider valid        
+          if (switchReading != switchSteadyState)
+          { 
+               // The debounced position is different than the current switch state...
+               if (switchReading == LOW) 
+               {
+                    // Since the input has pull-up resistor, a LOW state indicates the switch is closed.. which
+                    // is what we want to trigger an internal state change..
+                    if (localState == 1)
+                    {
+                         localState = 0;
+                    }
+                    else
+                    {
+                         localState = 1;
+                    } 
+                    
+                    Serial.print("LocalStateChange: '" + String(localState) + "'.\n");      
+                    digitalWrite(13, localState); 
+               } 
+               switchSteadyState = switchReading; // since the reading is valid and different, let's consider it our new state!
+          }
+     }
+    
+     previousSwitchReading = switchReading; 
 }
