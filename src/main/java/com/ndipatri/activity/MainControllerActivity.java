@@ -81,6 +81,13 @@ public class MainControllerActivity extends Activity {
         // Periodically query remote state...
         queryStateIntervalMillis = getResources().getInteger(R.integer.remote_state_check_interval_millis);
         queueQueryStateHandler = new Handler(getMainLooper());
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        shouldQueryState = true;
 
         // NJD TODO - Safe to assume since our prevous Activity hooked us up? We should have BroadcastReceiver monitoring this maybe?
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -102,13 +109,6 @@ public class MainControllerActivity extends Activity {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-
-        shouldQueryState = true;
-    }
-
-    @Override
     public void onPause() {
         super.onPause();
 
@@ -117,6 +117,13 @@ public class MainControllerActivity extends Activity {
         queueQueryStateHandler.removeCallbacks(queueQueryStateRunnable);
         bluetoothMessageHandler.removeMessages(QUERY_STATE_MESSAGE);
         bluetoothMessageHandler.removeMessages(SET_STATE_MESSAGE);
+
+        if (bluetoothSocket != null) {
+            Log.d(TAG, "Shutting down Bluetooth Socket..");
+            try {
+                bluetoothSocket.close();
+            } catch (IOException ignored) {}
+        }
     }
 
     private void returnToBluetoothSetupActivity() {
@@ -249,6 +256,7 @@ public class MainControllerActivity extends Activity {
 
     private void queryRemoteState() {
 
+        Log.d(TAG, "queryRemoteState()");
         final ByteBuffer byteBuffer = ByteBuffer.allocate(1);
 
         try {
@@ -265,7 +273,7 @@ public class MainControllerActivity extends Activity {
 
                 // Tell Arduino to send us StateReport
                 OutputStream outputStream = bluetoothSocket.getOutputStream();
-                outputStream.write(new byte[]{0x40, 0x40, 0x40}); // '@@@'
+                outputStream.write(new byte[]{0x51, 0x51, 0x51}); // 'QQQ'
                 Log.d(TAG, "StateRequestUpdate sent! Waiting for reply...");
 
                 // For now, assume one byte state response...
@@ -276,7 +284,9 @@ public class MainControllerActivity extends Activity {
 
                 if (bytesRead != 1) {
                     publishProgress(getString(R.string.transmission_failure));
-                    try { bluetoothSocket.close(); } catch (IOException ignored) { }
+                    if (bluetoothSocket != null) {
+                        try { bluetoothSocket.close(); } catch (IOException ignored) { }
+                    }
                     return;
                 } else {
                     Log.d(TAG, "Reply received.");
@@ -344,13 +354,14 @@ public class MainControllerActivity extends Activity {
             }
         }
 
+        progressBar.setVisibility(View.GONE);
         toggleButton.setActivated(true);
         toggleButton.setVisibility(View.VISIBLE);
-        progressBar.setVisibility(View.GONE);
     }
 
     private void setRemoteState() {
 
+        Log.d(TAG, "setRemoteState()");
         try {
             if (bluetoothSocket == null || !bluetoothSocket.isConnected()) {
                 publishProgress(getString(R.string.opening_bluetooth_socket));

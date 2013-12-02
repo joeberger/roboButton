@@ -25,80 +25,29 @@ long debounce = 50;                // the debounce time in milliseconds.. This i
                                     // physical switch used.
 
 void setup()
-{  
-  // BLuetooth Setup
-  Serial.begin(9600);  // Begin the serial monitor at 9600bps
+{
+     Serial.begin(9600);  // Begin the serial monitor at 9600bps
+
+     bluetooth.begin(115200);  // The Bluetooth Mate defaults to 115200bps
+     bluetooth.print("$");  // Print three times individually
+     bluetooth.print("$");
+     bluetooth.print("$");  // Enter command mode
+     delay(100);  // Short delay, wait for the Mate to send back CMD
+     bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
+     // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
+     bluetooth.begin(9600);  // Start bluetooth serial at 9600
+
+     // Switch Setup
+     pinMode(switchPinIn, INPUT_PULLUP); // This means there's an internal pull-up resistor which sets the input high.  The physical
+                                           // switch should be tied directly to ground.  When the switch is actuated, the input goes from goes
+                                           // from high to low as the internal resistor drops all the voltage.
   
-  Serial.print("Requesting bluetooth command mode...");      
-
-  bluetooth.begin(115200);  // The Bluetooth Mate defaults to 115200bps
-
-  boolean initialized = false;
-  
-  bluetooth.print("$"); bluetooth.print("$"); bluetooth.print("$"); 
-  
-  // No wait for 'CMD' response...
-  do
-  {
-       if(bluetooth.available())  // If the bluetooth sent any characters
-       {
-            char incomingByte = (char)bluetooth.read();
-            inputBuffer += incomingByte; 
-         
-            Serial.print("Current Buffer: '" + String(inputBuffer) + "'.");      
-     
-            int bufferLength = inputBuffer.length();
-            switch (bufferLength) {
-            
-            case 1:
-          
-                 if (!inputBuffer.startsWith("C")) {
-                      // incoming garbage.. ignore.
-                      inputBuffer = "";
-                      bluetooth.print("$");bluetooth.print("$");bluetooth.print("$");   
-                 }
-                 break;
-            
-            case 2:
-                
-                 if (!inputBuffer.startsWith("CM")) {
-                      // incoming garbage.. ignore.
-                      inputBuffer = "";
-                      bluetooth.print("$");bluetooth.print("$");bluetooth.print("$"); 
-                 }
-                 break;  
-                 
-            case 3:
-                
-                if (inputBuffer.startsWith("CMD")) {
-                     Serial.print("CommandMode Achieved!");      
-
-                     // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
-                     bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
-                     bluetooth.begin(9600);  // Start bluetooth serial at 9600
-
-                     inputBuffer = "";
-                     initialized = true;
-                } else 
-                      inputBuffer = "";
-                      bluetooth.print("$");bluetooth.print("$");bluetooth.print("$");                 
-                }
-                break; 
-       }
-       
-  } while (!initialized);
-
-  // Switch Setup
-  //pinMode(switchPinIn, INPUT_PULLUP); // This means there's an internal pull-up resistor which sets the input high.  The physical
-                                      // switch should be tied directly to ground.  When the switch is actuated, the input goes from goes
-                                      // from high to low as the internal resistor drops all the voltage.
-  
-  //pinMode(13, OUTPUT); // we'll use this to convey our singel localState variable.
+     pinMode(13, OUTPUT); // we'll use this to convey our singel localState variable.
 }
 
 void loop()
 {    
-     //debounceAndProcessSwitch();
+     debounceAndProcessSwitch();
   
      processBluetooth();
 
@@ -119,7 +68,7 @@ void processBluetooth()
             
             case 1:
           
-                if (!inputBuffer.startsWith("@") && !inputBuffer.startsWith("X")) {
+                if (!inputBuffer.startsWith("Q") && !inputBuffer.startsWith("X")) {
                     // incoming garbage.. ignore.
                     inputBuffer = "";  
                 }
@@ -127,7 +76,7 @@ void processBluetooth()
             
             case 2:
                 
-                if (!inputBuffer.startsWith("@@") && !inputBuffer.startsWith("XX")) {
+                if (!inputBuffer.startsWith("QQ") && !inputBuffer.startsWith("XX")) {
                     // incoming garbage.. ignore.
                     inputBuffer = "";  
                 }
@@ -136,7 +85,7 @@ void processBluetooth()
                  
             case 3:
                 
-                if (inputBuffer.startsWith("@@@")) {
+                if (inputBuffer.startsWith("QQQ")) {
                     Serial.print("Received StateReport request!");      
 
                     // we've received a request for local state report!
