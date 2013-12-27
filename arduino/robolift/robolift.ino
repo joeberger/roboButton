@@ -17,6 +17,7 @@ String inputBuffer = "";
 // Switch Debounce
 //
 int switchPinIn = 8;                // the number of the input pin
+int statePinOut = 13;                  // the number of the state pin
 int switchReadin = LOW;             // the current reading from the switch.. our goal is to debounce this
 int previousSwitchReading = LOW;    // the previous reading from the switch.
 int switchSteadyState = LOW;        // This is the debounced position of the switch 
@@ -32,7 +33,7 @@ void setup()
      bluetooth.print("$");  // Print three times individually
      bluetooth.print("$");
      bluetooth.print("$");  // Enter command mode
-     delay(100);  // Short delay, wait for the Mate to send back CMD
+     delay(300);  // Short delay, wait for the Mate to send back CMD
      bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
      // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
      bluetooth.begin(9600);  // Start bluetooth serial at 9600
@@ -42,7 +43,7 @@ void setup()
                                            // switch should be tied directly to ground.  When the switch is actuated, the input goes from goes
                                            // from high to low as the internal resistor drops all the voltage.
   
-     pinMode(13, OUTPUT); // we'll use this to convey our singel localState variable.
+     pinMode(statePinOut, OUTPUT); // we'll use this to convey our single localState variable.
 }
 
 void loop()
