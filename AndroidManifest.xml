@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           android:versionCode="2"
           android:versionName="1.0.0-SNAPSHOT"
-          package="com.ndipatri">
+          package="com.ndipatri.arduinoButton">
 
     <uses-sdk
             android:minSdkVersion="17"
@@ -12,13 +12,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
     <application
-            android:name=".RoboLiftApplication"
+            android:name=".ArduinoButtonApplication"
             android:debuggable="true"
-            android:label="RoboLift">
-
-        <activity
-                android:name=".activity.BluetoothSetupActivity"
-                android:screenOrientation="portrait"/>
+            android:label="ArduinoButton">
 
         <activity
                 android:name=".activity.MainControllerActivity"

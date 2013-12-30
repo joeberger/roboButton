@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <integer name="remote_state_check_interval_millis">1000</integer>
-    <integer name="max_reconnect_attempts_before_redirect_to_step">5</integer>
+    <integer name="button_discovery_interval_millis">5000</integer>
+    <integer name="max_reconnect_attempts">2</integer>
 </resources>

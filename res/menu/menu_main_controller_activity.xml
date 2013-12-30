@@ -3,7 +3,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-            android:id="@+id/action_setup_bluetooth"
+            android:id="@+id/forget_all_buttons"
             android:icon="@android:drawable/stat_sys_data_bluetooth"
-            android:title="@string/setup_bluetooth"/>
+            android:title="@string/forget_all_buttons"/>
 </menu>
