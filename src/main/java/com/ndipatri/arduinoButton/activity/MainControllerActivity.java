@@ -38,8 +38,6 @@ public class MainControllerActivity extends Activity {
 
     public static final String EXTERNAL_BLUETOOTH_DEVICE_MAC = "macAddress";
 
-    private static final String MY_UUID = "00001101-0000-1000-8000-00805F9B34FB";
-
     private static final int REQUEST_ENABLE_BT = 1;
 
     private static final int QUERY_STATE_MESSAGE = 0;
@@ -48,18 +46,14 @@ public class MainControllerActivity extends Activity {
 
     private static final String TAG = MainControllerActivity.class.getCanonicalName();
 
-    // Handler which passes outgoing bluetooth messages background thread to be processed.
-    private MessageHandler bluetoothMessageHandler;
-
     // This ensures that we are periodically querying the remote state and discovery of bluetooth buttons.
     private Handler buttonQueryHandler = null;
     private Runnable buttonQueryRunnable = null;
     long queryStateIntervalMillis = -1;
     long buttonDiscoveryIntervalMillis = -1;
 
-    private boolean stateBoolean = false;
-
-    private int failedToConnectCount = 0;
+    // Handler which passes outgoing bluetooth messages background thread to be processed.
+    private MessageHandler bluetoothMessageHandler;
 
     private boolean shouldRun = false;
 
@@ -199,25 +193,25 @@ public class MainControllerActivity extends Activity {
         public void queueQueryStateRequest() {
 
             // We only queue a query request if NO requests are already pending...
-            if (!bluetoothMessageHandler.hasMessages(SET_STATE_MESSAGE) &&
-                !bluetoothMessageHandler.hasMessages(QUERY_STATE_MESSAGE)) {
+            if (!hasMessages(SET_STATE_MESSAGE) &&
+                !hasMessages(QUERY_STATE_MESSAGE)) {
 
                 // Queue a QueryState Message
-                Message rawMessage = bluetoothMessageHandler.obtainMessage();
+                Message rawMessage = obtainMessage();
                 rawMessage.what = QUERY_STATE_MESSAGE;
 
                 // To be handled by separate thread.
-                bluetoothMessageHandler.sendMessage(rawMessage);
+                sendMessage(rawMessage);
             }
         }
 
         public void queueDiscoverButtonRequest() {
 
-            Message rawMessage = bluetoothMessageHandler.obtainMessage();
+            Message rawMessage = obtainMessage();
             rawMessage.what = DISCOVER_BUTTON_DEVICES;
 
             // To be handled by separate thread.
-            bluetoothMessageHandler.sendMessage(rawMessage);
+            sendMessage(rawMessage);
         }
 
         public void queueSetStateRequest() {
@@ -277,143 +271,22 @@ public class MainControllerActivity extends Activity {
 
         for (final ArduinoButton arduinoButton : arduinoButtonMap.values()) {
 
-            BluetoothSocket bluetoothSocket = arduinoButton.socket;
             Log.d(TAG, "queryRemoteState()");
-            final ByteBuffer byteBuffer = ByteBuffer.allocate(1);
-
-            try {
-                if (bluetoothSocket == null || !bluetoothSocket.isConnected()) {
-                    Log.d(TAG, "Trying to create bluetooth connection...");
-                    publishProgress(getString(R.string.opening_bluetooth_socket));
-                    bluetoothSocket = createConnectionToBluetoothDevice(BluetoothAdapter.getDefaultAdapter(), arduinoButton.device);
-                }
-
-                if (bluetoothSocket != null) {
-                    Log.d(TAG, "Bluetooth connect. Getting output stream ...");
-
-                    failedToConnectCount = 0;
-
-                    // Tell Arduino to send us StateReport
-                    OutputStream outputStream = bluetoothSocket.getOutputStream();
-                    outputStream.write(new byte[]{0x51, 0x51, 0x51}); // 'QQQ'
-                    Log.d(TAG, "StateRequestUpdate sent! Waiting for reply...");
-
-                    // For now, assume one byte state response...
-                    final byte[] remoteStateBytes = new byte[1];
-
-                    // NJD TODO - Need watchdog thread on these blocking calls (so we can call socket.close() if need be)
-                    final int bytesRead = bluetoothSocket.getInputStream().read(remoteStateBytes);
-
-                    if (bytesRead != 1) {
-                        publishProgress(getString(R.string.transmission_failure));
-                        forgetArduinoButton(arduinoButton);
-                        return;
-                    } else {
-                        Log.d(TAG, "Reply received.");
-                    }
-                    byteBuffer.put(remoteStateBytes);
-                    byteBuffer.flip();  // prepare for reading.
-                } else {
-                    Log.d(TAG, "Cannot create bluetooth socket!");
-
-                    failedToConnectCount++;
-
-                    if (failedToConnectCount > getResources().getInteger(R.integer.max_reconnect_attempts)) {
-                        failedToConnectCount = 0;
-
-                        forgetArduinoButton(arduinoButton);
-                    }
-                }
-
-            } catch (IOException connectException) {
-                // Unable to connect; close the socket and get out
-                publishProgress(getString(R.string.transmission_failure));
-                Log.d(TAG, "Socket connect exception!", connectException);
-                try {
-                    bluetoothSocket.close();
-                } catch (IOException ignored) {
-                }
-            }
-
-            if (byteBuffer.hasRemaining()) {
-                // queues up this update runnable on UI thread
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        // Currently, the response is a single character: an ASCII representation of either a '0' or '1'
-                        String responseChar = String.valueOf(new char[]{(char) byteBuffer.get()});
-                        Log.d(TAG, "Response from bluetooth device '" + arduinoButton + " ', '" + responseChar + "'.");
-                        try {
-                            arduinoButton.setState(Integer.valueOf(responseChar) > 0);
-                        } catch (NumberFormatException nex) {
-                            Log.d(TAG, "Invalid response from bluetooth device: '" + arduinoButton + "'.");
-
-                            publishProgress(getString(R.string.transmission_failure));
-                            forgetArduinoButton(arduinoButton);
-                        }
-                    }
-                });
-            }
+            arduinoButton.readRemoteState();
         }
 
         scheduleQueryStateMessage();
-    }
-
-    private synchronized void forgetAllArduinoButtons() {
-        for (ArduinoButton button : arduinoButtonMap.values()) {
-            forgetArduinoButton(button);
-        }
-    }
-
-    private synchronized void forgetArduinoButton(final ArduinoButton arduinoButton) {
-
-        if (arduinoButton.socket != null) {
-            try {
-                arduinoButton.socket.close();
-            } catch (IOException ignored) {
-            }
-        }
-
-        arduinoButtonMap.remove(arduinoButton.buttonId);
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mainViewGroup.removeView(arduinoButton.getRootViewGroup());
-            }
-        });
     }
 
     private synchronized void setRemoteState() {
 
         for (ArduinoButton arduinoButton : arduinoButtonMap.values()) {
 
-            BluetoothSocket bluetoothSocket = arduinoButton.socket;
             Log.d(TAG, "setRemoteState()");
             try {
-                if (bluetoothSocket == null || !bluetoothSocket.isConnected()) {
-                    publishProgress(getString(R.string.opening_bluetooth_socket));
-                    bluetoothSocket = createConnectionToBluetoothDevice(BluetoothAdapter.getDefaultAdapter(), arduinoButton.device);
-                }
-
-                if (bluetoothSocket != null) {
-                    ByteBuffer desiredState = renderRemoteStateFromLocalViews();
-
-                    OutputStream outputStream = bluetoothSocket.getOutputStream();
-                    outputStream.write(new byte[]{0x58, 0x58, 0x58}); // 'XXX' - StateChangeRequest
-                    outputStream.write(desiredState.array());
-                }
-            } catch (IOException connectException) {
-                // Unable to connect; close the socket and get out
+                arduinoButton.setRemoteState();
+            } catch (Exception ex) {
                 publishProgress(getString(R.string.transmission_failure));
-                Log.d(TAG, "Socket connect exception!", connectException);
-                if (bluetoothSocket != null) {
-                    try {
-                        bluetoothSocket.close();
-                    } catch (IOException ignored) {
-                    }
-                }
             }
         }
     }
@@ -428,39 +301,47 @@ public class MainControllerActivity extends Activity {
         if (pairedDevices != null) {
             for (BluetoothDevice device : pairedDevices) {
                 if (device.getName().contains(discoverableButtonPatternString)) {
-                    Log.d(TAG, "Discovered '" + discoverableButtonPatternString + "' device!");
+                    Log.d(TAG, "We have a paired ArduinoButton device!");
 
                     foundButtonIdToDeviceMap.put(device.getAddress(), device);
                 }
             }
         }
 
+        // To keep track of buttons that have gone missing.
         Set<String> lostButtonSet = new HashSet<String>(arduinoButtonMap.keySet());
 
         Map<String, ArduinoButton> combinedButtonMap = new HashMap<String, ArduinoButton>();
 
         for (String foundButtonId : foundButtonIdToDeviceMap.keySet()) {
             if (arduinoButtonMap.containsKey(foundButtonId)) {
-                // Need to keep track of these for cleanup
-                lostButtonSet.remove(foundButtonId);
 
-                // Preserve existing buttons
-                combinedButtonMap.put(foundButtonId, arduinoButtonMap.get(foundButtonId));
+                // Existing button!
+                final ArduinoButton existingButton = arduinoButtonMap.get(foundButtonId);
+                if ((existingButton.socket != null) && (existingButton.socket.isConnected())) {
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mainViewGroup.addView(existingButton.getRootViewGroup());
+                        }
+                    });
+
+                    // this is not a lost button
+                    lostButtonSet.remove(foundButtonId);
+
+                    // Preserve existing buttons
+                    combinedButtonMap.put(foundButtonId, arduinoButtonMap.get(foundButtonId));
+                }
             } else {
                 final ArduinoButton newArduinoButton = new ArduinoButton(foundButtonId, foundButtonId, foundButtonIdToDeviceMap.get(foundButtonId)); // NJD TODO - need to prompt user to name each
                 combinedButtonMap.put(foundButtonId, newArduinoButton);
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mainViewGroup.addView(newArduinoButton.getRootViewGroup());
-                    }
-                });
             }
         }
 
         // remove and disconnect all lost buttons
         for (String lostButtonId : lostButtonSet) {
+            Log.d(TAG, "Forgetting lost button '" + lostButtonId + "'.");
             forgetArduinoButton(arduinoButtonMap.get(lostButtonId));
         }
 
@@ -469,118 +350,22 @@ public class MainControllerActivity extends Activity {
         scheduleButtonDiscoveryMessage();
     }
 
-    private ByteBuffer renderRemoteStateFromLocalViews() {
-
-        ByteBuffer byteBuffer = ByteBuffer.allocate(1);
-
-        if (stateBoolean) {
-            byteBuffer.put((byte) '1'); // a char is the ascii representation of '1'
-        } else {
-            byteBuffer.put((byte) '0');
+    private synchronized void forgetAllArduinoButtons() {
+        for (ArduinoButton button : arduinoButtonMap.values()) {
+            forgetArduinoButton(button);
         }
-
-        // prepare for reading
-        byteBuffer.flip();
-
-        return byteBuffer;
     }
 
-    // Should not be run in UI thread.
-    private BluetoothSocket createConnectionToBluetoothDevice(BluetoothAdapter bluetoothAdapter, BluetoothDevice bluetoothDevice) {
+    private synchronized void forgetArduinoButton(final ArduinoButton arduinoButton) {
 
-        BluetoothSocket bluetoothSocket = null;
+        arduinoButton.disconnect();
+        arduinoButtonMap.remove(arduinoButton.buttonId);
 
-        try {
-            Log.d(TAG, "Creating Bluetooth Socket ...");
-            bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
-
-            // Cancel discovery because it will slow down the connection
-            bluetoothAdapter.cancelDiscovery();
-
-            // Connect the device through the socket. This will block
-            // until it succeeds or throws an exception
-            // NJD TODO - really need timeout mechanism here..
-            bluetoothSocket.connect();
-
-            Log.d(TAG, "Success!");
-
-        } catch (IOException connectException) {
-
-            Log.e(TAG, "Failed with Exception!", connectException);
-            if (bluetoothSocket != null) {
-                try { bluetoothSocket.close(); } catch (IOException ignored) { }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mainViewGroup.removeView(arduinoButton.getRootViewGroup());
             }
-
-            if (connectException.getMessage().contains("Bluetooth is off")) {
-                onResume();
-            }
-
-            bluetoothSocket = null;
-        }
-
-        return bluetoothSocket;
-    }
-
-    public class ArduinoButton {
-
-        private boolean enabled = true;
-        private ImageView imageView = null;
-        private ViewGroup rootViewGroup = null;
-        private BluetoothDevice device = null;
-        private BluetoothSocket socket = null;
-        private boolean state = false;
-        private String description = null;
-        private String buttonId;
-
-        public ArduinoButton(String description, String buttonId, BluetoothDevice device) {
-            this.device = device;
-            this.description = description;
-            this.buttonId = buttonId;
-
-            rootViewGroup = (ViewGroup) LayoutInflater.from(MainControllerActivity.this).inflate(R.layout.button_layout, null);
-            imageView = (ImageView) rootViewGroup.findViewById(R.id.imageView);
-            imageView.setImageResource(R.drawable.yellow_button);
-
-            rootViewGroup.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.d(TAG, "Button Pressed!");
-
-                    if (enabled) {
-                        enabled = false;
-                        imageView.setImageResource(R.drawable.yellow_button);
-                        state = !state;
-                        bluetoothMessageHandler.queueSetStateRequest();
-                    }
-                }
-            });
-        }
-
-        public void setState(boolean state) {
-
-            this.enabled = true;
-            this.state = state;
-
-            if (state) {
-                Log.d(TAG, "State is ON");
-                imageView.setImageResource(R.drawable.green_button);
-            } else {
-                Log.d(TAG, "State is OFF");
-                imageView.setImageResource(R.drawable.red_button);
-            }
-        }
-
-        public void disconnect() {
-            if (socket != null) {
-                Log.d(TAG, "Shutting down Bluetooth Socket for Button('" + description + "').");
-                try {
-                    socket.close();
-                } catch (IOException ignored) {}
-            }
-        }
-
-        public ViewGroup getRootViewGroup() {
-            return rootViewGroup;
-        }
+        });
     }
 }

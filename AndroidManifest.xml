@@ -14,7 +14,7 @@
     <application
             android:name=".ArduinoButtonApplication"
             android:debuggable="true"
-            android:label="ArduinoButton">
+            android:label="Arduino Button">
 
         <activity
                 android:name=".activity.MainControllerActivity"
