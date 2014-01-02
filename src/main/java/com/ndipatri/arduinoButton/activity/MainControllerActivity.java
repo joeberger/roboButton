@@ -3,7 +3,7 @@ package com.ndipatri.arduinoButton.activity;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,32 +11,29 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.events.ArduinoButtonBluetoothDisabledEvent;
+import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
+import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeEvent;
+import com.ndipatri.arduinoButton.utils.BusProvider;
+import com.squareup.otto.Subscribe;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import butterknife.InjectView;
 import butterknife.Views;
 
 public class MainControllerActivity extends Activity {
-
-    public static final String EXTERNAL_BLUETOOTH_DEVICE_MAC = "macAddress";
 
     private static final int REQUEST_ENABLE_BT = 1;
 
@@ -89,6 +86,8 @@ public class MainControllerActivity extends Activity {
 
         shouldRun = true;
 
+        BusProvider.getInstance().register(this);
+
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
             Toast.makeText(this, "Bluetooth not supported on this device!", Toast.LENGTH_SHORT).show();
@@ -115,6 +114,8 @@ public class MainControllerActivity extends Activity {
         super.onPause();
 
         shouldRun = false;
+
+        BusProvider.getInstance().unregister(this);
 
         buttonQueryHandler.removeCallbacks(buttonQueryRunnable);
         bluetoothMessageHandler.removeMessages(QUERY_STATE_MESSAGE);
@@ -161,28 +162,6 @@ public class MainControllerActivity extends Activity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu items for use in the action bar
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_main_controller_activity, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle presses on the action bar items
-        switch (item.getItemId()) {
-            case R.id.forget_all_buttons:
-
-                forgetAllArduinoButtons();
-
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
     // Hands outgoing bluetooth messages to background thread.
     private final class MessageHandler extends Handler {
 
@@ -214,7 +193,7 @@ public class MainControllerActivity extends Activity {
             sendMessage(rawMessage);
         }
 
-        public void queueSetStateRequest() {
+        public void queueSetStateRequest(ArduinoButton arduinoButton) {
 
             // If a set request is already pending, do nothing.
             if (!bluetoothMessageHandler.hasMessages(SET_STATE_MESSAGE)) {
@@ -224,6 +203,9 @@ public class MainControllerActivity extends Activity {
 
                 Message rawMessage = bluetoothMessageHandler.obtainMessage();
                 rawMessage.what = SET_STATE_MESSAGE;
+                Bundle bundle = new Bundle();
+                bundle.putString("buttonId", arduinoButton.getButtonId());
+                rawMessage.setData(bundle);
 
                 // To be handled by separate thread.
                 bluetoothMessageHandler.sendMessage(rawMessage);
@@ -245,13 +227,19 @@ public class MainControllerActivity extends Activity {
 
                 case SET_STATE_MESSAGE:
 
-                    setRemoteState();
+                    if (shouldRun) {
+                        Bundle bundle = msg.getData();
+                        String buttonId = bundle.getString("buttonId");
+                        setRemoteState(buttonId);
+                    }
 
                     break;
 
                 case DISCOVER_BUTTON_DEVICES:
 
-                    discoverButtonDevices();
+                    if (shouldRun) {
+                        discoverButtonDevices();
+                    }
 
                     break;
             }
@@ -278,16 +266,13 @@ public class MainControllerActivity extends Activity {
         scheduleQueryStateMessage();
     }
 
-    private synchronized void setRemoteState() {
+    private synchronized void setRemoteState(String buttonId) {
 
-        for (ArduinoButton arduinoButton : arduinoButtonMap.values()) {
-
-            Log.d(TAG, "setRemoteState()");
-            try {
-                arduinoButton.setRemoteState();
-            } catch (Exception ex) {
-                publishProgress(getString(R.string.transmission_failure));
-            }
+        ArduinoButton arduinoButton = arduinoButtonMap.get(buttonId);
+        try {
+            arduinoButton.setRemoteState();
+        } catch (Exception ex) {
+            publishProgress(getString(R.string.transmission_failure));
         }
     }
 
@@ -318,14 +303,17 @@ public class MainControllerActivity extends Activity {
 
                 // Existing button!
                 final ArduinoButton existingButton = arduinoButtonMap.get(foundButtonId);
-                if ((existingButton.socket != null) && (existingButton.socket.isConnected())) {
+                if (existingButton.isConnected()) {
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mainViewGroup.addView(existingButton.getRootViewGroup());
-                        }
-                    });
+                    if (existingButton.getRootViewGroup().getParent() == null) {
+                        // This button isn't visible yet!
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mainViewGroup.addView(existingButton.getRootViewGroup());
+                            }
+                        });
+                    }
 
                     // this is not a lost button
                     lostButtonSet.remove(foundButtonId);
@@ -334,7 +322,7 @@ public class MainControllerActivity extends Activity {
                     combinedButtonMap.put(foundButtonId, arduinoButtonMap.get(foundButtonId));
                 }
             } else {
-                final ArduinoButton newArduinoButton = new ArduinoButton(foundButtonId, foundButtonId, foundButtonIdToDeviceMap.get(foundButtonId)); // NJD TODO - need to prompt user to name each
+                final ArduinoButton newArduinoButton = new ArduinoButton(this, foundButtonId, foundButtonId, foundButtonIdToDeviceMap.get(foundButtonId)); // NJD TODO - need to prompt user to name each
                 combinedButtonMap.put(foundButtonId, newArduinoButton);
             }
         }
@@ -359,7 +347,7 @@ public class MainControllerActivity extends Activity {
     private synchronized void forgetArduinoButton(final ArduinoButton arduinoButton) {
 
         arduinoButton.disconnect();
-        arduinoButtonMap.remove(arduinoButton.buttonId);
+        arduinoButtonMap.remove(arduinoButton.getButtonId());
 
         runOnUiThread(new Runnable() {
             @Override
@@ -367,5 +355,48 @@ public class MainControllerActivity extends Activity {
                 mainViewGroup.removeView(arduinoButton.getRootViewGroup());
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main_controller_activity, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle presses on the action bar items
+        switch (item.getItemId()) {
+            case R.id.forget_all_buttons:
+
+                forgetAllArduinoButtons();
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Subscribe
+    public void onArduinoButtonStateChange(ArduinoButtonStateChangeEvent arduinoButtonStateChangeEvent) {
+        Log.d(TAG, "State change detected for button '" + arduinoButtonStateChangeEvent + "'.");
+
+        bluetoothMessageHandler.queueSetStateRequest(arduinoButtonStateChangeEvent.arduinoButton);
+    }
+
+    @Subscribe
+    public void onArduinoButtonInformation(ArduinoButtonInformationEvent arduinoButtonInformationEvent) {
+        Log.d(TAG, "Information received detected for button '" + arduinoButtonInformationEvent.arduinoButton + "'.");
+
+        publishProgress(arduinoButtonInformationEvent.message);
+    }
+
+    @Subscribe
+    public void onArduinoButtonBluetoothDisabled(ArduinoButtonBluetoothDisabledEvent arduinoButtonBluetoothDisabledEvent) {
+        Log.d(TAG, "Bluetooth disabled!");
+
+        onResume();
     }
 }

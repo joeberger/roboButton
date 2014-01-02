@@ -1,13 +1,23 @@
 package com.ndipatri.arduinoButton.activity;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
+import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.events.ArduinoButtonBluetoothDisabledEvent;
+import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
+import com.ndipatri.arduinoButton.utils.BusProvider;
+import com.squareup.otto.Subscribe.*;
+
+import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeEvent;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,13 +41,15 @@ public class ArduinoButton {
     private boolean state = false;
     private String description = null;
     private String buttonId;
+    private Activity activityContext;
 
-    public ArduinoButton(String description, String buttonId, BluetoothDevice device) {
+    public ArduinoButton(Activity activityContext, String description, String buttonId, BluetoothDevice device) {
         this.device = device;
         this.description = description;
         this.buttonId = buttonId;
+        this.activityContext = activityContext;
 
-        rootViewGroup = (ViewGroup) LayoutInflater.from(MainControllerActivity.this).inflate(R.layout.button_layout, null);
+        rootViewGroup = (ViewGroup) LayoutInflater.from(activityContext).inflate(R.layout.button_layout, null);
         imageView = (ImageView) rootViewGroup.findViewById(R.id.imageView);
         imageView.setImageResource(R.drawable.yellow_button);
 
@@ -50,24 +62,30 @@ public class ArduinoButton {
                     enabled = false;
                     imageView.setImageResource(R.drawable.yellow_button);
                     state = !state;
-                    bluetoothMessageHandler.queueSetStateRequest();
+
+                    BusProvider.getInstance().post(new ArduinoButtonStateChangeEvent(ArduinoButton.this));
                 }
             }
         });
     }
 
-    public void setState(boolean state) {
+    public void setState(final boolean state) {
 
         this.enabled = true;
         this.state = state;
 
-        if (state) {
-            Log.d(TAG, "State is ON");
-            imageView.setImageResource(R.drawable.green_button);
-        } else {
-            Log.d(TAG, "State is OFF");
-            imageView.setImageResource(R.drawable.red_button);
-        }
+        activityContext.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (state) {
+                    Log.d(TAG, "State is ON");
+                    imageView.setImageResource(R.drawable.green_button);
+                } else {
+                    Log.d(TAG, "State is OFF");
+                    imageView.setImageResource(R.drawable.red_button);
+                }
+            }
+        });
     }
 
     public ByteBuffer getState() {
@@ -93,6 +111,10 @@ public class ArduinoButton {
                 socket.close();
             } catch (IOException ignored) {}
         }
+    }
+
+    public boolean isConnected() {
+        return (socket != null) && socket.isConnected();
     }
 
     public void readRemoteState() {
@@ -142,7 +164,7 @@ public class ArduinoButton {
             String responseChar = String.valueOf(new char[]{(char) byteBuffer.get()});
             Log.d(TAG, "Response from bluetooth device '" + this + " ', '" + responseChar + "'.");
             try {
-                state = Integer.valueOf(responseChar) > 0;
+                setState(Integer.valueOf(responseChar) > 0);
             } catch (NumberFormatException nex) {
                 Log.d(TAG, "Invalid response from bluetooth device: '" + this + "'.");
                 disconnect();
@@ -154,7 +176,7 @@ public class ArduinoButton {
 
         try {
             if (socket == null || !socket.isConnected()) {
-                publishProgress(getString(R.string.opening_bluetooth_socket));
+                BusProvider.getInstance().post(new ArduinoButtonInformationEvent(activityContext.getString(R.string.opening_bluetooth_socket), this));
                 socket = createConnectionToBluetoothDevice(BluetoothAdapter.getDefaultAdapter(), device);
             }
 
@@ -168,7 +190,7 @@ public class ArduinoButton {
             }
         } catch (IOException connectException) {
             // Unable to connect; close the socket and get out
-            publishProgress(getString(R.string.transmission_failure));
+            BusProvider.getInstance().post(new ArduinoButtonInformationEvent(activityContext.getString(R.string.transmission_failure), this));
             Log.d(TAG, "Socket connect exception!", connectException);
             if (socket != null) {
                 try { socket.close(); } catch (IOException ignored) {}
@@ -207,12 +229,16 @@ public class ArduinoButton {
             }
 
             if (connectException.getMessage().contains("Bluetooth is off")) {
-                onResume();
+                BusProvider.getInstance().post(new ArduinoButtonBluetoothDisabledEvent());
             }
 
             bluetoothSocket = null;
         }
 
         return bluetoothSocket;
+    }
+
+    public String getButtonId() {
+        return buttonId;
     }
 }
