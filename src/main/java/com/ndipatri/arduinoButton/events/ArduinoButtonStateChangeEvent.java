@@ -1,15 +1,13 @@
 package com.ndipatri.arduinoButton.events;
 
-import com.ndipatri.arduinoButton.activity.ArduinoButton;
-
 /**
  * Created by ndipatri on 1/1/14.
  */
 public class ArduinoButtonStateChangeEvent {
 
-    public ArduinoButton arduinoButton;
+    public String buttonId;
 
-    public ArduinoButtonStateChangeEvent(ArduinoButton arduinoButton) {
-        this.arduinoButton = arduinoButton;
+    public ArduinoButtonStateChangeEvent(String buttonId) {
+        this.buttonId = buttonId;
     }
 }

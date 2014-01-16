@@ -3,7 +3,6 @@ package com.ndipatri.arduinoButton.activity;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,7 +13,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
@@ -33,6 +31,8 @@ import java.util.Set;
 import butterknife.InjectView;
 import butterknife.Views;
 
+// This class coordinates all BT communications from its various ArduinoButtonFragments.  This class
+// schedules and provides thread resources for the querying and setting of button state.
 public class MainControllerActivity extends Activity {
 
     private static final int REQUEST_ENABLE_BT = 1;
@@ -43,19 +43,18 @@ public class MainControllerActivity extends Activity {
 
     private static final String TAG = MainControllerActivity.class.getCanonicalName();
 
-    // This ensures that we are periodically querying the remote state and discovery of bluetooth buttons.
-    private Handler buttonQueryHandler = null;
-    private Runnable buttonQueryRunnable = null;
     long queryStateIntervalMillis = -1;
     long buttonDiscoveryIntervalMillis = -1;
 
-    // Handler which passes outgoing bluetooth messages background thread to be processed.
+    // Handler which uses background thread to handle BT communications
     private MessageHandler bluetoothMessageHandler;
 
     private boolean shouldRun = false;
 
-    private Map<String, ArduinoButton> arduinoButtonMap = new HashMap<String, ArduinoButton>();
+    // Set of all ArduinoButtons that are currently rendered into ArduinoButtonFragments
+    private Set<String> arduinoButtonSet = new HashSet<String>();
 
+    // The main ViewGroup to which all ArduinoButtonFragments are added.
     protected @InjectView(R.id.mainViewGroup) ViewGroup mainViewGroup;
 
     @Override
@@ -75,7 +74,6 @@ public class MainControllerActivity extends Activity {
 
         // Periodically query remote state...
         queryStateIntervalMillis = getResources().getInteger(R.integer.remote_state_check_interval_millis);
-        buttonQueryHandler = new Handler(getMainLooper());
 
         buttonDiscoveryIntervalMillis = getResources().getInteger(R.integer.button_discovery_interval_millis);
     }
@@ -117,7 +115,6 @@ public class MainControllerActivity extends Activity {
 
         BusProvider.getInstance().unregister(this);
 
-        buttonQueryHandler.removeCallbacks(buttonQueryRunnable);
         bluetoothMessageHandler.removeMessages(QUERY_STATE_MESSAGE);
         bluetoothMessageHandler.removeMessages(SET_STATE_MESSAGE);
 
@@ -137,29 +134,11 @@ public class MainControllerActivity extends Activity {
     }
 
     private void scheduleQueryStateMessage() {
-        buttonQueryHandler.postDelayed(new QueueQueryStateRunnable(), queryStateIntervalMillis);
+        bluetoothMessageHandler.queueQueryStateRequest();
     }
 
     private void scheduleButtonDiscoveryMessage() {
-        buttonQueryHandler.postDelayed(new ButtonDiscoveryRunnable(), queryStateIntervalMillis);
-    }
-
-    private class QueueQueryStateRunnable implements Runnable {
-        @Override
-        public void run() {
-            if (shouldRun) {
-                bluetoothMessageHandler.queueQueryStateRequest();
-            }
-        }
-    }
-
-    private class ButtonDiscoveryRunnable implements Runnable {
-        @Override
-        public void run() {
-            if (shouldRun) {
-                bluetoothMessageHandler.queueDiscoverButtonRequest();
-            }
-        }
+        bluetoothMessageHandler.queueDiscoverButtonRequest();
     }
 
     // Hands outgoing bluetooth messages to background thread.
@@ -173,14 +152,14 @@ public class MainControllerActivity extends Activity {
 
             // We only queue a query request if NO requests are already pending...
             if (!hasMessages(SET_STATE_MESSAGE) &&
-                !hasMessages(QUERY_STATE_MESSAGE)) {
+                    !hasMessages(QUERY_STATE_MESSAGE)) {
 
                 // Queue a QueryState Message
                 Message rawMessage = obtainMessage();
                 rawMessage.what = QUERY_STATE_MESSAGE;
 
                 // To be handled by separate thread.
-                sendMessage(rawMessage);
+                sendMessageDelayed(rawMessage, queryStateIntervalMillis);
             }
         }
 
@@ -190,25 +169,25 @@ public class MainControllerActivity extends Activity {
             rawMessage.what = DISCOVER_BUTTON_DEVICES;
 
             // To be handled by separate thread.
-            sendMessage(rawMessage);
+            sendMessageDelayed(rawMessage, buttonDiscoveryIntervalMillis);
         }
 
-        public void queueSetStateRequest(ArduinoButton arduinoButton) {
+        public void queueSetStateRequest(String buttonId) {
 
             // If a set request is already pending, do nothing.
-            if (!bluetoothMessageHandler.hasMessages(SET_STATE_MESSAGE)) {
+            if (!hasMessages(SET_STATE_MESSAGE)) {
 
                 // A set request pre-empts any pending query request
-                bluetoothMessageHandler.removeMessages(QUERY_STATE_MESSAGE);
+                removeMessages(QUERY_STATE_MESSAGE);
 
-                Message rawMessage = bluetoothMessageHandler.obtainMessage();
+                Message rawMessage = obtainMessage();
                 rawMessage.what = SET_STATE_MESSAGE;
                 Bundle bundle = new Bundle();
-                bundle.putString("buttonId", arduinoButton.getButtonId());
+                bundle.putString("buttonId", buttonId);
                 rawMessage.setData(bundle);
 
                 // To be handled by separate thread.
-                bluetoothMessageHandler.sendMessage(rawMessage);
+                sendMessage(rawMessage);
             }
         }
 
@@ -238,7 +217,13 @@ public class MainControllerActivity extends Activity {
                 case DISCOVER_BUTTON_DEVICES:
 
                     if (shouldRun) {
-                        discoverButtonDevices();
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                discoverButtonDevices();
+                            }
+                        });
                     }
 
                     break;
@@ -257,10 +242,13 @@ public class MainControllerActivity extends Activity {
 
     private synchronized void queryRemoteState() {
 
-        for (final ArduinoButton arduinoButton : arduinoButtonMap.values()) {
+        for (final String buttonId : arduinoButtonSet) {
 
             Log.d(TAG, "queryRemoteState()");
-            arduinoButton.readRemoteState();
+            ArduinoButtonFragment arduinoButtonFragment = lookupButtonFragment(buttonId);
+            if (arduinoButtonFragment != null) {
+                arduinoButtonFragment.readRemoteState();
+            }
         }
 
         scheduleQueryStateMessage();
@@ -268,14 +256,20 @@ public class MainControllerActivity extends Activity {
 
     private synchronized void setRemoteState(String buttonId) {
 
-        ArduinoButton arduinoButton = arduinoButtonMap.get(buttonId);
-        try {
-            arduinoButton.setRemoteState();
-        } catch (Exception ex) {
-            publishProgress(getString(R.string.transmission_failure));
+        Log.d(TAG, "setRemoteState()");
+        ArduinoButtonFragment arduinoButtonFragment = lookupButtonFragment(buttonId);
+        if (arduinoButtonFragment != null) {
+            try {
+                arduinoButtonFragment.setRemoteState();
+            } catch (Exception ex) {
+                publishProgress(getString(R.string.transmission_failure));
+            }
         }
     }
 
+    // This MUST be run on UI thread as it uses FragmentManager heavily.
+    // This deals with adding/removing buttons based on which bluetooth devices are 'bonded' (paired).  No BT
+    // communications is done here..... So this should be called from UI thread.
     private synchronized void discoverButtonDevices() {
 
         Map<String, BluetoothDevice> foundButtonIdToDeviceMap = new HashMap<String, BluetoothDevice>();
@@ -294,67 +288,70 @@ public class MainControllerActivity extends Activity {
         }
 
         // To keep track of buttons that have gone missing.
-        Set<String> lostButtonSet = new HashSet<String>(arduinoButtonMap.keySet());
+        Set<String> lostButtonSet = new HashSet<String>(arduinoButtonSet);
 
-        Map<String, ArduinoButton> combinedButtonMap = new HashMap<String, ArduinoButton>();
+        Set<String> newAndExistingButtonIdSet = new HashSet<String>();
 
-        for (String foundButtonId : foundButtonIdToDeviceMap.keySet()) {
-            if (arduinoButtonMap.containsKey(foundButtonId)) {
+        for (final String foundButtonId : foundButtonIdToDeviceMap.keySet()) {
+
+            newAndExistingButtonIdSet.add(foundButtonId);
+
+            if (arduinoButtonSet.contains(foundButtonId)) {
 
                 // Existing button!
-                final ArduinoButton existingButton = arduinoButtonMap.get(foundButtonId);
-                if (existingButton.isConnected()) {
-
-                    if (existingButton.getRootViewGroup().getParent() == null) {
-                        // This button isn't visible yet!
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mainViewGroup.addView(existingButton.getRootViewGroup());
-                            }
-                        });
-                    }
+                final ArduinoButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
+                if (existingButtonFragment != null && existingButtonFragment.isConnected()) {
 
                     // this is not a lost button
                     lostButtonSet.remove(foundButtonId);
-
-                    // Preserve existing buttons
-                    combinedButtonMap.put(foundButtonId, arduinoButtonMap.get(foundButtonId));
                 }
             } else {
-                final ArduinoButton newArduinoButton = new ArduinoButton(this, foundButtonId, foundButtonId, foundButtonIdToDeviceMap.get(foundButtonId)); // NJD TODO - need to prompt user to name each
-                combinedButtonMap.put(foundButtonId, newArduinoButton);
+                // new button!
+                final ArduinoButtonFragment newArduinoButtonFragment = ArduinoButtonFragment.newInstance(foundButtonId, foundButtonId, foundButtonIdToDeviceMap.get(foundButtonId)); // NJD TODO - need to prompt user to name each
+                getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newArduinoButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
             }
         }
 
         // remove and disconnect all lost buttons
         for (String lostButtonId : lostButtonSet) {
             Log.d(TAG, "Forgetting lost button '" + lostButtonId + "'.");
-            forgetArduinoButton(arduinoButtonMap.get(lostButtonId));
+            forgetArduinoButton(lostButtonId);
         }
 
-        arduinoButtonMap = combinedButtonMap;
+        arduinoButtonSet = newAndExistingButtonIdSet;
 
         scheduleButtonDiscoveryMessage();
     }
 
+    private ArduinoButtonFragment lookupButtonFragment(String buttonId) {
+        return (ArduinoButtonFragment) getFragmentManager().findFragmentByTag(getButtonFragmentTag(buttonId));
+    }
+
+    private String getButtonFragmentTag(String buttonId) {
+        return "button_" + buttonId;
+    }
+
     private synchronized void forgetAllArduinoButtons() {
-        for (ArduinoButton button : arduinoButtonMap.values()) {
-            forgetArduinoButton(button);
+        for (String buttonId : arduinoButtonSet) {
+            forgetArduinoButton(buttonId);
         }
     }
 
-    private synchronized void forgetArduinoButton(final ArduinoButton arduinoButton) {
+    private synchronized void forgetArduinoButton(final String lostButtonId) {
 
-        arduinoButton.disconnect();
-        arduinoButtonMap.remove(arduinoButton.getButtonId());
+        final ArduinoButtonFragment arduinoButtonFragment = lookupButtonFragment(lostButtonId);
+        if (arduinoButtonFragment != null) {
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mainViewGroup.removeView(arduinoButton.getRootViewGroup());
-            }
-        });
+            arduinoButtonFragment.disconnect();
+            arduinoButtonSet.remove(lostButtonId);
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    getFragmentManager().beginTransaction().remove(arduinoButtonFragment).commitAllowingStateLoss();
+                }
+            });
+        }
     }
 
     @Override
@@ -383,12 +380,12 @@ public class MainControllerActivity extends Activity {
     public void onArduinoButtonStateChange(ArduinoButtonStateChangeEvent arduinoButtonStateChangeEvent) {
         Log.d(TAG, "State change detected for button '" + arduinoButtonStateChangeEvent + "'.");
 
-        bluetoothMessageHandler.queueSetStateRequest(arduinoButtonStateChangeEvent.arduinoButton);
+        bluetoothMessageHandler.queueSetStateRequest(arduinoButtonStateChangeEvent.buttonId);
     }
 
     @Subscribe
     public void onArduinoButtonInformation(ArduinoButtonInformationEvent arduinoButtonInformationEvent) {
-        Log.d(TAG, "Information received detected for button '" + arduinoButtonInformationEvent.arduinoButton + "'.");
+        Log.d(TAG, "Information received detected for button '" + arduinoButtonInformationEvent.buttonId + "(" + arduinoButtonInformationEvent.buttonDescription + ")'.");
 
         publishProgress(arduinoButtonInformationEvent.message);
     }
