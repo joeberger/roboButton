@@ -9,7 +9,7 @@ int bluetoothRx = 3;  // RX-I pin of bluetooth mate, Arduino D3
 
 SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 
-int localState = 1; // default state value
+int localState = 0; // default state value
 
 String inputBuffer = "";
 
@@ -159,3 +159,4 @@ void debounceAndProcessSwitch()
     
      previousSwitchReading = switchReading; 
 }
+
