@@ -1,4 +1,4 @@
-package com.ndipatri.arduinoButton.activity;
+package com.ndipatri.arduinoButton.fragments;
 
 import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
@@ -150,6 +150,17 @@ public class ArduinoButtonFragment extends Fragment {
                     Log.d(TAG, "Button Pressed!");
                     toggleButtonState();
                 }
+            }
+        });
+
+        rootView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                ButtonDetailsDialogFragment dialog = ButtonDetailsDialogFragment.newInstance(getButtonId());
+                dialog.show(getFragmentManager().beginTransaction(), "button details dialog");
+
+                return false;
             }
         });
 

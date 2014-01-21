@@ -11,4 +11,5 @@
     <string name="transmission_success">Transmission Success</string>
     <string name="forget_all_buttons">Forget All Buttons</string>
     <string name="button_discovery_pattern">FireFly-</string>
+    <string name="configure_button">Configure Button</string>
 </resources>

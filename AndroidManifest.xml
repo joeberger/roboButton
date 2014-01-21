@@ -17,7 +17,7 @@
             android:label="Arduino Button">
 
         <activity
-                android:name=".activity.MainControllerActivity"
+                android:name=".activities.MainControllerActivity"
                 android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

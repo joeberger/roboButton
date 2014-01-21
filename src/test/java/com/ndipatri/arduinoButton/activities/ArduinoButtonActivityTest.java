@@ -1,4 +1,4 @@
-package com.ndipatri.arduinoButton.activity;
+package com.ndipatri.arduinoButton.activities;
 
 import android.app.Activity;
 

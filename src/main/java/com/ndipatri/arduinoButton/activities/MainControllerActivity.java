@@ -1,4 +1,4 @@
-package com.ndipatri.arduinoButton.activity;
+package com.ndipatri.arduinoButton.activities;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.events.ArduinoButtonBluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
+import com.ndipatri.arduinoButton.fragments.ArduinoButtonFragment;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
