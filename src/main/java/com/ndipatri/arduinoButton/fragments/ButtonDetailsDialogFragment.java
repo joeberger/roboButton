@@ -9,11 +9,21 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 import com.ndipatri.arduinoButton.R;
 
+import butterknife.InjectView;
+import butterknife.Views;
+
 public class ButtonDetailsDialogFragment extends DialogFragment {
+
+    private Animation shrinkAnimation = null;
+
+    // ButterKnife Injected Views
+    protected @InjectView(R.id.overlayImageButton) android.widget.ImageButton overlayImageButton;
 
     public static ButtonDetailsDialogFragment newInstance(String buttonId) {
 
@@ -29,6 +39,8 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
+        shrinkAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.button_shrink);
+
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         String dialogTitle = getResources().getString(R.string.configure_button);
@@ -39,8 +51,11 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
         View dialogView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_button_details, null);
 
+        // Use ButterKnife for view injection (http://jakewharton.github.io/butterknife/)
+        Views.inject(this, dialogView);
+
         builder.setTitle(dialogTitle)
-                .setCustomTitle(titleView)
+                //.setCustomTitle(titleView)
                 .setView(dialogView)
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
@@ -59,7 +74,19 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
         dialog.getWindow().getAttributes().windowAnimations = R.style.slideup_dialog_animation;
         dialog.setCanceledOnTouchOutside(false);
+
+        setupViews();
+
         return dialog;
+    }
+
+    private void setupViews() {
+        overlayImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                overlayImageButton.startAnimation(shrinkAnimation);
+            }
+        });
     }
 
     private synchronized String getButtonId() {

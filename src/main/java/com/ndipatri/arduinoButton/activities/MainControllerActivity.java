@@ -88,7 +88,7 @@ public class MainControllerActivity extends Activity {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             } else {
-                scheduleButtonDiscoveryMessage();
+                scheduleImmediateButtonDiscoveryMessage();
             }
         }
     }
@@ -116,8 +116,12 @@ public class MainControllerActivity extends Activity {
         }
     }
 
+    private void scheduleImmediateButtonDiscoveryMessage() {
+        bluetoothMessageHandler.queueDiscoverButtonRequest(0);
+    }
+
     private void scheduleButtonDiscoveryMessage() {
-        bluetoothMessageHandler.queueDiscoverButtonRequest();
+        bluetoothMessageHandler.queueDiscoverButtonRequest(buttonDiscoveryIntervalMillis);
     }
 
     // Hands outgoing bluetooth messages to background thread.
@@ -127,13 +131,13 @@ public class MainControllerActivity extends Activity {
             super(looper);
         }
 
-        public void queueDiscoverButtonRequest() {
+        public void queueDiscoverButtonRequest(final long offsetMillis) {
 
             Message rawMessage = obtainMessage();
             rawMessage.what = DISCOVER_BUTTON_DEVICES;
 
             // To be handled by separate thread.
-            sendMessageDelayed(rawMessage, buttonDiscoveryIntervalMillis);
+            sendMessageDelayed(rawMessage, offsetMillis);
         }
 
         @Override
@@ -152,18 +156,8 @@ public class MainControllerActivity extends Activity {
         }
     }
 
-    private void publishProgress(final String progressString)  {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(MainControllerActivity.this, progressString, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    // This MUST be run on UI thread as it uses FragmentManager heavily.
     // This deals with adding/removing buttons based on which bluetooth devices are 'bonded' (paired).  No BT
-    // communications is done here..... So this should be called from UI thread.
+    // communications is done here.
     private synchronized void discoverButtonDevices() {
 
         Map<String, BluetoothDevice> foundButtonIdToDeviceMap = new HashMap<String, BluetoothDevice>();
@@ -223,6 +217,15 @@ public class MainControllerActivity extends Activity {
         arduinoButtonSet = newAndExistingButtonIdSet;
 
         scheduleButtonDiscoveryMessage();
+    }
+
+    private void publishProgress(final String progressString)  {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(MainControllerActivity.this, progressString, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private ArduinoButtonFragment lookupButtonFragment(String buttonId) {

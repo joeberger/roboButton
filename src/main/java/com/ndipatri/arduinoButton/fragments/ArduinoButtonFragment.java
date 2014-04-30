@@ -183,11 +183,15 @@ public class ArduinoButtonFragment extends Fragment {
 
         shouldRun = true;
 
-        scheduleQueryStateMessage();
+        scheduleImmediateQueryStateMessage();
+    }
+
+    private void scheduleImmediateQueryStateMessage() {
+        bluetoothMessageHandler.queueQueryStateRequest(0);
     }
 
     private void scheduleQueryStateMessage() {
-        bluetoothMessageHandler.queueQueryStateRequest();
+        bluetoothMessageHandler.queueQueryStateRequest(queryStateIntervalMillis);
     }
 
     // Hands outgoing bluetooth messages to background thread.
@@ -197,7 +201,7 @@ public class ArduinoButtonFragment extends Fragment {
             super(looper);
         }
 
-        public void queueQueryStateRequest() {
+        public void queueQueryStateRequest(final long offsetMillis) {
 
             // We only queue a query request if NO requests are already pending...
             if (!hasMessages(SET_STATE_MESSAGE) &&
@@ -208,7 +212,7 @@ public class ArduinoButtonFragment extends Fragment {
                 rawMessage.what = QUERY_STATE_MESSAGE;
 
                 // To be handled by separate thread.
-                sendMessageDelayed(rawMessage, queryStateIntervalMillis);
+                sendMessageDelayed(rawMessage, offsetMillis);
             }
         }
 
