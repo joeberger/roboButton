@@ -8,12 +8,18 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.database.ButtonProvider;
+import com.ndipatri.arduinoButton.models.Button;
 
 import butterknife.InjectView;
 import butterknife.Views;
@@ -23,7 +29,15 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     private Animation shrinkAnimation = null;
 
     // ButterKnife Injected Views
-    protected @InjectView(R.id.overlayImageButton) android.widget.ImageButton overlayImageButton;
+    protected @InjectView(R.id.nameEditText) EditText nameEditText;
+    protected @InjectView(R.id.autoModeSwitch) Switch autoModeSwitch;
+    protected @InjectView(R.id.overlayImageButton) ImageButton overlayImageButton;
+
+    // NJD TODO - Should use Dagger for this to be cool.
+    protected ButtonProvider buttonProvider = new ButtonProvider();
+
+    // Need to integrate this with view..
+    protected String iconFileNameString = "";
 
     public static ButtonDetailsDialogFragment newInstance(String buttonId) {
 
@@ -40,6 +54,25 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         shrinkAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.button_shrink);
+        shrinkAnimation.setAnimationListener(new Animation.AnimationListener() {
+                                                 @Override
+                                                 public void onAnimationStart(Animation animation) {
+
+                                                 }
+
+                                                 @Override
+                                                 public void onAnimationEnd(Animation animation) {
+                                                     // NJD TODO - Need to launch 'Select Image' intent
+                                                     // and then handle returned information by assinging
+                                                     // it to 'iconFileNameString' or something...
+
+                                                 }
+
+                                                 @Override
+                                                 public void onAnimationRepeat(Animation animation) {
+
+                                                 }
+                                             });
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
@@ -66,7 +99,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        // NJD TODO - Save New Button Settings
+                        buttonProvider.createOrUpdateButton(getActivity(), new Button(getButtonId(), nameEditText.getText().toString(), autoModeSwitch.isChecked(), iconFileNameString));
                     }
                 });
 
@@ -81,12 +114,34 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     }
 
     private void setupViews() {
-        overlayImageButton.setOnClickListener(new View.OnClickListener() {
+
+        populateViewsWithExistingData();
+
+        overlayImageButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View v) {
-                overlayImageButton.startAnimation(shrinkAnimation);
+            public boolean onTouch(View v, MotionEvent event) {
+
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    overlayImageButton.startAnimation(shrinkAnimation);
+                    return true;
+                } else
+                {
+                    return false;
+                }
             }
         });
+    }
+
+    protected void populateViewsWithExistingData() {
+
+        Button existingButton = buttonProvider.getButton(getActivity(), getButtonId());
+        if (existingButton != null) {
+            nameEditText.setText(existingButton.getName());
+            autoModeSwitch.setChecked(existingButton.isAutoModeEnabled());
+
+            iconFileNameString = existingButton.getIconFileName();
+            // NJD TODO - Need to retrieve image from file name and populate the overlayImageButton view
+        }
     }
 
     private synchronized String getButtonId() {

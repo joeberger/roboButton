@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.database.ButtonProvider;
 import com.ndipatri.arduinoButton.events.ArduinoButtonBluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
 import com.ndipatri.arduinoButton.fragments.ArduinoButtonFragment;

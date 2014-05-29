@@ -8,20 +8,20 @@
               android:layout_height="wrap_content">
 
     <EditText
-            android:id="@+id/nameEditText"
+        android:id="@+id/nameEditText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:inputType="textPersonName"
-            android:text="Button Name"
+            android:hint="Button Name"
             android:ems="10"
             android:layout_gravity="left|center_vertical"
             android:layout_margin="20dp"/>
 
     <Switch
+        android:id="@+id/autoModeSwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Auto Mode"
-            android:id="@+id/switch1"
             android:layout_gravity="center"
             android:checked="false"
             android:layout_margin="20dp"/>
@@ -30,6 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginBottom="20dp"
             android:background="@drawable/grey_gradiant_box">
 
         <ImageButton
