@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -17,9 +18,10 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.ndipatri.arduinoButton.R;
-import com.ndipatri.arduinoButton.database.ButtonProvider;
 import com.ndipatri.arduinoButton.events.ArduinoButtonBluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
+import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
+import com.ndipatri.arduinoButton.events.ButtonImageResponseEvent;
 import com.ndipatri.arduinoButton.fragments.ArduinoButtonFragment;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -28,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import butterknife.InjectView;
 import butterknife.Views;
@@ -36,8 +39,12 @@ import butterknife.Views;
 // schedules and provides thread resources for the querying and setting of button state.
 public class MainControllerActivity extends Activity {
 
-    private static final int REQUEST_ENABLE_BT = 1;
-    private static final int DISCOVER_BUTTON_DEVICES = 1;
+    private AtomicInteger imageRequestIdGenerator = new AtomicInteger();
+
+    protected HashMap<Integer, String> pendingImageRequestMap = new HashMap<Integer, String>();
+
+    private static final int REQUEST_ENABLE_BT = -101;
+    private static final int DISCOVER_BUTTON_DEVICES = -102;
 
     private static final String TAG = MainControllerActivity.class.getCanonicalName();
 
@@ -105,14 +112,29 @@ public class MainControllerActivity extends Activity {
         forgetAllArduinoButtons();
     }
 
+    public void chooseImage(String requestingButtonId) {
+        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+        photoPickerIntent.setType("image/*");
+
+        startActivityForResult(photoPickerIntent, getNextImageRequestId(requestingButtonId));
+    }
+
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent returnedIntent) {
+
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_OK) {
                 scheduleButtonDiscoveryMessage();
             } else {
                 Toast.makeText(this, "This application cannot run without Bluetooth enabled!", Toast.LENGTH_SHORT).show();
                 finish();
+            }
+        } else {
+            String requestingButtonId = getButtonForRequestId(new Integer(requestCode));
+            if (requestingButtonId != null && resultCode == RESULT_OK) {
+
+                Uri selectedImage = returnedIntent.getData();
+                BusProvider.getInstance().post(new ButtonImageResponseEvent(requestingButtonId, selectedImage));
             }
         }
     }
@@ -294,5 +316,25 @@ public class MainControllerActivity extends Activity {
         Log.d(TAG, "Bluetooth disabled!");
 
         onResume();
+    }
+
+    @Subscribe
+    public void onButtonImageRequestEvent(ButtonImageRequestEvent request) {
+        chooseImage(request.buttonId);
+    }
+
+    protected synchronized Integer getNextImageRequestId(String buttonId) {
+        Integer nextImageRequestId = imageRequestIdGenerator.incrementAndGet();
+        pendingImageRequestMap.put(nextImageRequestId, buttonId);
+
+        return nextImageRequestId;
+    }
+
+    protected synchronized String getButtonForRequestId(Integer imageRequestId) {
+        return pendingImageRequestMap.get(imageRequestId);
+    }
+
+    protected synchronized  void finishedRequest(Integer imageRequestId) {
+        pendingImageRequestMap.remove(imageRequestId);
     }
 }
