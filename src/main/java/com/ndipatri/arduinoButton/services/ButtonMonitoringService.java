@@ -27,11 +27,17 @@ public class ButtonMonitoringService extends Service {
 
     public static final String TAG = ButtonMonitoringService.class.getCanonicalName();
 
+    public static final String SLEEP_STATE_TIME_MULTIPLIER = "timeMultiplier";
+
     private static final int DISCOVER_BUTTON_DEVICES = -102;
 
-    long buttonDiscoveryIntervalMillis = -1;
+    // region localVars
 
-    long communicationsGracePeriodMillis = -1;
+    protected long buttonDiscoveryIntervalMillis = -1;
+
+    protected long communicationsGracePeriodMillis = -1;
+
+    protected int timeMultiplier = 1;
 
     // Handler which uses background thread to handle BT communications
     private MessageHandler bluetoothMessageHandler;
@@ -43,6 +49,8 @@ public class ButtonMonitoringService extends Service {
 
     // Keeping track of last time a monitor checked in with a status (to detect blocked reads)
     HashMap<String, Long> buttonToLastCommunicationsTimeMap = new HashMap<String, Long>();
+
+    //endregion
 
     public IBinder onBind(Intent intent) {
         return null;
@@ -69,6 +77,16 @@ public class ButtonMonitoringService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        int newTimeMultiplier = intent.getIntExtra(SLEEP_STATE_TIME_MULTIPLIER, 1);
+        Log.d(TAG, "onStartCommand() with timeMultiplier '" + newTimeMultiplier + "'.");
+
+        if (newTimeMultiplier != timeMultiplier) {
+            timeMultiplier = newTimeMultiplier;
+            for (final ButtonMonitor buttonMonitor : currentButtonMap.values()) {
+                buttonMonitor.setTimeMultiplier(timeMultiplier);
+            }
+        }
 
         if (!running) {
 

@@ -3,4 +3,5 @@
     <integer name="remote_state_check_interval_millis">1000</integer>
     <integer name="button_discovery_interval_millis">4000</integer>
     <integer name="communications_grace_period_millis">10000</integer>
+    <integer name="background_time_multiplier">5</integer>
 </resources>

@@ -27,6 +27,7 @@ public class ButtonMonitor {
 
     private static final String TAG = ButtonMonitor.class.getCanonicalName();
 
+    // region localArgs
     private BluetoothSocket socket = null;
 
     private static final int QUERY_STATE_MESSAGE = 0;
@@ -35,7 +36,9 @@ public class ButtonMonitor {
     // Handler which uses background thread to handle BT communications
     private MessageHandler bluetoothMessageHandler;
 
-    long queryStateIntervalMillis = -1;
+    protected long queryStateIntervalMillis = -1;
+
+    protected int timeMultiplier = 1;
 
     private boolean shouldRun = false;
 
@@ -46,6 +49,8 @@ public class ButtonMonitor {
     private BluetoothDevice bluetoothDevice;
 
     private Context context;
+
+    // endregion
 
     public ButtonMonitor(final Context context, final BluetoothDevice bluetoothDevice) {
 
@@ -121,7 +126,7 @@ public class ButtonMonitor {
     }
 
     private void scheduleQueryStateMessage() {
-        bluetoothMessageHandler.queueQueryStateRequest(queryStateIntervalMillis);
+        bluetoothMessageHandler.queueQueryStateRequest(getQueryStateIntervalMillis());
     }
 
     // Hands outgoing bluetooth messages to background thread.
@@ -369,4 +374,13 @@ public class ButtonMonitor {
         this.buttonState = event.requestedButtonState;
         bluetoothMessageHandler.queueSetStateRequest();
     }
+
+    public synchronized long getQueryStateIntervalMillis() {
+        return queryStateIntervalMillis * timeMultiplier;
+    }
+
+    public synchronized void setTimeMultiplier(int timeMultiplier) {
+        this.timeMultiplier = timeMultiplier;
+    }
 }
+
