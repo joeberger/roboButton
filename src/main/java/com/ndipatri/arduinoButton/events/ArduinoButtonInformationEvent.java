@@ -6,12 +6,10 @@ package com.ndipatri.arduinoButton.events;
 public class ArduinoButtonInformationEvent {
 
     public String message;
-    public String buttonDescription;
     public String buttonId;
 
-    public ArduinoButtonInformationEvent(String message, String buttonDescription, String buttonId) {
+    public ArduinoButtonInformationEvent(String message, String buttonId) {
         this.message = message;
-        this.buttonDescription = buttonDescription;
         this.buttonId = buttonId;
     }
 }
