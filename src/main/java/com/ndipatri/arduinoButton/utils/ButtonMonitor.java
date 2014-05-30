@@ -75,11 +75,25 @@ public class ButtonMonitor {
     public void start() {
         shouldRun = true;
 
+        new Handler(context.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                BusProvider.getInstance().register(ButtonMonitor.this);
+            }
+        });
+
         scheduleImmediateQueryStateMessage();
     }
 
     public void stop() {
         shouldRun = false;
+
+        new Handler(context.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                BusProvider.getInstance().unregister(ButtonMonitor.this);
+            }
+        });
 
         bluetoothMessageHandler.removeMessages(QUERY_STATE_MESSAGE);
         bluetoothMessageHandler.removeMessages(SET_STATE_MESSAGE);
@@ -100,12 +114,6 @@ public class ButtonMonitor {
                 BusProvider.getInstance().post(new ArduinoButtonStateChangeReportEvent(getButtonId(), buttonState));
             }
         });
-    }
-
-    @Subscribe
-    protected void onArduinoButtonStateChangeRequestEvent(final ArduinoButtonStateChangeRequestEvent event) {
-        this.buttonState = event.requestedButtonState;
-        bluetoothMessageHandler.queueSetStateRequest();
     }
 
     private void scheduleImmediateQueryStateMessage() {
@@ -203,12 +211,14 @@ public class ButtonMonitor {
 
         return byteBuffer;
     }
+
     public void disconnect() {
         if (socket != null) {
             Log.d(TAG, "Shutting down Bluetooth Socket for Button('" + getButtonId() + "').");
             try {
                 socket.close();
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
 
             setLocalButtonState(ButtonState.DISCONNECTED);
         }
@@ -229,15 +239,16 @@ public class ButtonMonitor {
                 // Tell Arduino to send us StateReport
                 OutputStream outputStream = socket.getOutputStream();
                 outputStream.write(new byte[]{0x51, 0x51, 0x51}); // 'QQQ'
+
                 Log.d(TAG, "StateRequestUpdate sent! Waiting for reply...");
 
                 // For now, assume one byte state response...
                 final byte[] remoteStateBytes = new byte[1];
 
-                // NJD TODO - Need watchdog thread on these blocking calls (so we can call socket.close() if need be)
                 final int bytesRead = socket.getInputStream().read(remoteStateBytes);
 
                 if (bytesRead != 1) {
+                    Log.d(TAG, "Reply received.. but not right length!");
                     disconnect();
 
                     return;
@@ -250,13 +261,18 @@ public class ButtonMonitor {
                 Log.d(TAG, "Cannot create bluetooth socket!");
             }
 
-        } catch (IOException connectException) {
+        } catch (IOException connectException)
+        {
             // Unable to connect; close the socket and get out
             Log.d(TAG, "Socket connect exception!", connectException);
-            try { socket.close(); } catch (IOException ignored) {}
+            try {
+                socket.close();
+            } catch (IOException ignored) {
+            }
         }
 
-        if (byteBuffer.hasRemaining()) {
+        if (byteBuffer.hasRemaining())
+        {
             String responseChar = String.valueOf(new char[]{(char) byteBuffer.get()});
             Log.d(TAG, "Response from bluetooth device '" + this + " ', '" + responseChar + "'.");
             try {
@@ -267,6 +283,7 @@ public class ButtonMonitor {
                 disconnect();
             }
         }
+
     }
 
     public void setRemoteState() {
@@ -290,7 +307,10 @@ public class ButtonMonitor {
             BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), getButtonId()));
             Log.d(TAG, "Socket connect exception!", connectException);
             if (socket != null) {
-                try { socket.close(); } catch (IOException ignored) {}
+                try {
+                    socket.close();
+                } catch (IOException ignored) {
+                }
             }
         }
     }
@@ -302,10 +322,12 @@ public class ButtonMonitor {
 
         try {
             Log.d(TAG, "Creating Bluetooth Socket ...");
-            bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
 
             // Cancel discovery because it will slow down the connection
             bluetoothAdapter.cancelDiscovery();
+
+            bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
+            //bluetoothSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
 
             // Connect the device through the socket. This will block
             // until it succeeds or throws an exception
@@ -318,7 +340,10 @@ public class ButtonMonitor {
 
             Log.e(TAG, "Failed with Exception!", connectException);
             if (bluetoothSocket != null) {
-                try { bluetoothSocket.close(); } catch (IOException ignored) { }
+                try {
+                    bluetoothSocket.close();
+                } catch (IOException ignored) {
+                }
             }
 
             if (connectException.getMessage().contains("Bluetooth is off")) {
@@ -337,5 +362,11 @@ public class ButtonMonitor {
 
     public BluetoothDevice getBluetoothDevice() {
         return bluetoothDevice;
+    }
+
+    @Subscribe
+    public void onArduinoButtonStateChangeRequestEvent(final ArduinoButtonStateChangeRequestEvent event) {
+        this.buttonState = event.requestedButtonState;
+        bluetoothMessageHandler.queueSetStateRequest();
     }
 }

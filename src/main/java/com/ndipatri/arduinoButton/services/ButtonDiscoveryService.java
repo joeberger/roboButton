@@ -12,19 +12,17 @@ import android.os.Message;
 import android.util.Log;
 
 import com.ndipatri.arduinoButton.R;
-import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
+import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeReportEvent;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.ndipatri.arduinoButton.utils.ButtonMonitor;
+import com.squareup.otto.Subscribe;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Created by ndipatri on 5/29/14.
- */
 public class ButtonDiscoveryService extends Service {
 
     public static final String TAG = ButtonDiscoveryService.class.getCanonicalName();
@@ -33,15 +31,28 @@ public class ButtonDiscoveryService extends Service {
 
     long buttonDiscoveryIntervalMillis = -1;
 
+    long communicationsGracePeriodMillis = -1;
+
     // Handler which uses background thread to handle BT communications
     private MessageHandler bluetoothMessageHandler;
 
     private boolean running = false;
 
+    // Keeping track of all currently monitored buttons.
     HashMap<String, ButtonMonitor> currentButtonMap = new HashMap<String, ButtonMonitor>();
+
+    // Keeping track of last time a monitor checked in with a status (to detect blocked reads)
+    HashMap<String, Long> buttonToLastCommunicationsTimeMap = new HashMap<String, Long>();
 
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        BusProvider.getInstance().register(this);
     }
 
     @Override
@@ -50,6 +61,10 @@ public class ButtonDiscoveryService extends Service {
 
         BusProvider.getInstance().unregister(this);
         running = false;
+
+        for (final ButtonMonitor thisMonitor : currentButtonMap.values()) {
+            thisMonitor.stop();
+        }
     }
 
     @Override
@@ -57,17 +72,17 @@ public class ButtonDiscoveryService extends Service {
 
         if (!running) {
 
-            BusProvider.getInstance().register(this);
-
             // Create thread for handling communication with Bluetooth
             // This thread only runs if it's passed a message.. so no need worrying about if it's running or not after this point.
             HandlerThread messageProcessingThread = new HandlerThread("Discovery_BluetoothCommunicationThread", android.os.Process.THREAD_PRIORITY_BACKGROUND);
             messageProcessingThread.start();
 
-            // Connect up above background thread's looper with our message processing handler.
+            // Connect up our background thread's looper with our message processing handler.
             bluetoothMessageHandler = new MessageHandler(messageProcessingThread.getLooper());
 
             buttonDiscoveryIntervalMillis = getResources().getInteger(R.integer.button_discovery_interval_millis);
+
+            communicationsGracePeriodMillis = getResources().getInteger(R.integer.communications_grace_period_millis);
 
             scheduleImmediateButtonDiscoveryMessage();
 
@@ -117,11 +132,11 @@ public class ButtonDiscoveryService extends Service {
         }
     }
 
-    // This deals with adding/removing buttons based on which bluetooth devices are 'bonded' (paired).  No BT
-    // communications is done here.
+    // Here we determin if the device is actually on and communicating..
+    // so we launch a monitor for each potential device to ascertain this...
     private synchronized void discoverButtonDevices() {
 
-        final Set<BluetoothDevice> foundBluetoothDevices = new HashSet<BluetoothDevice>();
+        final Set<BluetoothDevice> pairedButtons = new HashSet<BluetoothDevice>();
 
         String discoverableButtonPatternString = getString(R.string.button_discovery_pattern);
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -131,52 +146,67 @@ public class ButtonDiscoveryService extends Service {
                 if (device.getName().contains(discoverableButtonPatternString)) {
                     Log.d(TAG, "We have a paired ArduinoButton device! + '" + device + "'.");
 
-                    foundBluetoothDevices.add(device);
+                    pairedButtons.add(device);
                 }
             }
         }
 
-        // To keep track of buttons that have gone missing.
+        // To keep track of buttons that have gone incommunicado.
+
+        // This starts by containing all paired buttons.. and then as we decide we can communicate
+        // with each button, we remove them.. What is left are all buttons not talking.
         final Set<String> lostButtonSet = new HashSet<String>(currentButtonMap.keySet());
 
+        // These are all buttons with which we are still communicating.
         final HashMap<String, ButtonMonitor> newAndExistingButtonMap = new HashMap<String, ButtonMonitor>();
 
-        for (final BluetoothDevice foundBluetoothDevice : foundBluetoothDevices) {
+        for (final BluetoothDevice pairedButton : pairedButtons) {
 
-            String buttonId = getButtonId(foundBluetoothDevice);
+            String buttonId = getButtonId(pairedButton);
 
             ButtonMonitor buttonMonitor = currentButtonMap.get(buttonId);
 
-            if (buttonMonitor != null &&
-                    ((buttonMonitor.getButtonState() == ButtonState.NEVER_CONNECTED) ||
-                     (buttonMonitor.getButtonState() != ButtonState.DISCONNECTED))) {
-
-                // Existing button found!
-                // This is either an existing button that has yet to connect OR it's a connected button
-                lostButtonSet.remove(foundBluetoothDevice);
-                newAndExistingButtonMap.put(buttonId, buttonMonitor);
+            if (buttonMonitor == null) {
+                // This is a paired button with no monitor.. So start monitoring.
+                newAndExistingButtonMap.put(buttonId, new ButtonMonitor(getApplicationContext(), pairedButton));
             } else {
-                // new button!
 
-                newAndExistingButtonMap.put(buttonId, new ButtonMonitor(getApplicationContext(), foundBluetoothDevice));
-                new Handler(getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
+                // Ok, first make sure monitor isn't dead...
+                boolean buttonUnresponsive = false;
+                Long lastCommuncationsTimeMillis = buttonToLastCommunicationsTimeMap.get(buttonId);
+                if ((System.currentTimeMillis() - lastCommuncationsTimeMillis) > communicationsGracePeriodMillis) {
+                    Log.d(TAG, "Button has become unresponsive for '" + buttonId + "'");
+                    buttonUnresponsive = true;
+                }
 
-                        // Note, just because we can 'see' a bluetooth button doesn't mean we can
-                        // communicate with it...
-                        BusProvider.getInstance().post(new ArduinoButtonFoundEvent(foundBluetoothDevice));
-                    }
-                });
+                if (buttonMonitor.getButtonState().isCommunicating && !buttonUnresponsive) {
+
+                    // This button is actively communicating
+                    lostButtonSet.remove(buttonId);
+                    newAndExistingButtonMap.put(buttonId, buttonMonitor);
+
+                    // Yes, this will produce redundant 'found' events.   Every discovery cycle,
+                    // we will emit new events for all devices currently communicating.. This is a level
+                    // triggered event, not edge triggered.
+                    new Handler(getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            BusProvider.getInstance().post(new ArduinoButtonFoundEvent(pairedButton));
+                        }
+                    });
+                }
             }
         }
 
-        // remove and disconnect all lost buttons
+        // All buttons left in 'lostButtonSet' represent buttons that are no longer communicating
         for (final String lostButtonId : lostButtonSet) {
             Log.d(TAG, "Forgetting lost button '" + lostButtonId + "'.");
 
             final ButtonMonitor lostButtonMonitor = currentButtonMap.get(lostButtonId);
             lostButtonMonitor.stop();
+
+            currentButtonMap.remove(lostButtonId);
+            buttonToLastCommunicationsTimeMap.remove(lostButtonId);
 
             new Handler(getMainLooper()).post(new Runnable() {
                 @Override
@@ -193,5 +223,13 @@ public class ButtonDiscoveryService extends Service {
 
     protected String getButtonId(final BluetoothDevice bluetoothDevice) {
         return bluetoothDevice.getAddress();
+    }
+
+    @Subscribe
+    public void onArduinoButtonStateChangeReportEvent(final ArduinoButtonStateChangeReportEvent event) {
+
+        // The purpose of subscribing is just to ensure buttonMonitor is still communicating successfully.
+        // This service serves as a watchdog to terminate any monitors that have become unresponsive
+        buttonToLastCommunicationsTimeMap.put(event.buttonId, System.currentTimeMillis());
     }
 }

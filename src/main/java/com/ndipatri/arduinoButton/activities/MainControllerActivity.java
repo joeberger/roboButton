@@ -6,11 +6,8 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,9 +26,7 @@ import com.ndipatri.arduinoButton.services.ButtonDiscoveryService;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,7 +39,8 @@ public class MainControllerActivity extends Activity {
 
     private AtomicInteger imageRequestIdGenerator = new AtomicInteger();
 
-    protected HashMap<Integer, String> pendingImageRequestMap = new HashMap<Integer, String>();
+    // These are all outstanding intents to retrieve an image for a particular buttonId
+    protected SparseArray<String> pendingImageRequestIdToButtonIdMap = new SparseArray<String>();
 
     private static final int REQUEST_ENABLE_BT = -101;
 
@@ -117,15 +113,15 @@ public class MainControllerActivity extends Activity {
                 finish();
             }
         } else {
-            String requestingButtonId = getButtonForRequestId(new Integer(requestCode));
+            String requestingButtonId = getButtonForRequestId(requestCode);
             if (requestingButtonId != null && resultCode == RESULT_OK) {
 
                 Uri selectedImage = returnedIntent.getData();
                 BusProvider.getInstance().post(new ButtonImageResponseEvent(requestingButtonId, selectedImage));
+                finishedRequest(requestCode);
             }
         }
     }
-
 
     private void publishProgress(final String progressString)  {
         runOnUiThread(new Runnable() {
@@ -164,34 +160,9 @@ public class MainControllerActivity extends Activity {
 
     @Subscribe
     public void onArduinoButtonInformation(ArduinoButtonInformationEvent arduinoButtonInformationEvent) {
-        Log.d(TAG, "Information received detected for button '" + arduinoButtonInformationEvent.buttonId + "(" + arduinoButtonInformationEvent.buttonDescription + ")'.");
+        Log.d(TAG, "Information received detected for button '" + arduinoButtonInformationEvent.buttonId + "(" + arduinoButtonInformationEvent.buttonId + ")'.");
 
         publishProgress(arduinoButtonInformationEvent.message);
-    }
-
-    @Subscribe
-    public void onArduinoButtonBluetoothDisabled(ArduinoButtonBluetoothDisabledEvent arduinoButtonBluetoothDisabledEvent) {
-        Log.d(TAG, "Bluetooth disabled!");
-
-        onResume();
-    }
-
-    @Subscribe
-    public void onButtonImageRequestEvent(ButtonImageRequestEvent request) {
-        chooseImage(request.buttonId);
-    }
-
-    @Subscribe
-    public void onButtonFoundEvent(ArduinoButtonFoundEvent arduinoButtonFoundEvent) {
-
-        String foundButtonId = getButtonId(arduinoButtonFoundEvent.bluetoothDevice);
-
-        ArduinoButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
-        if (existingButtonFragment == null) {
-            final ArduinoButtonFragment newArduinoButtonFragment = ArduinoButtonFragment.newInstance(foundButtonId, foundButtonId, arduinoButtonFoundEvent.bluetoothDevice); // NJD TODO - need to prompt user to name each
-            getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newArduinoButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
-            buttonFragmentIds.add(foundButtonId);
-        }
     }
 
     protected String getButtonId(BluetoothDevice bluetoothDevice) {
@@ -200,13 +171,6 @@ public class MainControllerActivity extends Activity {
 
     private ArduinoButtonFragment lookupButtonFragment(String buttonId) {
         return (ArduinoButtonFragment) getFragmentManager().findFragmentByTag(getButtonFragmentTag(buttonId));
-    }
-
-    @Subscribe
-    public void onButtonLostEvent(ArduinoButtonLostEvent arduinoButtonLostEvent) {
-        String lostButtonId = getButtonId(arduinoButtonLostEvent.bluetoothDevice);
-
-        forgetArduinoButton(lostButtonId);
     }
 
     private synchronized void forgetAllArduinoButtons() {
@@ -226,16 +190,48 @@ public class MainControllerActivity extends Activity {
 
     protected synchronized Integer getNextImageRequestId(String buttonId) {
         Integer nextImageRequestId = imageRequestIdGenerator.incrementAndGet();
-        pendingImageRequestMap.put(nextImageRequestId, buttonId);
+        pendingImageRequestIdToButtonIdMap.put(nextImageRequestId, buttonId);
 
         return nextImageRequestId;
     }
 
     protected synchronized String getButtonForRequestId(Integer imageRequestId) {
-        return pendingImageRequestMap.get(imageRequestId);
+        return pendingImageRequestIdToButtonIdMap.get(imageRequestId);
     }
 
     protected synchronized  void finishedRequest(Integer imageRequestId) {
-        pendingImageRequestMap.remove(imageRequestId);
+        pendingImageRequestIdToButtonIdMap.remove(imageRequestId);
+    }
+
+    @Subscribe
+    public void onButtonLostEvent(ArduinoButtonLostEvent arduinoButtonLostEvent) {
+        String lostButtonId = getButtonId(arduinoButtonLostEvent.bluetoothDevice);
+
+        forgetArduinoButton(lostButtonId);
+    }
+
+    @Subscribe
+    public void onArduinoButtonBluetoothDisabled(ArduinoButtonBluetoothDisabledEvent arduinoButtonBluetoothDisabledEvent) {
+        Log.d(TAG, "Bluetooth disabled!");
+
+        onResume();
+    }
+
+    @Subscribe
+    public void onButtonImageRequestEvent(ButtonImageRequestEvent request) {
+        chooseImage(request.buttonId);
+    }
+
+    @Subscribe
+    public void onArduinoButtonFoundEvent(ArduinoButtonFoundEvent arduinoButtonFoundEvent) {
+
+        String foundButtonId = getButtonId(arduinoButtonFoundEvent.bluetoothDevice);
+
+        ArduinoButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
+        if (existingButtonFragment == null) {
+            final ArduinoButtonFragment newArduinoButtonFragment = ArduinoButtonFragment.newInstance(foundButtonId);
+            getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newArduinoButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
+            buttonFragmentIds.add(foundButtonId);
+        }
     }
 }

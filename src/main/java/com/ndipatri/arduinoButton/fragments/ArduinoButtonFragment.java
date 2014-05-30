@@ -20,21 +20,34 @@ import butterknife.Views;
 
 /**
  * Created by ndipatri on 12/31/13.
- *
- *  This fragment presents the user with a button which can be pressed to toggle on/off state.  When
- *  the button is pressed, the state is 'pending' and the button is disabled. A single attempt is then
- *  made to change remote arduino button based on this state.
- *
- *  Periodically, this fragment overwrites the current button state with the remote arduino button state.
- **/
+ * <p/>
+ * This fragment presents the user with a button which can be pressed to toggle on/off state.  When
+ * the button is pressed, the state is 'pending' and the button is disabled. A single attempt is then
+ * made to change remote arduino button based on this state.
+ * <p/>
+ * Periodically, this fragment overwrites the current button state with the remote arduino button state.
+ */
 public class ArduinoButtonFragment extends Fragment {
 
     private static final String TAG = ArduinoButtonFragment.class.getCanonicalName();
 
     // ButterKnife Injected Views
-    protected @InjectView(R.id.imageView) ImageView imageView;
+    protected
+    @InjectView(R.id.imageView)
+    ImageView imageView;
 
     protected ButtonState buttonState = null;
+
+    public static ArduinoButtonFragment newInstance(String buttonId) {
+
+        ArduinoButtonFragment arduinoButtonFragment = new ArduinoButtonFragment();
+        Bundle args = new Bundle();
+        arduinoButtonFragment.setArguments(args);
+
+        arduinoButtonFragment.setButtonId(buttonId);
+
+        return arduinoButtonFragment;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -69,11 +82,15 @@ public class ArduinoButtonFragment extends Fragment {
 
     // This sets a pending local state then requests a remote state change...
     public void toggleButtonState() {
+
+        // We immediately change local state to pending...
         if (buttonState.value) {
-            BusProvider.getInstance().post(new ArduinoButtonStateChangeRequestEvent(getButtonId(), ButtonState.OFF_PENDING));
+            setButtonState(ButtonState.OFF_PENDING);
         } else {
-            BusProvider.getInstance().post(new ArduinoButtonStateChangeRequestEvent(getButtonId(), ButtonState.ON_PENDING));
+            setButtonState(ButtonState.ON_PENDING);
         }
+
+        BusProvider.getInstance().post(new ArduinoButtonStateChangeRequestEvent(getButtonId(), buttonState));
     }
 
     @Override
@@ -92,27 +109,22 @@ public class ArduinoButtonFragment extends Fragment {
         BusProvider.getInstance().unregister(this);
     }
 
-    @Subscribe
-    protected void onArduinoButtonStateChangeReportEvent(final ArduinoButtonStateChangeReportEvent event) {
-        imageView.setImageResource(event.newButtonState.drawableResourceId);
-    }
-
-    public static ArduinoButtonFragment newInstance(String buttonId) {
-
-        ArduinoButtonFragment arduinoButtonFragment = new ArduinoButtonFragment();
-        Bundle args = new Bundle();
-        arduinoButtonFragment.setArguments(args);
-
-        arduinoButtonFragment.setButtonId(buttonId);
-
-        return arduinoButtonFragment;
-    }
-
     private synchronized String getButtonId() {
         return getArguments().getString("buttonId");
     }
 
     private synchronized void setButtonId(String buttonId) {
         getArguments().putString("buttonId", buttonId);
+    }
+
+    private void setButtonState(ButtonState buttonState) {
+        this.buttonState = buttonState;
+
+        imageView.setImageResource(buttonState.drawableResourceId);
+    }
+
+    @Subscribe
+    public void onArduinoButtonStateChangeReportEvent(final ArduinoButtonStateChangeReportEvent event) {
+        setButtonState(event.newButtonState);
     }
 }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <integer name="remote_state_check_interval_millis">1000</integer>
-    <integer name="button_discovery_interval_millis">5000</integer>
+    <integer name="button_discovery_interval_millis">4000</integer>
+    <integer name="communications_grace_period_millis">10000</integer>
 </resources>

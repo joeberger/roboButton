@@ -12,6 +12,6 @@ public class ArduinoButtonStateChangeRequestEvent {
 
     public ArduinoButtonStateChangeRequestEvent(final String buttonId, final ButtonState requestedButtonState) {
         this.buttonId = buttonId;
-        this.requestedButtonState = requestedButtonStatee;
+        this.requestedButtonState = requestedButtonState;
     }
 }
