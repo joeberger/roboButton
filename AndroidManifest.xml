@@ -25,6 +25,6 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".services.ButtonDiscoveryService" />
+        <service android:name=".services.ButtonMonitoringService" />
     </application>
 </manifest>

@@ -23,9 +23,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ButtonDiscoveryService extends Service {
+public class ButtonMonitoringService extends Service {
 
-    public static final String TAG = ButtonDiscoveryService.class.getCanonicalName();
+    public static final String TAG = ButtonMonitoringService.class.getCanonicalName();
 
     private static final int DISCOVER_BUTTON_DEVICES = -102;
 

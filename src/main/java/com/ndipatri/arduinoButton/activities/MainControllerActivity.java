@@ -22,7 +22,7 @@ import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageResponseEvent;
 import com.ndipatri.arduinoButton.fragments.ArduinoButtonFragment;
-import com.ndipatri.arduinoButton.services.ButtonDiscoveryService;
+import com.ndipatri.arduinoButton.services.ButtonMonitoringService;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
@@ -37,6 +37,7 @@ import butterknife.Views;
 // schedules and provides thread resources for the querying and setting of button state.
 public class MainControllerActivity extends Activity {
 
+    // region localVariables
     private AtomicInteger imageRequestIdGenerator = new AtomicInteger();
 
     // These are all outstanding intents to retrieve an image for a particular buttonId
@@ -51,6 +52,7 @@ public class MainControllerActivity extends Activity {
 
     // The main ViewGroup to which all ArduinoButtonFragments are added.
     protected @InjectView(R.id.mainViewGroup) ViewGroup mainViewGroup;
+    //endregion
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,32 +60,13 @@ public class MainControllerActivity extends Activity {
         setContentView(R.layout.activity_main_controller);
 
         Views.inject(this);
-
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        BusProvider.getInstance().register(this);
-
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter == null) {
-            Toast.makeText(this, "Bluetooth not supported on this device!", Toast.LENGTH_SHORT).show();
-            finish();
-        } else {
-            if (!bluetoothAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            } else {
-                startBluetoothDiscoveryService();
-            }
-        }
-    }
-
-    private void startBluetoothDiscoveryService() {
-        final Intent buttonDiscoveryServiceIntent = new Intent(this, ButtonDiscoveryService.class);
-        startService(buttonDiscoveryServiceIntent);
+        resumeActivity();
     }
 
     @Override
@@ -93,6 +76,40 @@ public class MainControllerActivity extends Activity {
         BusProvider.getInstance().unregister(this);
 
         forgetAllArduinoButtons();
+    }
+
+    protected void resumeActivity() {
+        registerWithOttoBus();
+
+        BluetoothAdapter bluetoothAdapter = getBluetoothAdapter();
+        if (bluetoothAdapter == null) {
+            Toast.makeText(this, "Bluetooth not supported on this device!", Toast.LENGTH_SHORT).show();
+            finish();
+        } else {
+            if (!bluetoothAdapter.isEnabled()) {
+                requestUserToEnableBluetooth();
+            } else {
+                startBluetoothMonitoringService();
+            }
+        }
+    }
+
+    protected void registerWithOttoBus() {
+        BusProvider.getInstance().register(this);
+    }
+
+    protected void requestUserToEnableBluetooth() {
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+    }
+
+    protected BluetoothAdapter getBluetoothAdapter() {
+        return BluetoothAdapter.getDefaultAdapter();
+    }
+
+    protected void startBluetoothMonitoringService() {
+        final Intent buttonDiscoveryServiceIntent = new Intent(this, ButtonMonitoringService.class);
+        startService(buttonDiscoveryServiceIntent);
     }
 
     public void chooseImage(String requestingButtonId) {
@@ -107,7 +124,7 @@ public class MainControllerActivity extends Activity {
 
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_OK) {
-                startBluetoothDiscoveryService();
+                startBluetoothMonitoringService();
             } else {
                 Toast.makeText(this, "This application cannot run without Bluetooth enabled!", Toast.LENGTH_SHORT).show();
                 finish();
@@ -157,6 +174,8 @@ public class MainControllerActivity extends Activity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    // region OTTO Subscriptions
 
     @Subscribe
     public void onArduinoButtonInformation(ArduinoButtonInformationEvent arduinoButtonInformationEvent) {
@@ -214,7 +233,7 @@ public class MainControllerActivity extends Activity {
     public void onArduinoButtonBluetoothDisabled(ArduinoButtonBluetoothDisabledEvent arduinoButtonBluetoothDisabledEvent) {
         Log.d(TAG, "Bluetooth disabled!");
 
-        onResume();
+        resumeActivity();
     }
 
     @Subscribe
@@ -234,4 +253,7 @@ public class MainControllerActivity extends Activity {
             buttonFragmentIds.add(foundButtonId);
         }
     }
+
+    //endregion
 }
+
