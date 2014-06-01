@@ -14,10 +14,12 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.database.ButtonProvider;
+import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeReportEvent;
@@ -61,6 +63,9 @@ public class ButtonMonitoringService extends Service {
 
     // Keeping track of last time a monitor checked in with a status (to detect blocked reads)
     HashMap<String, Long> buttonToLastCommunicationsTimeMap = new HashMap<String, Long>();
+
+    // Keeping track of last value received from button.
+    HashMap<String, ButtonState> buttonToLastButtonStateMap = new HashMap<String, ButtonState>();
 
     //endregion
 
@@ -217,19 +222,26 @@ public class ButtonMonitoringService extends Service {
                     lostButtonSet.remove(buttonId);
                     newAndExistingButtonMap.put(buttonId, buttonMonitor);
 
-                    // Yes, this will produce redundant 'found' events.   Every discovery cycle,
-                    // we will emit new events for all devices currently communicating.. This is a level
-                    // triggered event, not edge triggered.
+                    final ButtonState currentButtonState = buttonMonitor.getButtonState();
+
+                    // Level Trigger state notification, not edge triggered (e.g. we will send this active
+                    // notification every poll interval that this button is communicating)..
                     new Handler(getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
                             BusProvider.getInstance().post(new ArduinoButtonFoundEvent(pairedButton));
 
                             if (runInBackground) {
-                                sendActiveButtonNotification(buttonId);
+                                sendActiveButtonNotification(buttonId, currentButtonState);
                             }
                         }
                     });
+
+                    ButtonState previousButtonState = buttonToLastButtonStateMap.get(buttonId);
+                    if (runInBackground && (previousButtonState == null || (previousButtonState.value != currentButtonState.value))) {
+                        sendActiveButtonNotification(buttonId, currentButtonState);
+                    }
+                    buttonToLastButtonStateMap.put(buttonId, currentButtonState);
                 }
             }
         }
@@ -243,6 +255,7 @@ public class ButtonMonitoringService extends Service {
 
             currentButtonMap.remove(lostButtonId);
             buttonToLastCommunicationsTimeMap.remove(lostButtonId);
+            buttonToLastButtonStateMap.remove(lostButtonId);
 
             new Handler(getMainLooper()).post(new Runnable() {
                 @Override
@@ -261,21 +274,18 @@ public class ButtonMonitoringService extends Service {
         return bluetoothDevice.getAddress();
     }
 
-    protected void sendActiveButtonNotification(String buttonId) {
+    protected void sendActiveButtonNotification(String buttonId, ButtonState buttonState) {
 
-        String notificationTitle = this.getString(R.string.robo_button_found);
-        String tickerText = this.getString(R.string.new_button);
-        String notificationContent = this.getString(R.string.notification_content);
-
+        String tickerText = this.getString(R.string.new_robo_button);
         Button button = buttonProvider.getButton(this, buttonId);
         if (button != null) {
-            tickerText = button.getName();
+            tickerText = " '" + button.getName() + "'";
         }
+        tickerText += " " + this.getString(buttonState.descriptionResId);
 
         Intent intent = new Intent(this, MainControllerActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
-        String notifyTitle = "Test app for ORMLite";
         int notifId = 1234;
 
         NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -283,29 +293,34 @@ public class ButtonMonitoringService extends Service {
         // construct the Notification object.
         Notification.Builder builder = new Notification.Builder(this);
         builder.setWhen(System.currentTimeMillis());
-        builder.setContentText(notificationContent);
-        builder.setTicker(tickerText);
+        //builder.setContentText(tickerText);
+        builder.setSmallIcon(buttonState.smallDrawableResourceId); // this is what shows up in notification bar before you pull it down
         builder.setNumber(1234);
+        builder.setAutoCancel(true);
         builder.setOnlyAlertOnce(true);
+        builder.setContentIntent(pendingIntent);
         builder.setVibrate(new long[]{0,     // start immediately
-                                      200,   // on
-                                      1000,  // off
-                                      200,   // on
-                                      1000,  // off
-                                      200,   // on
-                                      1000,  // off
-                                      200,   // on
-                                      -1});  // no repeat
-        builder.addAction(R.drawable.green_button_small, notifyTitle, pendingIntent);
+                200,   // on
+                1000,  // off
+                200,   // on
+                1000,  // off
+                200,   // on
+                1000,  // off
+                200,   // on
+                -1});  // no repeat
 
-        //Notification notification = new Notification(icon, tickerText, System.currentTimeMillis());
+        // This provides sub-information in the notification. not using right now.
+        //String notifyTitle = "Test app for ORMLite";
+        //builder.addAction(R.drawable.green_button_small, notifyTitle, pendingIntent);
+
         Notification notification = builder.build();
 
-		/*
-		 * Note that we use R.layout.incoming_message_panel as the ID for the notification. It could be any integer you
-		 * want, but we use the convention of using a resource id for a string related to the notification. It will
-		 * always be a unique number within your application.
-		 */
+        RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.notification_layout);
+        contentView.setImageViewResource(R.id.image, buttonState.smallDrawableResourceId);
+        contentView.setTextViewText(R.id.title, this.getString(R.string.robo_button));
+        contentView.setTextViewText(R.id.detail, tickerText);
+        notification.contentView = contentView;
+
         notificationManager.notify(notifId, notification);
     }
 

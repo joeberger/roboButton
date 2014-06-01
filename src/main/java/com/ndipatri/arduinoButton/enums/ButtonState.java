@@ -6,13 +6,15 @@ import com.ndipatri.arduinoButton.R;
  * Created by ndipatri on 5/29/14.
  */
 public enum ButtonState {
-    NEVER_CONNECTED(false, true, false, R.drawable.yellow_button),
-    ON(true, true, true, R.drawable.green_button),
-    OFF(false, true, true, R.drawable.red_button),
-    ON_PENDING(true, true, false, R.drawable.yellow_button),
-    OFF_PENDING(false, true, false, R.drawable.yellow_button),
-    DISCONNECTED(false, false, false, R.drawable.yellow_button),
+    NEVER_CONNECTED(R.string.is_connecting, false, true, false, R.drawable.yellow_button, R.drawable.yellow_button_small),
+    ON(R.string.on, true, true, true, R.drawable.green_button, R.drawable.green_button_small),
+    OFF(R.string.off, false, true, true, R.drawable.red_button, R.drawable.red_button_small),
+    ON_PENDING(R.string.is_connecting, true, true, false, R.drawable.yellow_button, R.drawable.yellow_button_small),
+    OFF_PENDING(R.string.is_connecting, false, true, false, R.drawable.yellow_button, R.drawable.yellow_button_small),
+    DISCONNECTED(R.string.disconnected, false, false, false, R.drawable.yellow_button, R.drawable.yellow_button_small),
     ;
+
+    public int descriptionResId;
 
     public boolean isCommunicating;
 
@@ -23,10 +25,14 @@ public enum ButtonState {
 
     public int drawableResourceId;
 
-    private ButtonState(final boolean value, final boolean isCommunicating, final boolean enabled, final int drawableResourceId) {
+    public int smallDrawableResourceId;
+
+    private ButtonState(final int descriptionResId, final boolean value, final boolean isCommunicating, final boolean enabled, final int drawableResourceId, final int smallDrawableResourceId) {
+        this.descriptionResId = descriptionResId;
         this.value = value;
         this.isCommunicating = isCommunicating;
         this.enabled = enabled;
         this.drawableResourceId = drawableResourceId;
+        this.smallDrawableResourceId = smallDrawableResourceId;
     }
 }

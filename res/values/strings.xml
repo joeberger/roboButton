@@ -12,7 +12,14 @@
     <string name="forget_all_buttons">Forget All Buttons</string>
     <string name="button_discovery_pattern">FireFly-</string>
     <string name="configure_button">Configure Button</string>
+    <string name="robo_button">Robo Button</string>
     <string name="robo_button_found">RoboButton Found!</string>
-    <string name="new_button">New Button</string>
-    <string name="notification_content">RoboButtonApplication</string>
+    <string name="new_robo_button">New Robo Button</string>
+    <string name="found">Found</string>
+    <string name="never_connected">nevet connected</string>
+    <string name="on">on</string>
+    <string name="off">off</string>
+    <string name="disconnected">disconnected</string>
+    <string name="unknown">uUnknown</string>
+    <string name="is_connecting">is connecting</string>
 </resources>
