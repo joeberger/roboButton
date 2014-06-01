@@ -51,16 +51,16 @@ public class ArduinoButtonApplication extends Application {
     }
 
     protected void backgroundBluetoothMonitoringService() {
-        // We still want it to run for notification purposes.. but with much slower intervals to save power.
-        final Intent buttonDiscoveryServiceIntent = new Intent(this, ButtonMonitoringService.class);
-        buttonDiscoveryServiceIntent.putExtra(ButtonMonitoringService.SLEEP_STATE_TIME_MULTIPLIER, getResources().getInteger(R.integer.background_time_multiplier));
-        startService(buttonDiscoveryServiceIntent);
+        startMonitoringService(true);
     }
 
     protected void foregroundBluetoothMonitoringService() {
-        // We still want it to run for notification purposes.. but with much slower intervals to save power.
+        startMonitoringService(false);
+    }
+
+    protected void startMonitoringService(final boolean shouldBackground) {
         final Intent buttonDiscoveryServiceIntent = new Intent(this, ButtonMonitoringService.class);
-        buttonDiscoveryServiceIntent.putExtra(ButtonMonitoringService.SLEEP_STATE_TIME_MULTIPLIER, 1);
+        buttonDiscoveryServiceIntent.putExtra(ButtonMonitoringService.RUN_IN_BACKGROUND,  shouldBackground);
         startService(buttonDiscoveryServiceIntent);
     }
 }

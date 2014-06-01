@@ -12,4 +12,7 @@
     <string name="forget_all_buttons">Forget All Buttons</string>
     <string name="button_discovery_pattern">FireFly-</string>
     <string name="configure_button">Configure Button</string>
+    <string name="robo_button_found">RoboButton Found!</string>
+    <string name="new_button">New Button</string>
+    <string name="notification_content">RoboButtonApplication</string>
 </resources>

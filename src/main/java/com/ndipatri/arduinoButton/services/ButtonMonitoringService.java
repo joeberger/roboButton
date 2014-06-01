@@ -1,8 +1,12 @@
 package com.ndipatri.arduinoButton.services;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -12,9 +16,12 @@ import android.os.Message;
 import android.util.Log;
 
 import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.activities.MainControllerActivity;
+import com.ndipatri.arduinoButton.database.ButtonProvider;
 import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeReportEvent;
+import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.ndipatri.arduinoButton.utils.ButtonMonitor;
 import com.squareup.otto.Subscribe;
@@ -27,11 +34,16 @@ public class ButtonMonitoringService extends Service {
 
     public static final String TAG = ButtonMonitoringService.class.getCanonicalName();
 
-    public static final String SLEEP_STATE_TIME_MULTIPLIER = "timeMultiplier";
+    public static final String RUN_IN_BACKGROUND = "run_in_background";
 
     private static final int DISCOVER_BUTTON_DEVICES = -102;
 
     // region localVars
+
+    protected boolean runInBackground = false;
+
+    // NJD TODO - Should use Dagger for this to be cool.
+    protected ButtonProvider buttonProvider = new ButtonProvider();
 
     protected long buttonDiscoveryIntervalMillis = -1;
 
@@ -78,8 +90,10 @@ public class ButtonMonitoringService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        int newTimeMultiplier = intent.getIntExtra(SLEEP_STATE_TIME_MULTIPLIER, 1);
-        Log.d(TAG, "onStartCommand() with timeMultiplier '" + newTimeMultiplier + "'.");
+        runInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
+        Log.d(TAG, "onStartCommand() (runInBackground='" + runInBackground + "').");
+
+        int newTimeMultiplier = runInBackground ? getResources().getInteger(R.integer.background_time_multiplier) : 1;
 
         if (newTimeMultiplier != timeMultiplier) {
             timeMultiplier = newTimeMultiplier;
@@ -180,7 +194,7 @@ public class ButtonMonitoringService extends Service {
 
         for (final BluetoothDevice pairedButton : pairedButtons) {
 
-            String buttonId = getButtonId(pairedButton);
+            final String buttonId = getButtonId(pairedButton);
 
             ButtonMonitor buttonMonitor = currentButtonMap.get(buttonId);
 
@@ -210,6 +224,10 @@ public class ButtonMonitoringService extends Service {
                         @Override
                         public void run() {
                             BusProvider.getInstance().post(new ArduinoButtonFoundEvent(pairedButton));
+
+                            if (runInBackground) {
+                                sendActiveButtonNotification(buttonId);
+                            }
                         }
                     });
                 }
@@ -241,6 +259,54 @@ public class ButtonMonitoringService extends Service {
 
     protected String getButtonId(final BluetoothDevice bluetoothDevice) {
         return bluetoothDevice.getAddress();
+    }
+
+    protected void sendActiveButtonNotification(String buttonId) {
+
+        String notificationTitle = this.getString(R.string.robo_button_found);
+        String tickerText = this.getString(R.string.new_button);
+        String notificationContent = this.getString(R.string.notification_content);
+
+        Button button = buttonProvider.getButton(this, buttonId);
+        if (button != null) {
+            tickerText = button.getName();
+        }
+
+        Intent intent = new Intent(this, MainControllerActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        String notifyTitle = "Test app for ORMLite";
+        int notifId = 1234;
+
+        NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // construct the Notification object.
+        Notification.Builder builder = new Notification.Builder(this);
+        builder.setWhen(System.currentTimeMillis());
+        builder.setContentText(notificationContent);
+        builder.setTicker(tickerText);
+        builder.setNumber(1234);
+        builder.setOnlyAlertOnce(true);
+        builder.setVibrate(new long[]{0,     // start immediately
+                                      200,   // on
+                                      1000,  // off
+                                      200,   // on
+                                      1000,  // off
+                                      200,   // on
+                                      1000,  // off
+                                      200,   // on
+                                      -1});  // no repeat
+        builder.addAction(R.drawable.green_button_small, notifyTitle, pendingIntent);
+
+        //Notification notification = new Notification(icon, tickerText, System.currentTimeMillis());
+        Notification notification = builder.build();
+
+		/*
+		 * Note that we use R.layout.incoming_message_panel as the ID for the notification. It could be any integer you
+		 * want, but we use the convention of using a resource id for a string related to the notification. It will
+		 * always be a unique number within your application.
+		 */
+        notificationManager.notify(notifId, notification);
     }
 
     @Subscribe
