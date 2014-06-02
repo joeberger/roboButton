@@ -18,7 +18,7 @@ import android.widget.RemoteViews;
 
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
-import com.ndipatri.arduinoButton.database.ButtonProvider;
+import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;

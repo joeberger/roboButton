@@ -4,14 +4,30 @@ import android.app.Application;
 import android.content.Intent;
 import android.util.Log;
 
+import com.ndipatri.arduinoButton.dagger.modules.RoboButtonModule;
 import com.ndipatri.arduinoButton.services.ButtonMonitoringService;
 import com.ndipatri.arduinoButton.utils.ActivityWatcher;
+
+import java.util.Arrays;
+import java.util.List;
+
+import dagger.ObjectGraph;
 
 public class ArduinoButtonApplication extends Application {
 
     private static final String TAG = ArduinoButtonApplication.class.getCanonicalName();
 
+    // region localVars
     private boolean inBackground = true;
+
+    private ObjectGraph graph;
+
+    private static ArduinoButtonApplication instance = null;
+    // endregion
+
+    public ArduinoButtonApplication() {
+        instance = this;
+    }
 
     @Override
     public void onCreate() {
@@ -36,6 +52,18 @@ public class ArduinoButtonApplication extends Application {
             }
         });
         registerActivityLifecycleCallbacks(activityWatcher);
+
+        graph = ObjectGraph.create(getDependencyModules().toArray());
+    }
+
+    protected List<? extends Object> getDependencyModules() {
+        return Arrays.asList(
+                new RoboButtonModule()
+        );
+    }
+
+    public static ArduinoButtonApplication getInstance() {
+        return instance;
     }
 
     protected void onForeground() {

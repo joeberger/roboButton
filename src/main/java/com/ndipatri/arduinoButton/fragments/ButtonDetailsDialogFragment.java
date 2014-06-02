@@ -22,7 +22,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.ndipatri.arduinoButton.R;
-import com.ndipatri.arduinoButton.database.ButtonProvider;
+import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageResponseEvent;
 import com.ndipatri.arduinoButton.models.Button;
