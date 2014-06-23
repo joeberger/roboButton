@@ -277,7 +277,7 @@ public class ButtonMonitoringService extends Service {
     protected void sendActiveButtonNotification(String buttonId, ButtonState buttonState) {
 
         String tickerText = this.getString(R.string.new_robo_button);
-        Button button = buttonProvider.getButton(this, buttonId);
+        Button button = buttonProvider.getButton(buttonId);
         if (button != null) {
             tickerText = " '" + button.getName() + "'";
         }
