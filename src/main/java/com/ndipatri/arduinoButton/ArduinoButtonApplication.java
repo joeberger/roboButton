@@ -58,7 +58,7 @@ public class ArduinoButtonApplication extends Application {
 
     protected List<? extends Object> getDependencyModules() {
         return Arrays.asList(
-                new RoboButtonModule()
+                new RoboButtonModule(this)
         );
     }
 
@@ -90,5 +90,9 @@ public class ArduinoButtonApplication extends Application {
         final Intent buttonDiscoveryServiceIntent = new Intent(this, ButtonMonitoringService.class);
         buttonDiscoveryServiceIntent.putExtra(ButtonMonitoringService.RUN_IN_BACKGROUND,  shouldBackground);
         startService(buttonDiscoveryServiceIntent);
+    }
+
+    public void inject(Object object) {
+        graph.inject(object);
     }
 }

@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -21,6 +20,7 @@ import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
@@ -31,6 +31,8 @@ import com.squareup.otto.Subscribe;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+
+import javax.inject.Inject;
 
 import butterknife.InjectView;
 import butterknife.Views;
@@ -51,8 +53,8 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     @InjectView(R.id.overlayImageButton)
     ImageButton overlayImageButton;
 
-    // NJD TODO - Should use Dagger for this to be cool.
-    protected ButtonProvider buttonProvider = new ButtonProvider();
+    @Inject
+    protected ButtonProvider buttonProvider;
 
     // Need to integrate this with view..
     protected String iconFileNameString = "";
@@ -70,6 +72,8 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        ((ArduinoButtonApplication)getActivity().getApplication()).inject(this);
 
         shrinkAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.button_shrink);
         shrinkAnimation.setAnimationListener(new Animation.AnimationListener() {
@@ -114,7 +118,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        buttonProvider.createOrUpdateButton(getActivity(), new Button(getButtonId(), nameEditText.getText().toString(), autoModeSwitch.isChecked(), iconFileNameString));
+                        buttonProvider.createOrUpdateButton(new Button(getButtonId(), nameEditText.getText().toString(), autoModeSwitch.isChecked(), iconFileNameString));
                     }
                 });
 
@@ -160,7 +164,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
     protected void populateViewsWithExistingData() {
 
-        Button existingButton = buttonProvider.getButton(getActivity(), getButtonId());
+        Button existingButton = buttonProvider.getButton(getButtonId());
         if (existingButton != null) {
             nameEditText.setText(existingButton.getName());
             autoModeSwitch.setChecked(existingButton.isAutoModeEnabled());

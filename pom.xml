@@ -10,6 +10,10 @@
     <name>RoboLift</name>
     <description>Who is the replicant here?</description>
 
+    <properties>
+        <maven.min-version>3.0.4</maven.min-version>
+    </properties>
+
     <dependencies>
 
         <dependency>
@@ -78,36 +82,83 @@
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
+            <!-- the android build lifecycle -->
             <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
-            <plugin>
+                <!-- See http://code.google.com/p/maven-android-plugin/ -->
                 <groupId>com.jayway.maven.plugins.android.generation2</groupId>
                 <artifactId>android-maven-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
                     <sdk>
-                        <!-- platform or api level (api level 4 = platform 1.6)-->
-                        <platform>18</platform>
+                        <platform>17</platform>
                     </sdk>
-                    <undeployBeforeDeploy>true</undeployBeforeDeploy>
+                    <!-- classifier>${env}</classifier -->
+                    <resourceDirectory>../${project.build.directory}/filtered-res</resourceDirectory>
+                    <androidManifestFile>../${project.build.directory}/filtered-manifest/AndroidManifest.xml</androidManifestFile>
+                    <proguard>
+                        <skip>true</skip>
+                    </proguard>
                 </configuration>
                 <extensions>true</extensions>
+            </plugin>
+
+            <!-- enforce a minimum maven version, so that all of the features that we use will work -->
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <id>enforce-default</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[${maven.min-version},)</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>enforce-clean</id>
+                        <phase>pre-clean</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[${maven.min-version},)</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>enforce-site</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[${maven.min-version},)</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.6</version>
                 <configuration>
+                    <argLine>-Xmx1024m -XX:MaxPermSize=512m</argLine>
                     <excludes>
                         <exclude>**/Test*.java</exclude>
                     </excludes>
-                    <argLine>-Xmx1024m</argLine>
                 </configuration>
             </plugin>
         </plugins>

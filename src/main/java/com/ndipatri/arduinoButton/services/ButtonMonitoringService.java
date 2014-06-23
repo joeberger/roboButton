@@ -16,6 +16,7 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
@@ -32,6 +33,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 public class ButtonMonitoringService extends Service {
 
     public static final String TAG = ButtonMonitoringService.class.getCanonicalName();
@@ -44,8 +47,8 @@ public class ButtonMonitoringService extends Service {
 
     protected boolean runInBackground = false;
 
-    // NJD TODO - Should use Dagger for this to be cool.
-    protected ButtonProvider buttonProvider = new ButtonProvider();
+    @Inject
+    protected ButtonProvider buttonProvider;
 
     protected long buttonDiscoveryIntervalMillis = -1;
 
@@ -78,6 +81,7 @@ public class ButtonMonitoringService extends Service {
         super.onCreate();
 
         BusProvider.getInstance().register(this);
+        ((ArduinoButtonApplication)getApplication()).inject(this);
     }
 
     @Override
