@@ -3,6 +3,8 @@ package com.ndipatri.arduinoButton.dagger.modules;
 import android.content.Context;
 
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
+import com.ndipatri.arduinoButton.fragments.ButtonDetailsDialogFragment;
+import com.ndipatri.arduinoButton.services.ButtonMonitoringService;
 
 import javax.inject.Singleton;
 
@@ -11,7 +13,8 @@ import dagger.Provides;
 
 @Module(
         injects = {
-                ButtonProvider.class
+                ButtonDetailsDialogFragment.class,
+                ButtonMonitoringService.class
         }
 )
 public class RoboButtonModule {

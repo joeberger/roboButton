@@ -184,7 +184,8 @@ public class ButtonMonitoringService extends Service {
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         if (pairedDevices != null) {
             for (BluetoothDevice device : pairedDevices) {
-                if (device.getName().contains(discoverableButtonPatternString)) {
+                Log.d(TAG, "Checking BT device: + '" + device.getName() + ":" + device.getAddress() + "'.");
+                if (device.getName().matches(discoverableButtonPatternString)) {
                     Log.d(TAG, "We have a paired ArduinoButton device! + '" + device + "'.");
 
                     pairedButtons.add(device);
