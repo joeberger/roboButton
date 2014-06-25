@@ -14,7 +14,9 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.events.ArduinoButtonBluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
@@ -30,6 +32,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.inject.Inject;
+
 import butterknife.InjectView;
 import butterknife.Views;
 
@@ -38,6 +42,8 @@ import butterknife.Views;
 public class MainControllerActivity extends Activity {
 
     // region localVariables
+    @Inject protected BluetoothProvider bluetoothProvider;
+
     private AtomicInteger imageRequestIdGenerator = new AtomicInteger();
 
     // These are all outstanding intents to retrieve an image for a particular buttonId
@@ -58,6 +64,8 @@ public class MainControllerActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_controller);
+
+        ((ArduinoButtonApplication)getApplicationContext()).inject(this);
 
         Views.inject(this);
     }
@@ -81,7 +89,7 @@ public class MainControllerActivity extends Activity {
     protected void resumeActivity() {
         registerWithOttoBus();
 
-        BluetoothAdapter bluetoothAdapter = getBluetoothAdapter();
+        BluetoothAdapter bluetoothAdapter = bluetoothProvider.getAdapter();
         if (bluetoothAdapter == null) {
             Toast.makeText(this, "Bluetooth not supported on this device!", Toast.LENGTH_SHORT).show();
             finish();
@@ -101,10 +109,6 @@ public class MainControllerActivity extends Activity {
     protected void requestUserToEnableBluetooth() {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-    }
-
-    protected BluetoothAdapter getBluetoothAdapter() {
-        return BluetoothAdapter.getDefaultAdapter();
     }
 
     protected void startBluetoothMonitoringService() {

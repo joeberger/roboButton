@@ -19,6 +19,7 @@ import android.widget.RemoteViews;
 import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
+import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
@@ -47,8 +48,9 @@ public class ButtonMonitoringService extends Service {
 
     protected boolean runInBackground = false;
 
-    @Inject
-    protected ButtonProvider buttonProvider;
+    @Inject protected ButtonProvider buttonProvider;
+
+    @Inject protected BluetoothProvider bluetoothProvider;
 
     protected long buttonDiscoveryIntervalMillis = -1;
 
@@ -180,7 +182,7 @@ public class ButtonMonitoringService extends Service {
         final Set<BluetoothDevice> pairedButtons = new HashSet<BluetoothDevice>();
 
         String discoverableButtonPatternString = getString(R.string.button_discovery_pattern);
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter bluetoothAdapter = bluetoothProvider.getAdapter();
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         if (pairedDevices != null) {
             for (BluetoothDevice device : pairedDevices) {
