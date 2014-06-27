@@ -10,7 +10,9 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ArduinoButtonBluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
@@ -23,9 +25,13 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 public class ButtonMonitor {
 
     private static final String TAG = ButtonMonitor.class.getCanonicalName();
+
+    @Inject protected BluetoothProvider bluetoothProvider;
 
     // region localArgs
     private BluetoothSocket socket = null;
@@ -56,6 +62,8 @@ public class ButtonMonitor {
 
         this.context = context;
         this.bluetoothDevice = bluetoothDevice;
+
+        ((ArduinoButtonApplication)context).inject(this);
 
         // Create thread for handling communication with Bluetooth
         // This thread only runs if it's passed a message.. so no need worrying about if it's running or not after this point.
@@ -235,7 +243,7 @@ public class ButtonMonitor {
         try {
             if (socket == null || !socket.isConnected()) {
                 Log.d(TAG, "Trying to create bluetooth connection...");
-                socket = createConnectionToBluetoothDevice(BluetoothAdapter.getDefaultAdapter(), bluetoothDevice);
+                socket = createConnectionToBluetoothDevice(bluetoothProvider.getAdapter(), bluetoothDevice);
             }
 
             if (socket != null) {
@@ -296,7 +304,7 @@ public class ButtonMonitor {
         try {
             if (socket == null || !socket.isConnected()) {
                 BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.opening_bluetooth_socket), getButtonId()));
-                socket = createConnectionToBluetoothDevice(BluetoothAdapter.getDefaultAdapter(), bluetoothDevice);
+                socket = createConnectionToBluetoothDevice(bluetoothProvider.getAdapter(), bluetoothDevice);
             }
 
             if (socket != null) {
