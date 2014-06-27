@@ -13,9 +13,14 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.RemoteException;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
+import com.estimote.sdk.Beacon;
+import com.estimote.sdk.BeaconManager;
+import com.estimote.sdk.Region;
 import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
@@ -31,6 +36,7 @@ import com.squareup.otto.Subscribe;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -44,6 +50,8 @@ public class ButtonMonitoringService extends Service {
     private static final int DISCOVER_BUTTON_DEVICES = -102;
 
     // region localVars
+    private static final String ESTIMOTE_PROXIMITY_UUID = "B9407F30-F5F8-466E-AFF9-25556B57FE6D";
+    private static final Region ALL_ESTIMOTE_BEACONS = new Region("regionId", ESTIMOTE_PROXIMITY_UUID, null, null);
 
     protected boolean runInBackground = false;
 
@@ -70,6 +78,7 @@ public class ButtonMonitoringService extends Service {
     // Keeping track of last value received from button.
     HashMap<String, ButtonState> buttonToLastButtonStateMap = new HashMap<String, ButtonState>();
 
+    BeaconManager beaconManager;
     //endregion
 
     public IBinder onBind(Intent intent) {
@@ -80,6 +89,16 @@ public class ButtonMonitoringService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        beaconManager = new BeaconManager(this);
+        connectToBeaconService();
+
+        beaconManager.setRangingListener(new BeaconManager.RangingListener() {
+            @Override
+            public void onBeaconsDiscovered(Region region, final List<Beacon> beacons) {
+                Log.d(TAG, "Found beacons! " + beacons);
+            }
+        });
+
         BusProvider.getInstance().register(this);
         ((ArduinoButtonApplication)getApplication()).inject(this);
     }
@@ -87,6 +106,13 @@ public class ButtonMonitoringService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        try {
+            beaconManager.stopRanging(ALL_ESTIMOTE_BEACONS);
+            beaconManager.disconnect();
+        } catch (RemoteException e) {
+            Log.d(TAG, "Error while stopping ranging", e);
+        }
 
         BusProvider.getInstance().unregister(this);
         running = false;
@@ -335,5 +361,19 @@ public class ButtonMonitoringService extends Service {
         // The purpose of subscribing is just to ensure buttonMonitor is still communicating successfully.
         // This service serves as a watchdog to terminate any monitors that have become unresponsive
         buttonToLastCommunicationsTimeMap.put(event.buttonId, System.currentTimeMillis());
+    }
+
+    private void connectToBeaconService() {
+        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
+            @Override
+            public void onServiceReady() {
+                try {
+                    beaconManager.startRanging(ALL_ESTIMOTE_BEACONS);
+                } catch (RemoteException e) {
+                    Toast.makeText(ButtonMonitoringService.this, "Cannot start ranging, something terrible happened", Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "Cannot start ranging", e);
+                }
+            }
+        });
     }
 }

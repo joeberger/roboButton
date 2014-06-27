@@ -11,6 +11,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
+    <!-- Declaration that this app is usable on phones with Bluetooth Low Energy. -->
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+
     <application
             android:name=".ArduinoButtonApplication"
             android:debuggable="true"
@@ -25,6 +28,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".services.ButtonMonitoringService" />
+        <service android:name=".services.ButtonMonitoringService" android:exported="false"/>
+        <service android:name="com.estimote.sdk.service.BeaconService" android:exported="false"/>
     </application>
 </manifest>
