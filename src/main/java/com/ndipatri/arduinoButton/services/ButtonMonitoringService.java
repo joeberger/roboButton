@@ -79,8 +79,6 @@ public class ButtonMonitoringService extends Service {
 
     // Keeping track of last value received from button.
     HashMap<String, ButtonState> buttonToLastButtonStateMap = new HashMap<String, ButtonState>();
-
-    BeaconManager beaconManager;
     //endregion
 
     public IBinder onBind(Intent intent) {
@@ -91,27 +89,20 @@ public class ButtonMonitoringService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        beaconManager = new BeaconManager(this);
-        connectToBeaconService();
+        ((ArduinoButtonApplication)getApplication()).inject(this);
 
-        beaconManager.setRangingListener(new BeaconManager.RangingListener() {
-            @Override
-            public void onBeaconsDiscovered(Region region, final List<Beacon> beacons) {
-                Log.d(TAG, "Found beacons! " + beacons);
-            }
-        });
+        connectToBeaconServiceAndStartRanging(bluetoothProvider.getBeaconManager());
 
         BusProvider.getInstance().register(this);
-        ((ArduinoButtonApplication)getApplication()).inject(this);
     }
+
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
         try {
-            beaconManager.stopRanging(ALL_ESTIMOTE_BEACONS);
-            beaconManager.disconnect();
+            disconnectFromBeaconServiceAndStopRanging(bluetoothProvider.getBeaconManager());
         } catch (RemoteException e) {
             Log.d(TAG, "Error while stopping ranging", e);
         }
@@ -122,6 +113,14 @@ public class ButtonMonitoringService extends Service {
         for (final ButtonMonitor thisMonitor : currentButtonMap.values()) {
             thisMonitor.stop();
         }
+    }
+
+    private void unsubscribeFromBeaconRangingNotifications(BeaconManager beaconManager) throws RemoteException {
+    }
+
+    private void disconnectFromBeaconServiceAndStopRanging(BeaconManager beaconManager) throws RemoteException {
+        beaconManager.stopRanging(ALL_ESTIMOTE_BEACONS);
+        beaconManager.disconnect();
     }
 
     @Override
@@ -365,12 +364,19 @@ public class ButtonMonitoringService extends Service {
         buttonToLastCommunicationsTimeMap.put(event.buttonId, System.currentTimeMillis());
     }
 
-    private void connectToBeaconService() {
+    private void connectToBeaconServiceAndStartRanging(final BeaconManager beaconManager) {
         beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
             @Override
             public void onServiceReady() {
                 try {
                     beaconManager.startRanging(ALL_ESTIMOTE_BEACONS);
+
+                    beaconManager.setRangingListener(new BeaconManager.RangingListener() {
+                        @Override
+                        public void onBeaconsDiscovered(Region region, final List<Beacon> beacons) {
+                            Log.d(TAG, "Found beacons! " + beacons);
+                        }
+                    });
                 } catch (RemoteException e) {
                     Toast.makeText(ButtonMonitoringService.this, "Cannot start ranging, something terrible happened", Toast.LENGTH_LONG).show();
                     Log.e(TAG, "Cannot start ranging", e);
