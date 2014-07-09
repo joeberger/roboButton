@@ -174,6 +174,11 @@ public class MainControllerActivity extends Activity {
                 forgetAllArduinoButtons();
 
                 return true;
+
+            case R.id.register_beacons:
+
+                registerBeacons();
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -200,6 +205,10 @@ public class MainControllerActivity extends Activity {
         for (final String buttonFragmentId : buttonFragmentIds) {
             forgetArduinoButton(buttonFragmentId);
         }
+    }
+
+    private void registerBeacons() {
+        startActivity(new Intent(this, RegisterBeaconsActivity.class));
     }
 
     private synchronized void forgetArduinoButton(final String lostButtonId) {

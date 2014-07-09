@@ -27,9 +27,9 @@ import java.util.List;
  * Displays list of found beacons sorted by RSSI.
  * Starts new activity with selected beacon if activity was provided.
  */
-public class ListBeaconsActivity extends Activity {
+public class RegisterBeaconsActivity extends Activity {
 
-    private static final String TAG = ListBeaconsActivity.class.getSimpleName();
+    private static final String TAG = RegisterBeaconsActivity.class.getSimpleName();
 
     public static final String EXTRAS_TARGET_ACTIVITY = "extrasTargetActivity";
     public static final String EXTRAS_BEACON = "extrasBeacon";
@@ -150,7 +150,7 @@ public class ListBeaconsActivity extends Activity {
                 try {
                     beaconManager.startRanging(ALL_ESTIMOTE_BEACONS_REGION);
                 } catch (RemoteException e) {
-                    Toast.makeText(ListBeaconsActivity.this, "Cannot start ranging, something terrible happened",
+                    Toast.makeText(RegisterBeaconsActivity.this, "Cannot start ranging, something terrible happened",
                             Toast.LENGTH_LONG).show();
                     Log.e(TAG, "Cannot start ranging", e);
                 }
@@ -165,7 +165,7 @@ public class ListBeaconsActivity extends Activity {
                 if (getIntent().getStringExtra(EXTRAS_TARGET_ACTIVITY) != null) {
                     try {
                         Class<?> clazz = Class.forName(getIntent().getStringExtra(EXTRAS_TARGET_ACTIVITY));
-                        Intent intent = new Intent(ListBeaconsActivity.this, clazz);
+                        Intent intent = new Intent(RegisterBeaconsActivity.this, clazz);
                         intent.putExtra(EXTRAS_BEACON, adapter.getItem(position));
                         startActivity(intent);
                     } catch (ClassNotFoundException e) {
