@@ -18,6 +18,7 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.estimote.sdk.utils.L;
 import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.fragments.BeaconDetailsDialogFragment;
 import com.ndipatri.arduinoButton.utils.LeDeviceListAdapter;
 
 import java.util.Collections;
@@ -162,16 +163,9 @@ public class RegisterBeaconsActivity extends Activity {
         return new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (getIntent().getStringExtra(EXTRAS_TARGET_ACTIVITY) != null) {
-                    try {
-                        Class<?> clazz = Class.forName(getIntent().getStringExtra(EXTRAS_TARGET_ACTIVITY));
-                        Intent intent = new Intent(RegisterBeaconsActivity.this, clazz);
-                        intent.putExtra(EXTRAS_BEACON, adapter.getItem(position));
-                        startActivity(intent);
-                    } catch (ClassNotFoundException e) {
-                        Log.e(TAG, "Finding class by name failed", e);
-                    }
-                }
+                BeaconDetailsDialogFragment dialog = BeaconDetailsDialogFragment.newInstance(adapter.getItem(position));
+                dialog.show(getFragmentManager().beginTransaction(), "button details dialog");
+
             }
         };
     }
