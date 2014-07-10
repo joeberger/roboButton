@@ -14,7 +14,7 @@
             android:inputType="textPersonName"
             android:hint="Beacon Name"
             android:ems="10"
-            android:layout_gravity="left|center_vertical"
+            android:layout_gravity="center_horizontal|center_vertical"
             android:layout_margin="20dp"/>
 
 </LinearLayout>

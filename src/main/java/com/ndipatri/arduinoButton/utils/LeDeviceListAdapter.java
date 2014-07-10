@@ -9,10 +9,15 @@ import android.widget.TextView;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.Utils;
+import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+
+import javax.inject.Inject;
 
 /**
  * Created by ndipatri on 7/9/14.
@@ -20,10 +25,20 @@ import java.util.Collection;
 public class LeDeviceListAdapter extends BaseAdapter {
     private ArrayList<Beacon> beacons;
     private LayoutInflater inflater;
+    private Context context;
+
+    // macAddress of each Beacon showing detailed information
+    protected HashSet<String> detailedBeaconsSet = new HashSet<String>();
+
+    @Inject
+    protected BeaconProvider beaconProvider;
 
     public LeDeviceListAdapter(Context context) {
+        this.context = context;
         this.inflater = LayoutInflater.from(context);
         this.beacons = new ArrayList<Beacon>();
+
+        ((ArduinoButtonApplication)context.getApplicationContext()).inject(this);
     }
 
     public void replaceWith(Collection<Beacon> newBeacons) {
@@ -56,11 +71,21 @@ public class LeDeviceListAdapter extends BaseAdapter {
 
     private void bind(Beacon beacon, View view) {
         ViewHolder holder = (ViewHolder) view.getTag();
+
+        com.ndipatri.arduinoButton.models.Beacon localBeacon = beaconProvider.getBeacon(beacon.getMacAddress());
+        if (localBeacon != null) {
+            holder.nameTextView.setText(localBeacon.getName());
+        } else {
+            holder.nameTextView.setText(context.getString(R.string.new_beacon));
+        }
+
         holder.macTextView.setText(String.format("MAC: %s (%.2fm)", beacon.getMacAddress(), Utils.computeAccuracy(beacon)));
         holder.majorTextView.setText("Major: " + beacon.getMajor());
         holder.minorTextView.setText("Minor: " + beacon.getMinor());
         holder.measuredPowerTextView.setText("MPower: " + beacon.getMeasuredPower());
         holder.rssiTextView.setText("RSSI: " + beacon.getRssi());
+
+        holder.detailViewGroup.setVisibility(detailedBeaconsSet.contains(beacon.getMacAddress()) ? View.VISIBLE : View.GONE);
     }
 
     private View inflateIfRequired(View view, int position, ViewGroup parent) {
@@ -72,18 +97,54 @@ public class LeDeviceListAdapter extends BaseAdapter {
     }
 
     static class ViewHolder {
+        final TextView nameTextView;
         final TextView macTextView;
         final TextView majorTextView;
         final TextView minorTextView;
         final TextView measuredPowerTextView;
         final TextView rssiTextView;
+        final ViewGroup detailViewGroup;
+        final View infoImageView;
+        final boolean showDetail = false;
 
         ViewHolder(View view) {
+            nameTextView = (TextView) view.findViewWithTag("name");
             macTextView = (TextView) view.findViewWithTag("mac");
             majorTextView = (TextView) view.findViewWithTag("major");
             minorTextView = (TextView) view.findViewWithTag("minor");
             measuredPowerTextView = (TextView) view.findViewWithTag("mpower");
             rssiTextView = (TextView) view.findViewWithTag("rssi");
+            detailViewGroup = (ViewGroup) view.findViewWithTag("detailViewGroup");
+            infoImageView = (View) view.findViewWithTag("infoImageView");
         }
+    }
+
+    public void toggleViewDetail(int position) {
+        Beacon beacon = getItem(position);
+
+        if (detailedBeaconsSet.contains(beacon.getMacAddress())) {
+            detailedBeaconsSet.remove(beacon.getMacAddress());
+        } else {
+            detailedBeaconsSet.add(beacon.getMacAddress());
+        }
+    }
+
+    private View.OnClickListener createOnClickListener() {
+        return new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+
+            }
+        }
+
+
+           /**
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                adapter.toggleViewDetail(position);
+                return false;
+            }
+            **/
     }
 }
