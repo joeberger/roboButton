@@ -52,7 +52,6 @@ public class RegisterBeaconsActivity extends Activity {
         ListView list = (ListView) findViewById(R.id.device_list);
         list.setAdapter(adapter);
         list.setOnItemClickListener(createOnItemClickListener());
-        list.setOnItemLongClickListener(createOnItemLongClickListener());
 
         // Configure verbose debug logging.
         L.enableDebugLogging(true);

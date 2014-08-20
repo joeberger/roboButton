@@ -42,6 +42,10 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+/**
+ * Constantly monitors all discovered Buttons and launches a ButtonMonitor for each... sends
+ * Otto events when a button is discovered or becomes unresponsive.
+ */
 public class ButtonMonitoringService extends Service {
 
     public static final String TAG = ButtonMonitoringService.class.getCanonicalName();
@@ -137,6 +141,9 @@ public class ButtonMonitoringService extends Service {
                 buttonMonitor.setTimeMultiplier(timeMultiplier);
             }
         }
+
+        // We want to forget all state when 'restarting' service..
+        buttonToLastButtonStateMap.clear();
 
         if (!running) {
 
@@ -262,10 +269,6 @@ public class ButtonMonitoringService extends Service {
                         @Override
                         public void run() {
                             BusProvider.getInstance().post(new ArduinoButtonFoundEvent(pairedButton));
-
-                            if (runInBackground) {
-                                sendActiveButtonNotification(buttonId, currentButtonState);
-                            }
                         }
                     });
 

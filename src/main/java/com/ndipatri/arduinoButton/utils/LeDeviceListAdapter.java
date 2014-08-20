@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.estimote.sdk.Beacon;
@@ -26,9 +27,6 @@ public class LeDeviceListAdapter extends BaseAdapter {
     private ArrayList<Beacon> beacons;
     private LayoutInflater inflater;
     private Context context;
-
-    // macAddress of each Beacon showing detailed information
-    protected HashSet<String> detailedBeaconsSet = new HashSet<String>();
 
     @Inject
     protected BeaconProvider beaconProvider;
@@ -70,7 +68,7 @@ public class LeDeviceListAdapter extends BaseAdapter {
     }
 
     private void bind(Beacon beacon, View view) {
-        ViewHolder holder = (ViewHolder) view.getTag();
+        final ViewHolder holder = (ViewHolder) view.getTag();
 
         com.ndipatri.arduinoButton.models.Beacon localBeacon = beaconProvider.getBeacon(beacon.getMacAddress());
         if (localBeacon != null) {
@@ -85,7 +83,16 @@ public class LeDeviceListAdapter extends BaseAdapter {
         holder.measuredPowerTextView.setText("MPower: " + beacon.getMeasuredPower());
         holder.rssiTextView.setText("RSSI: " + beacon.getRssi());
 
-        holder.detailViewGroup.setVisibility(detailedBeaconsSet.contains(beacon.getMacAddress()) ? View.VISIBLE : View.GONE);
+        holder.infoImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (holder.detailViewGroup.getVisibility() == View.VISIBLE) {
+                    holder.detailViewGroup.setVisibility(View.GONE);
+                } else {
+                    holder.detailViewGroup.setVisibility(View.VISIBLE);
+                }
+            }
+        });
     }
 
     private View inflateIfRequired(View view, int position, ViewGroup parent) {
@@ -105,7 +112,6 @@ public class LeDeviceListAdapter extends BaseAdapter {
         final TextView rssiTextView;
         final ViewGroup detailViewGroup;
         final View infoImageView;
-        final boolean showDetail = false;
 
         ViewHolder(View view) {
             nameTextView = (TextView) view.findViewWithTag("name");
@@ -117,34 +123,5 @@ public class LeDeviceListAdapter extends BaseAdapter {
             detailViewGroup = (ViewGroup) view.findViewWithTag("detailViewGroup");
             infoImageView = (View) view.findViewWithTag("infoImageView");
         }
-    }
-
-    public void toggleViewDetail(int position) {
-        Beacon beacon = getItem(position);
-
-        if (detailedBeaconsSet.contains(beacon.getMacAddress())) {
-            detailedBeaconsSet.remove(beacon.getMacAddress());
-        } else {
-            detailedBeaconsSet.add(beacon.getMacAddress());
-        }
-    }
-
-    private View.OnClickListener createOnClickListener() {
-        return new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-
-            }
-        }
-
-
-           /**
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                adapter.toggleViewDetail(position);
-                return false;
-            }
-            **/
     }
 }
