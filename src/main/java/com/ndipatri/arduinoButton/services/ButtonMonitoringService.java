@@ -96,6 +96,7 @@ public class ButtonMonitoringService extends Service {
         ((ArduinoButtonApplication)getApplication()).inject(this);
 
         connectToBeaconServiceAndStartRanging(bluetoothProvider.getBeaconManager());
+        monitorRegisteredBeacons(bluetoothProvider.getBeaconManager());
 
         BusProvider.getInstance().register(this);
     }
@@ -380,10 +381,31 @@ public class ButtonMonitoringService extends Service {
                             Log.d(TAG, "Found beacons! " + beacons);
                         }
                     });
+
+                    questions.. how do me monitor multiple regions.. we'll need to recall this everytime we
+                            want to register another beacon/button pairing no??
+
+                    beaconManager.startMonitoring(region);
                 } catch (RemoteException e) {
                     Toast.makeText(ButtonMonitoringService.this, "Cannot start ranging, something terrible happened", Toast.LENGTH_LONG).show();
                     Log.e(TAG, "Cannot start ranging", e);
                 }
+            }
+        });
+    }
+
+    private void monitorRegisteredBeacons(final BeaconManager beaconManager) {
+        beaconManager.setMonitoringListener(new BeaconManager.MonitoringListener() {
+            @Override
+            public void onEnteredRegion(Region region, List<Beacon> beacons) {
+                Toast.makeText(ButtonMonitoringService.this, "onEnteredRegion: '" + region + "' with beacons: '" + beacons + "'.", Toast.LENGTH_LONG).show();
+
+                // NJD TODO - here we need to correlate these incoming regions with the regions that we've set locally based on our registered beacons
+            }
+
+            @Override
+            public void onExitedRegion(Region region) {
+                Toast.makeText(ButtonMonitoringService.this, "onExitedREgion: '" + region + ".", Toast.LENGTH_LONG).show();
             }
         });
     }
