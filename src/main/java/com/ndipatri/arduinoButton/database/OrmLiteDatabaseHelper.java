@@ -31,6 +31,9 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     private Dao<Beacon, Long> beaconDao = null;
     private RuntimeExceptionDao<Beacon, Long> beaconRuntimeDao = null;
 
+    private Dao<Beacon, Long> beaconDao = null;
+    private RuntimeExceptionDao<Beacon, Long> beaconRuntimeDao = null;
+
     public OrmLiteDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }

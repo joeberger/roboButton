@@ -95,7 +95,6 @@ public class ButtonMonitoringService extends Service {
 
         ((ArduinoButtonApplication)getApplication()).inject(this);
 
-        connectToBeaconServiceAndStartRanging(bluetoothProvider.getBeaconManager());
         monitorRegisteredBeacons(bluetoothProvider.getBeaconManager());
 
         BusProvider.getInstance().register(this);
@@ -366,32 +365,6 @@ public class ButtonMonitoringService extends Service {
         // The purpose of subscribing is just to ensure buttonMonitor is still communicating successfully.
         // This service serves as a watchdog to terminate any monitors that have become unresponsive
         buttonToLastCommunicationsTimeMap.put(event.buttonId, System.currentTimeMillis());
-    }
-
-    private void connectToBeaconServiceAndStartRanging(final BeaconManager beaconManager) {
-        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
-            @Override
-            public void onServiceReady() {
-                try {
-                    beaconManager.startRanging(ALL_ESTIMOTE_BEACONS);
-
-                    beaconManager.setRangingListener(new BeaconManager.RangingListener() {
-                        @Override
-                        public void onBeaconsDiscovered(Region region, final List<Beacon> beacons) {
-                            Log.d(TAG, "Found beacons! " + beacons);
-                        }
-                    });
-
-                    questions.. how do me monitor multiple regions.. we'll need to recall this everytime we
-                            want to register another beacon/button pairing no??
-
-                    beaconManager.startMonitoring(region);
-                } catch (RemoteException e) {
-                    Toast.makeText(ButtonMonitoringService.this, "Cannot start ranging, something terrible happened", Toast.LENGTH_LONG).show();
-                    Log.e(TAG, "Cannot start ranging", e);
-                }
-            }
-        });
     }
 
     private void monitorRegisteredBeacons(final BeaconManager beaconManager) {

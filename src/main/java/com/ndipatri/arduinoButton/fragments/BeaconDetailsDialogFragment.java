@@ -59,7 +59,6 @@ public class BeaconDetailsDialogFragment extends DialogFragment {
 
         View dialogView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_beacon_details, null);
 
-        // Use ButterKnife for view injection (http://jakewharton.github.io/butterknife/)
         Views.inject(this, dialogView);
 
         builder.setTitle(dialogTitle)

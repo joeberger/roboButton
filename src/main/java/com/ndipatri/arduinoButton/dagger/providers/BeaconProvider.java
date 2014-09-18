@@ -61,4 +61,13 @@ public class BeaconProvider {
 
         return beacon;
     }
+
+    public void addButtonAssocation(String beaconMacAddress, String buttonId) {
+        OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
+        RuntimeExceptionDao<Beacon, Long> beaconDao = helper.getBeaconDao();
+
+        beaconDao.createOrUpdate(dirtyBeacon);
+
+        OpenHelperManager.releaseHelper();
+    }
 }
