@@ -222,7 +222,7 @@ void processBluetooth()
             case 4:
     
                 if (inputBuffer.startsWith("XXX")) { 
-                    localState = String(inputBuffer.charAt(3)).toInt();
+                    changeLocalState(String(inputBuffer.charAt(3)).toInt());
       
                     Serial.print("Received StateChange request! Changed to '" + String(localState) + "'.");      
       
@@ -239,6 +239,18 @@ void processBluetooth()
      }  
 }
 
+void changeLocalState(int newState) {
+     localState = newState;
+   
+     if (localState == 0) {
+          send_1M_pattern(pattern_test_red, 10, 50);
+     } 
+     
+     if (localState == 1) {
+          send_1M_pattern(pattern_test_green, 10, 50);
+     }  
+}  
+  
 void debounceAndProcessSwitch()
 {
      int switchReading = digitalRead(switchPinIn);
@@ -262,13 +274,11 @@ void debounceAndProcessSwitch()
                     // is what we want to trigger an internal state change..
                     if (localState == 1)
                     {
-                         send_1M_pattern(pattern_test_red, 10, 50);
-                         localState = 0;
+                         changeLocalState(0);
                     }
                     else
                     {
-                         send_1M_pattern(pattern_test_green, 10, 50);
-                         localState = 1;
+                         changeLocalState(1);
                     } 
                     
                     Serial.print("LocalStateChange: '" + String(localState) + "'.\n");      
