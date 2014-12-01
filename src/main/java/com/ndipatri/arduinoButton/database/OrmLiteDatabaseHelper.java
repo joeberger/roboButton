@@ -9,6 +9,7 @@ import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.ndipatri.arduinoButton.models.Beacon;
+import com.ndipatri.arduinoButton.models.BeaconButtonAssociation;
 import com.ndipatri.arduinoButton.models.Button;
 
 import java.sql.SQLException;
@@ -31,8 +32,8 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     private Dao<Beacon, Long> beaconDao = null;
     private RuntimeExceptionDao<Beacon, Long> beaconRuntimeDao = null;
 
-    private Dao<Beacon, Long> beaconDao = null;
-    private RuntimeExceptionDao<Beacon, Long> beaconRuntimeDao = null;
+    private Dao<Beacon, Long> beaconButtonAssociationDao = null;
+    private RuntimeExceptionDao<BeaconButtonAssociation, Long> beaconButtonAssociationRuntimeDao = null;
 
     public OrmLiteDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -90,6 +91,18 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
         }
 
         return beaconRuntimeDao;
+    }
+
+    /**
+     * Returns the RuntimeExceptionDao (Database Access Object) version of a Dao for our Beacon class. It will
+     * create it or just give the cached value. RuntimeExceptionDao only through RuntimeExceptions.
+     */
+    public RuntimeExceptionDao<BeaconButtonAssociation, Long> getBeaconButtonAssociationDao() {
+        if (beaconButtonAssociationRuntimeDao == null) {
+            beaconButtonAssociationRuntimeDao = getRuntimeExceptionDao(BeaconButtonAssociation.class);
+        }
+
+        return beaconButtonAssociationRuntimeDao;
     }
 
     /**
