@@ -8,9 +8,9 @@ public class BeaconButtonAssociation {
 
     public BeaconButtonAssociation() {}
 
-    public BeaconButtonAssociation(final String beaconId, final String buttonId) {
+    public BeaconButtonAssociation(final String beaconId, final Button button) {
         this.beaconId = beaconId;
-        this.buttonId = buttonId;
+        this.button = button;
     }
 
     // NJD - This is how we do composite keys in ORMLite
@@ -18,7 +18,7 @@ public class BeaconButtonAssociation {
     private String id;
 
     public String getId(){
-        return getBeaconId() + "-" + getButtonId();
+        return getBeaconId() + "-" + getButton().getId();
     }
     public void setId(String beaconId, String buttonId){
         this.id = beaconId + "-" + buttonId;
@@ -26,13 +26,13 @@ public class BeaconButtonAssociation {
 
     private static final String TAG = BeaconButtonAssociation.class.getCanonicalName();
 
-    public static final String BEACON_ID = "beaconId";
+    public static final String BUTTON_ID = "button_id";
+    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = BUTTON_ID)
+    private Button button;
+
+    public static final String BEACON_ID = "beacon_id";
     @DatabaseField(id = true, columnName = BEACON_ID)
     private String beaconId;
-
-    public static final String BUTTON_ID = "buttonId";
-    @DatabaseField(columnName = BUTTON_ID)
-    private String buttonId;
 
     public String getBeaconId() {
         return beaconId;
@@ -42,11 +42,11 @@ public class BeaconButtonAssociation {
         this.beaconId = beaconId;
     }
 
-    public String getButtonId() {
-        return buttonId;
+    public Button getButton() {
+        return button;
     }
 
-    public void setButtonId(String buttonId) {
-        this.buttonId = buttonId;
+    public void setButton(Button button) {
+        this.button = button;
     }
 }

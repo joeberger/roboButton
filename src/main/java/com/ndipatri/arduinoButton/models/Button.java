@@ -1,6 +1,8 @@
 package com.ndipatri.arduinoButton.models;
 
+import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
@@ -43,6 +45,17 @@ public class Button {
     public static final String ICONFILENAME_COLUMN_NAME = "icon_file_name";
     @DatabaseField(columnName = ICONFILENAME_COLUMN_NAME)
     private String iconFileName;
+
+    @ForeignCollectionField
+    private ForeignCollection<BeaconButtonAssociation> beaconButtonAssociations;
+
+    public ForeignCollection<BeaconButtonAssociation> getBeaconButtonAssociations() {
+        return beaconButtonAssociations;
+    }
+
+    public void setBeaconButtonAssociations(ForeignCollection<BeaconButtonAssociation> beaconButtonAssociations) {
+        this.beaconButtonAssociations = beaconButtonAssociations;
+    }
 
     public String getId() {
         return id;

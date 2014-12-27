@@ -56,23 +56,5 @@ public class ArduinoButtonActivityTest {
     }
 
 
-/*    @Override
-    public void onResume() {
-        super.onResume();
-
-        BusProvider.getInstance().register(this);
-
-        BluetoothAdapter bluetoothAdapter = getBluetoothAdapter();
-        if (bluetoothAdapter == null) {
-            Toast.makeText(this, "Bluetooth not supported on this device!", Toast.LENGTH_SHORT).show();
-            finish();
-        } else {
-            if (!bluetoothAdapter.isEnabled()) {
-                requestUserToEnableBluetooth();
-            } else {
-                startBluetoothMonitoringService();
-            }
-        }
-    }*/
 
 }
