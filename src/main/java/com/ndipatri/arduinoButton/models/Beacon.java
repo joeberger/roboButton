@@ -68,4 +68,29 @@ public class Beacon {
     public void setName(String name) {
         this.name = name;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Beacon beacon = (Beacon) o;
+
+        if (major != beacon.major) return false;
+        if (minor != beacon.minor) return false;
+        if (macAddress != null ? !macAddress.equals(beacon.macAddress) : beacon.macAddress != null)
+            return false;
+        if (name != null ? !name.equals(beacon.name) : beacon.name != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = macAddress != null ? macAddress.hashCode() : 0;
+        result = 31 * result + major;
+        result = 31 * result + minor;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        return result;
+    }
 }

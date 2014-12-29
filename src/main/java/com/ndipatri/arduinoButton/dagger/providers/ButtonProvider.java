@@ -9,9 +9,12 @@ import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
+import com.ndipatri.arduinoButton.models.Beacon;
+import com.ndipatri.arduinoButton.models.BeaconButtonAssociation;
 import com.ndipatri.arduinoButton.models.Button;
 
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -60,5 +63,40 @@ public class ButtonProvider {
         OpenHelperManager.releaseHelper();
 
         return button;
+    }
+
+    public void delete(List<Button> buttons) {
+        if (buttons == null || buttons.isEmpty()) {
+            return;
+        }
+
+        for (Button button : buttons) {
+            delete(button);
+        }
+    }
+
+    public void delete(Button button) {
+        if (button == null) {
+            return;
+        }
+
+        OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
+        RuntimeExceptionDao<Button, Long> buttonDao = helper.getButtonDao();
+
+        buttonDao.delete(button);
+        OpenHelperManager.releaseHelper();
+    }
+
+    public void associate(Button button, Beacon beacon) {
+        BeaconButtonAssociation beaconButtonAssociation = new BeaconButtonAssociation();
+        beaconButtonAssociation.setBeaconId(beacon.getMacAddress());
+        beaconButtonAssociation.setButton(button);
+
+        OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
+        RuntimeExceptionDao<BeaconButtonAssociation, Long> beaconButtonDao = helper.getBeaconButtonAssociationDao();
+
+        beaconButtonDao.createOrUpdate(beaconButtonAssociation);
+
+        OpenHelperManager.releaseHelper();
     }
 }

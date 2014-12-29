@@ -13,7 +13,7 @@ import java.util.List;
 
 import dagger.ObjectGraph;
 
-public class ArduinoButtonApplication extends Application {
+public abstract class ArduinoButtonApplication extends Application {
 
     private static final String TAG = ArduinoButtonApplication.class.getCanonicalName();
 
@@ -56,11 +56,7 @@ public class ArduinoButtonApplication extends Application {
         graph = ObjectGraph.create(getDependencyModules().toArray());
     }
 
-    protected List<? extends Object> getDependencyModules() {
-        return Arrays.asList(
-                new RoboButtonModule(this)
-        );
-    }
+    protected abstract List<? extends Object> getDependencyModules();
 
     public static ArduinoButtonApplication getInstance() {
         return instance;

@@ -6,6 +6,7 @@ import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderImpl;
+import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderTestImpl;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.fragments.BeaconDetailsDialogFragment;
 import com.ndipatri.arduinoButton.fragments.ButtonDetailsDialogFragment;
@@ -28,11 +29,11 @@ import dagger.Provides;
                 MainControllerActivity.class
         }
 )
-public class RoboButtonModule {
+public class TestRoboButtonModule {
 
     private Context context = null;
 
-    public RoboButtonModule (Context context) {
+    public TestRoboButtonModule(Context context) {
         this.context = context;
     }
 
@@ -45,7 +46,7 @@ public class RoboButtonModule {
     @Provides
     @Singleton
     BluetoothProvider provideBluetoothProvider() {
-        return new BluetoothProviderImpl(context);
+        return new BluetoothProviderTestImpl(context);
     }
 
     @Provides

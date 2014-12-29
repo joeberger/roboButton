@@ -20,6 +20,11 @@ public class BeaconButtonAssociation {
     public String getId(){
         return getBeaconId() + "-" + getButton().getId();
     }
+
+    public void setId(String id){
+        this.id = id;
+    }
+
     public void setId(String beaconId, String buttonId){
         this.id = beaconId + "-" + buttonId;
     }
@@ -31,7 +36,7 @@ public class BeaconButtonAssociation {
     private Button button;
 
     public static final String BEACON_ID = "beacon_id";
-    @DatabaseField(id = true, columnName = BEACON_ID)
+    @DatabaseField(columnName = BEACON_ID)
     private String beaconId;
 
     public String getBeaconId() {

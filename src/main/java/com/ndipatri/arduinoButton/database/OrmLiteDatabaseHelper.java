@@ -2,6 +2,7 @@ package com.ndipatri.arduinoButton.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
@@ -48,6 +49,7 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
         try {
             TableUtils.createTableIfNotExists(connectionSource, Button.class);
             TableUtils.createTableIfNotExists(connectionSource, Beacon.class);
+            TableUtils.createTableIfNotExists(connectionSource, BeaconButtonAssociation.class);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -62,6 +64,7 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
         try {
             TableUtils.dropTable(connectionSource, Button.class, true);
             TableUtils.dropTable(connectionSource, Beacon.class, true);
+            TableUtils.dropTable(connectionSource, BeaconButtonAssociation.class, true);
             // after we drop the old databases, we create the new ones
             onCreate(db, connectionSource);
         } catch (SQLException e) {
@@ -112,6 +115,18 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     public void close() {
         super.close();
         buttonRuntimeDao = null;
+    }
+
+    public void deleteDataFromAllTables() {
+        try {
+            TableUtils.clearTable(connectionSource, Button.class);
+            TableUtils.clearTable(connectionSource, Beacon.class);
+            TableUtils.clearTable(connectionSource, BeaconButtonAssociation.class);
+
+        } catch (SQLException e) {
+            Log.e(OrmLiteDatabaseHelper.class.getName(), "Can't clear databases", e);
+            throw new RuntimeException(e);
+        }
     }
 }
 

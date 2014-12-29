@@ -10,6 +10,7 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
 import com.ndipatri.arduinoButton.models.Beacon;
+import com.ndipatri.arduinoButton.models.Button;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -62,12 +63,25 @@ public class BeaconProvider {
         return beacon;
     }
 
-    public void addButtonAssocation(String beaconMacAddress, String buttonId) {
+    public void delete(List<Beacon> beacons) {
+        if (beacons == null || beacons.isEmpty()) {
+            return;
+        }
+
+        for (Beacon beacon : beacons) {
+            delete(beacon);
+        }
+    }
+
+    public void delete(Beacon beacon) {
+        if (beacon == null) {
+            return;
+        }
+
         OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
         RuntimeExceptionDao<Beacon, Long> beaconDao = helper.getBeaconDao();
 
-        beaconDao.createOrUpdate(dirtyBeacon);
-
+        beaconDao.delete(beacon);
         OpenHelperManager.releaseHelper();
     }
 }

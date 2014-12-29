@@ -5,25 +5,9 @@ import android.content.Context;
 
 import com.estimote.sdk.BeaconManager;
 
-public class BluetoothProvider {
+public interface BluetoothProvider {
 
-    private static final String TAG = BluetoothProvider.class.getCanonicalName();
+    public BluetoothAdapter getAdapter();
 
-    private Context context;
-
-    private BeaconManager beaconManager;
-
-    public BluetoothProvider(Context context) {
-        this.context = context;
-
-        beaconManager = new BeaconManager(context);
-    }
-
-    public BluetoothAdapter getAdapter() {
-        return BluetoothAdapter.getDefaultAdapter();
-    }
-
-    public BeaconManager getBeaconManager() {
-        return beaconManager;
-    }
+    public BeaconManager getBeaconManager();
 }

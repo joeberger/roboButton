@@ -88,4 +88,29 @@ public class Button {
     public void setAutoModeEnabled(boolean autoModeEnabled) {
         this.autoModeEnabled = autoModeEnabled;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Button button = (Button) o;
+
+        if (autoModeEnabled != button.autoModeEnabled) return false;
+        if (iconFileName != null ? !iconFileName.equals(button.iconFileName) : button.iconFileName != null)
+            return false;
+        if (id != null ? !id.equals(button.id) : button.id != null) return false;
+        if (name != null ? !name.equals(button.name) : button.name != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (autoModeEnabled ? 1 : 0);
+        result = 31 * result + (iconFileName != null ? iconFileName.hashCode() : 0);
+        return result;
+    }
 }
