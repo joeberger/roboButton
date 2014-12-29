@@ -10,7 +10,6 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
 import com.ndipatri.arduinoButton.models.Beacon;
-import com.ndipatri.arduinoButton.models.BeaconButtonAssociation;
 import com.ndipatri.arduinoButton.models.Button;
 
 import java.sql.SQLException;
@@ -84,19 +83,6 @@ public class ButtonProvider {
         RuntimeExceptionDao<Button, Long> buttonDao = helper.getButtonDao();
 
         buttonDao.delete(button);
-        OpenHelperManager.releaseHelper();
-    }
-
-    public void associate(Button button, Beacon beacon) {
-        BeaconButtonAssociation beaconButtonAssociation = new BeaconButtonAssociation();
-        beaconButtonAssociation.setBeaconId(beacon.getMacAddress());
-        beaconButtonAssociation.setButton(button);
-
-        OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
-        RuntimeExceptionDao<BeaconButtonAssociation, Long> beaconButtonDao = helper.getBeaconButtonAssociationDao();
-
-        beaconButtonDao.createOrUpdate(beaconButtonAssociation);
-
         OpenHelperManager.releaseHelper();
     }
 }

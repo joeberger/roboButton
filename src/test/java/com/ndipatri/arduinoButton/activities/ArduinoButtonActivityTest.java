@@ -15,7 +15,6 @@ import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderImpl;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
 import com.ndipatri.arduinoButton.models.Beacon;
-import com.ndipatri.arduinoButton.models.BeaconButtonAssociation;
 import com.ndipatri.arduinoButton.models.Button;
 
 import org.hamcrest.MatcherAssert;
@@ -107,10 +106,8 @@ public class ArduinoButtonActivityTest {
         try {
             TableUtils.dropTable(helper.getConnectionSource(), Button.class, true);
             TableUtils.dropTable(helper.getConnectionSource(), Beacon.class, true);
-            TableUtils.dropTable(helper.getConnectionSource(), BeaconButtonAssociation.class, true);
             TableUtils.createTable(helper.getConnectionSource(), Button.class);
             TableUtils.createTable(helper.getConnectionSource(), Beacon.class);
-            TableUtils.createTable(helper.getConnectionSource(), BeaconButtonAssociation.class);
         } catch (SQLException e) {
             e.printStackTrace();
         }

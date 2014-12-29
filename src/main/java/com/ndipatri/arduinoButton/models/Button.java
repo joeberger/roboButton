@@ -47,14 +47,14 @@ public class Button {
     private String iconFileName;
 
     @ForeignCollectionField
-    private ForeignCollection<BeaconButtonAssociation> beaconButtonAssociations;
+    private ForeignCollection<Beacon> beacons;
 
-    public ForeignCollection<BeaconButtonAssociation> getBeaconButtonAssociations() {
-        return beaconButtonAssociations;
+    public ForeignCollection<Beacon> getBeacons() {
+        return beacons;
     }
 
-    public void setBeaconButtonAssociations(ForeignCollection<BeaconButtonAssociation> beaconButtonAssociations) {
-        this.beaconButtonAssociations = beaconButtonAssociations;
+    public void setBeacons(ForeignCollection<Beacon> beacons) {
+        this.beacons = beacons;
     }
 
     public String getId() {

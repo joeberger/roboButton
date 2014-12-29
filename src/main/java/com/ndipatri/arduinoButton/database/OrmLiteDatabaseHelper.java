@@ -10,7 +10,6 @@ import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.ndipatri.arduinoButton.models.Beacon;
-import com.ndipatri.arduinoButton.models.BeaconButtonAssociation;
 import com.ndipatri.arduinoButton.models.Button;
 
 import java.sql.SQLException;
@@ -24,7 +23,7 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     private static final String DATABASE_NAME = "ormliteArduinoButton.db";
 
     // any time you make changes to your database objects, you may have to increase the database version
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
     // the DAO object we use to access the SimpleData table
     private Dao<Button, Long> buttonDao = null;
@@ -32,9 +31,6 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
 
     private Dao<Beacon, Long> beaconDao = null;
     private RuntimeExceptionDao<Beacon, Long> beaconRuntimeDao = null;
-
-    private Dao<Beacon, Long> beaconButtonAssociationDao = null;
-    private RuntimeExceptionDao<BeaconButtonAssociation, Long> beaconButtonAssociationRuntimeDao = null;
 
     public OrmLiteDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -49,7 +45,6 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
         try {
             TableUtils.createTableIfNotExists(connectionSource, Button.class);
             TableUtils.createTableIfNotExists(connectionSource, Beacon.class);
-            TableUtils.createTableIfNotExists(connectionSource, BeaconButtonAssociation.class);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -64,7 +59,6 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
         try {
             TableUtils.dropTable(connectionSource, Button.class, true);
             TableUtils.dropTable(connectionSource, Beacon.class, true);
-            TableUtils.dropTable(connectionSource, BeaconButtonAssociation.class, true);
             // after we drop the old databases, we create the new ones
             onCreate(db, connectionSource);
         } catch (SQLException e) {
@@ -97,18 +91,6 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     }
 
     /**
-     * Returns the RuntimeExceptionDao (Database Access Object) version of a Dao for our Beacon class. It will
-     * create it or just give the cached value. RuntimeExceptionDao only through RuntimeExceptions.
-     */
-    public RuntimeExceptionDao<BeaconButtonAssociation, Long> getBeaconButtonAssociationDao() {
-        if (beaconButtonAssociationRuntimeDao == null) {
-            beaconButtonAssociationRuntimeDao = getRuntimeExceptionDao(BeaconButtonAssociation.class);
-        }
-
-        return beaconButtonAssociationRuntimeDao;
-    }
-
-    /**
      * Close the database connections and clear any cached DAOs.
      */
     @Override
@@ -121,7 +103,6 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
         try {
             TableUtils.clearTable(connectionSource, Button.class);
             TableUtils.clearTable(connectionSource, Beacon.class);
-            TableUtils.clearTable(connectionSource, BeaconButtonAssociation.class);
 
         } catch (SQLException e) {
             Log.e(OrmLiteDatabaseHelper.class.getName(), "Can't clear databases", e);

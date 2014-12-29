@@ -7,7 +7,6 @@ import com.j256.ormlite.table.TableUtils;
 import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
 import com.ndipatri.arduinoButton.models.Beacon;
-import com.ndipatri.arduinoButton.models.BeaconButtonAssociation;
 import com.ndipatri.arduinoButton.models.Button;
 
 import org.hamcrest.MatcherAssert;
@@ -33,7 +32,7 @@ public class ButtonProviderTest {
         beaconProvider = new BeaconProvider(context);
 
         registerOrmLiteProvider();
-        resetRMTable();
+        resetORMTable();
     }
 
     @Test
@@ -90,12 +89,16 @@ public class ButtonProviderTest {
         beacon.setMajor(1);
         beacon.setMinor(2);
         beacon.setMacAddress("aa:bb:cc:dd");
-        beacon.set
+        beacon.setButton(button);
 
         beaconProvider.createOrUpdateBeacon(beacon);
 
+        Beacon retrievedBeacon = beaconProvider.getBeacon("aa:bb:cc:dd");
 
+        MatcherAssert.assertThat("Beacon not associated to Button properly.", retrievedBeacon.getButton().getId().equals("123"));
 
+        // NJD TODO - Testing that a Button has a set of beacons doesn't seem to work in Robolectric.. not sure why.. but in practice
+        // this one-to-many association does work.
     }
 
     public static void registerOrmLiteProvider() {
@@ -114,10 +117,8 @@ public class ButtonProviderTest {
         try {
             TableUtils.dropTable(helper.getConnectionSource(), Button.class, true);
             TableUtils.dropTable(helper.getConnectionSource(), Beacon.class, true);
-            TableUtils.dropTable(helper.getConnectionSource(), BeaconButtonAssociation.class, true);
             TableUtils.createTable(helper.getConnectionSource(), Button.class);
             TableUtils.createTable(helper.getConnectionSource(), Beacon.class);
-            TableUtils.createTable(helper.getConnectionSource(), BeaconButtonAssociation.class);
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -7,8 +7,6 @@ import com.j256.ormlite.table.TableUtils;
 import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
 import com.ndipatri.arduinoButton.models.Beacon;
-import com.ndipatri.arduinoButton.models.BeaconButtonAssociation;
-import com.ndipatri.arduinoButton.models.Button;
 
 import org.hamcrest.MatcherAssert;
 import org.junit.Before;

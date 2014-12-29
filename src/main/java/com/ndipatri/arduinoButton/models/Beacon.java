@@ -36,6 +36,17 @@ public class Beacon {
     @DatabaseField(columnName = NAME_COLUMN_NAME)
     private String name;
 
+    public static final String BUTTON_ID = "button_id";
+    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = BUTTON_ID)
+    private Button button;
+
+    public void setButton(Button button) {
+        this.button = button;
+    }
+
+    public Button getButton() {
+        return button;
+    }
 
     public String getMacAddress() {
         return macAddress;
