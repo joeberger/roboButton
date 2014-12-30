@@ -27,6 +27,9 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+/**
+ * Communicates with each individual Button
+ */
 public class ButtonMonitor {
 
     private static final String TAG = ButtonMonitor.class.getCanonicalName();

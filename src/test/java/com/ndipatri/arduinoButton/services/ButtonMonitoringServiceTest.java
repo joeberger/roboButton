@@ -1,6 +1,5 @@
 package com.ndipatri.arduinoButton.services;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
@@ -8,14 +7,10 @@ import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.table.TableUtils;
 import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
-import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
-import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderImpl;
-import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
 import com.ndipatri.arduinoButton.models.Beacon;
 import com.ndipatri.arduinoButton.utils.ActivityWatcher;
 
-import org.hamcrest.MatcherAssert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,24 +54,37 @@ public class ButtonMonitoringServiceTest {
         Intent startedIntent = shadowOf(activity).getNextStartedService();
 
         assertThat("ButtonMonitoringService should have been started.", startedIntent.getComponent().getClassName().equals(ButtonMonitoringService.class.getCanonicalName()));
-        assertThat("ButtonMonitoringService should have been started in foreground.", startedIntent.getExtras().get(ButtonMonitoringService.RUN_IN_BACKGROUND).equals(false));
     }
 
     @Test
-    public void buttonMonitoringServiceStartedTest() {
+    public void onStartCommand() {
 
-        next make sure the handler starts?? then do mockito testing 
+        ButtonMonitoringService monitoringService = startButtonMonitoringService(false); // should run in foreground
+
+        assertThat("ButtonMonitoringService should be running.", monitoringService.isRunning());
+        assertThat("ButtonMonitoringService should have been started in foreground.", !monitoringService.isRunInBackground());
+
+        ButtonMonitoringService.MessageHandler messageHandler = monitoringService.getBluetoothMessageHandler();
+
+        assertThat("MessageHandler thread should have been started and waiting for message.", messageHandler.getLooper().getThread().getState() == Thread.State.WAITING);
+        assertThat("MessageHandler thread should have a 'DISCOVER' message pending.", messageHandler.hasMessages(ButtonMonitoringService.DISCOVER_BUTTON_DEVICES));
+        assertThat("Button discovery interval should be 4 seconds.", monitoringService.getButtonDiscoveryIntervalMillis() == 4000);
+        assertThat("Button communications grace period should be 10 seconds.", monitoringService.getCommunicationsGracePeriodMillis() == 10000);
+    }
+
+    @Test
+    public void discoverButtonDevices() {
 
 
     }
 
-    public static ButtonMonitoringService startButtonMonitoringService() {
+    public static ButtonMonitoringService startButtonMonitoringService(final boolean shouldRunInBackground) {
 
         ButtonMonitoringService buttonMonitoringService = new ButtonMonitoringService();
         buttonMonitoringService.onCreate();
 
         final Intent buttonDiscoveryServiceIntent = new Intent();
-        buttonDiscoveryServiceIntent.putExtra(ButtonMonitoringService.RUN_IN_BACKGROUND,  false);
+        buttonDiscoveryServiceIntent.putExtra(ButtonMonitoringService.RUN_IN_BACKGROUND,  shouldRunInBackground);
         buttonMonitoringService.onStartCommand(buttonDiscoveryServiceIntent, -1, -1);
 
         return buttonMonitoringService;

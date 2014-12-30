@@ -44,7 +44,8 @@ import javax.inject.Inject;
 
 /**
  * Constantly monitors all discovered Buttons and launches a ButtonMonitor for each... sends
- * Otto events when a button is discovered or becomes unresponsive.
+ * Otto events when a button is discovered or becomes unresponsive... so this service only
+ * discovers buttons, it doesn't control them...
  */
 public class ButtonMonitoringService extends Service {
 
@@ -52,7 +53,7 @@ public class ButtonMonitoringService extends Service {
 
     public static final String RUN_IN_BACKGROUND = "run_in_background";
 
-    private static final int DISCOVER_BUTTON_DEVICES = -102;
+    public static final int DISCOVER_BUTTON_DEVICES = -102;
 
     // region localVars
     private static final String ESTIMOTE_PROXIMITY_UUID = "B9407F30-F5F8-466E-AFF9-25556B57FE6D";
@@ -127,6 +128,7 @@ public class ButtonMonitoringService extends Service {
         beaconManager.disconnect();
     }
 
+    // Recall that this can be called multiple times during the lifetime of the app...
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -176,7 +178,7 @@ public class ButtonMonitoringService extends Service {
     }
 
     // Hands outgoing bluetooth messages to background thread.
-    private final class MessageHandler extends Handler {
+    public final class MessageHandler extends Handler {
 
         public MessageHandler(Looper looper) {
             super(looper);
@@ -385,5 +387,21 @@ public class ButtonMonitoringService extends Service {
 
     public boolean isRunInBackground() {
         return runInBackground;
+    }
+
+    public MessageHandler getBluetoothMessageHandler() {
+        return bluetoothMessageHandler;
+    }
+
+    public long getButtonDiscoveryIntervalMillis() {
+        return buttonDiscoveryIntervalMillis;
+    }
+
+    public long getCommunicationsGracePeriodMillis() {
+        return communicationsGracePeriodMillis;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 }
