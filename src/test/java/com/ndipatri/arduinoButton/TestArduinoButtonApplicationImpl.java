@@ -1,6 +1,5 @@
-package com.ndipatri.arduinoButton.activities;
+package com.ndipatri.arduinoButton;
 
-import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.dagger.modules.RoboButtonModule;
 
 import java.util.Arrays;

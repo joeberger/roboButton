@@ -37,7 +37,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @RunWith(RobolectricTestRunner.class)
-public class ArduinoButtonActivityTest {
+public class MainControllerActivityTest {
 
     BluetoothProvider bluetoothProvider;
     ButtonProvider buttonProvider;

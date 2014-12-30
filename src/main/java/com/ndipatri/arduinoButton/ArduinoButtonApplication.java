@@ -17,6 +17,8 @@ public abstract class ArduinoButtonApplication extends Application {
 
     private static final String TAG = ArduinoButtonApplication.class.getCanonicalName();
 
+    private ActivityWatcher activityWatcher;
+
     // region localVars
     private boolean inBackground = true;
 
@@ -33,7 +35,7 @@ public abstract class ArduinoButtonApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        ActivityWatcher activityWatcher = new ActivityWatcher();
+        activityWatcher = new ActivityWatcher();
         activityWatcher.registerActivityWatcherCallbacks(new ActivityWatcher.ActivityWatcherCallbacks() {
 
             @Override
@@ -54,6 +56,10 @@ public abstract class ArduinoButtonApplication extends Application {
         registerActivityLifecycleCallbacks(activityWatcher);
 
         graph = ObjectGraph.create(getDependencyModules().toArray());
+    }
+
+    public ActivityWatcher getActivityWatcher() {
+        return activityWatcher;
     }
 
     protected abstract List<? extends Object> getDependencyModules();

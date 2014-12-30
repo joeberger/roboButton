@@ -207,7 +207,7 @@ public class ButtonMonitoringService extends Service {
         }
     }
 
-    // Here we determin if the device is actually on and communicating..
+    // Here we determine if the device is actually on and communicating..
     // so we launch a monitor for each potential device to ascertain this...
     private synchronized void discoverButtonDevices() {
 
@@ -381,5 +381,9 @@ public class ButtonMonitoringService extends Service {
                 Toast.makeText(ButtonMonitoringService.this, "onExitedREgion: '" + region + ".", Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    public boolean isRunInBackground() {
+        return runInBackground;
     }
 }
