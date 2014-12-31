@@ -4,7 +4,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
@@ -17,7 +16,6 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
-
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
@@ -34,7 +32,6 @@ import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.ndipatri.arduinoButton.utils.ButtonMonitor;
 import com.squareup.otto.Subscribe;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -96,18 +93,17 @@ public class ButtonMonitoringService extends Service {
 
         ((ArduinoButtonApplication)getApplication()).inject(this);
 
-        monitorRegisteredBeacons(bluetoothProvider.getBeaconManager());
+        monitorRegisteredBeacons(bluetoothProvider);
 
         BusProvider.getInstance().register(this);
     }
-
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
         try {
-            disconnectFromBeaconServiceAndStopRanging(bluetoothProvider.getBeaconManager());
+            bluetoothProvider.disconnectFromBTLEServiceAndStopRanging(ALL_ESTIMOTE_BEACONS);
         } catch (RemoteException e) {
             Log.d(TAG, "Error while stopping ranging", e);
         }
@@ -121,11 +117,6 @@ public class ButtonMonitoringService extends Service {
     }
 
     private void unsubscribeFromBeaconRangingNotifications(BeaconManager beaconManager) throws RemoteException {
-    }
-
-    private void disconnectFromBeaconServiceAndStopRanging(BeaconManager beaconManager) throws RemoteException {
-        beaconManager.stopRanging(ALL_ESTIMOTE_BEACONS);
-        beaconManager.disconnect();
     }
 
     // Recall that this can be called multiple times during the lifetime of the app...
@@ -215,9 +206,9 @@ public class ButtonMonitoringService extends Service {
 
         final Set<BluetoothDevice> pairedButtons = new HashSet<BluetoothDevice>();
 
+        // we monitor all paired devices...
         String discoverableButtonPatternString = getString(R.string.button_discovery_pattern);
-        BluetoothAdapter bluetoothAdapter = bluetoothProvider.getAdapter();
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        Set<BluetoothDevice> pairedDevices = bluetoothProvider.getPairedDevices();
         if (pairedDevices != null) {
             for (BluetoothDevice device : pairedDevices) {
                 Log.d(TAG, "Checking BT device: + '" + device.getName() + ":" + device.getAddress() + "'.");
@@ -369,8 +360,8 @@ public class ButtonMonitoringService extends Service {
         buttonToLastCommunicationsTimeMap.put(event.buttonId, System.currentTimeMillis());
     }
 
-    private void monitorRegisteredBeacons(final BeaconManager beaconManager) {
-        beaconManager.setMonitoringListener(new BeaconManager.MonitoringListener() {
+    private void monitorRegisteredBeacons(final BluetoothProvider bluetoothProvider) {
+        bluetoothProvider.setBTLEListener(new BeaconManager.MonitoringListener() {
             @Override
             public void onEnteredRegion(Region region, List<Beacon> beacons) {
                 Toast.makeText(ButtonMonitoringService.this, "onEnteredRegion: '" + region + "' with beacons: '" + beacons + "'.", Toast.LENGTH_LONG).show();

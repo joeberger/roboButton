@@ -89,12 +89,11 @@ public class MainControllerActivity extends Activity {
     protected void resumeActivity() {
         registerWithOttoBus();
 
-        BluetoothAdapter bluetoothAdapter = bluetoothProvider.getAdapter();
-        if (bluetoothAdapter == null) {
+        if (!bluetoothProvider.isBluetoothSupported()) {
             Toast.makeText(this, "Bluetooth not supported on this device!", Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            if (!bluetoothAdapter.isEnabled()) {
+            if (!bluetoothProvider.isBluetoothEnabled()) {
                 requestUserToEnableBluetooth();
             } else {
                 startBluetoothMonitoringService();

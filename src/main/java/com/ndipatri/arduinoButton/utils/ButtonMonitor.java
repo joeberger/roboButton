@@ -246,7 +246,7 @@ public class ButtonMonitor {
         try {
             if (socket == null || !socket.isConnected()) {
                 Log.d(TAG, "Trying to create bluetooth connection...");
-                socket = createConnectionToBluetoothDevice(bluetoothProvider.getAdapter(), bluetoothDevice);
+                socket = createConnectionToBluetoothDevice(bluetoothProvider, bluetoothDevice);
             }
 
             if (socket != null) {
@@ -307,7 +307,7 @@ public class ButtonMonitor {
         try {
             if (socket == null || !socket.isConnected()) {
                 BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.opening_bluetooth_socket), getButtonId()));
-                socket = createConnectionToBluetoothDevice(bluetoothProvider.getAdapter(), bluetoothDevice);
+                socket = createConnectionToBluetoothDevice(bluetoothProvider, bluetoothDevice);
             }
 
             if (socket != null) {
@@ -332,7 +332,7 @@ public class ButtonMonitor {
     }
 
     // Should not be run in UI thread.
-    private BluetoothSocket createConnectionToBluetoothDevice(BluetoothAdapter bluetoothAdapter, BluetoothDevice bluetoothDevice) {
+    private BluetoothSocket createConnectionToBluetoothDevice(BluetoothProvider bluetoothProvider, BluetoothDevice bluetoothDevice) {
 
         BluetoothSocket bluetoothSocket = null;
 
@@ -340,7 +340,7 @@ public class ButtonMonitor {
             Log.d(TAG, "Creating Bluetooth Socket ...");
 
             // Cancel discovery because it will slow down the connection
-            bluetoothAdapter.cancelDiscovery();
+            bluetoothProvider.cancelDiscovery();
 
             bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
             //bluetoothSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
