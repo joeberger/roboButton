@@ -39,8 +39,8 @@ public class ButtonMonitor {
     // region localArgs
     private BluetoothSocket socket = null;
 
-    private static final int QUERY_STATE_MESSAGE = 0;
-    private static final int SET_STATE_MESSAGE = 1;
+    protected static final int QUERY_STATE_MESSAGE = 0;
+    protected static final int SET_STATE_MESSAGE = 1;
 
     // Handler which uses background thread to handle BT communications
     private MessageHandler bluetoothMessageHandler;
@@ -137,7 +137,7 @@ public class ButtonMonitor {
     }
 
     // Hands outgoing bluetooth messages to background thread.
-    private final class MessageHandler extends Handler {
+    protected final class MessageHandler extends Handler {
 
         public MessageHandler(Looper looper) {
             super(looper);
@@ -388,6 +388,10 @@ public class ButtonMonitor {
 
     public synchronized void setTimeMultiplier(int timeMultiplier) {
         this.timeMultiplier = timeMultiplier;
+    }
+
+    public MessageHandler getBluetoothMessageHandler() {
+        return bluetoothMessageHandler;
     }
 
     public boolean isRunning() {

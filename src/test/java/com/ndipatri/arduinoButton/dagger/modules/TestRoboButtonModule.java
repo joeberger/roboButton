@@ -12,6 +12,7 @@ import com.ndipatri.arduinoButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
 import com.ndipatri.arduinoButton.services.BluetoothMonitoringServiceTest;
 import com.ndipatri.arduinoButton.services.ButtonMonitor;
+import com.ndipatri.arduinoButton.services.ButtonMonitorTest;
 import com.ndipatri.arduinoButton.utils.LeDeviceListAdapter;
 
 import javax.inject.Singleton;
@@ -22,6 +23,7 @@ import dagger.Provides;
 @Module(
         injects = {
                 BluetoothMonitoringServiceTest.class,
+                ButtonMonitorTest.class,
                 ButtonDetailsDialogFragment.class,
                 BeaconDetailsDialogFragment.class,
                 LeDeviceListAdapter.class,

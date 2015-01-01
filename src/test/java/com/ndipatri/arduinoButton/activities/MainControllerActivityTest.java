@@ -84,9 +84,9 @@ public class MainControllerActivityTest {
     @Test
     public void testResumeActivity() {
         MainControllerActivity mockMainControllerActivity = mock(MainControllerActivity.class);
-        doCallRealMethod().when(mockMainControllerActivity).onResume();
+        doCallRealMethod().when(mockMainControllerActivity).resumeActivity();
 
-        mockMainControllerActivity.onResume();
+        mockMainControllerActivity.resumeActivity();
         verify(mockMainControllerActivity, times(1)).registerWithOttoBus();
     }
 
