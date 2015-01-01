@@ -1,6 +1,5 @@
 package com.ndipatri.arduinoButton.services;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 
@@ -11,10 +10,14 @@ import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderTestImpl;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
+import com.ndipatri.arduinoButton.enums.ButtonState;
+import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
+import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
 import com.ndipatri.arduinoButton.models.Beacon;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.ActivityWatcher;
-import com.ndipatri.arduinoButton.utils.ButtonMonitor;
+import com.ndipatri.arduinoButton.utils.BusProvider;
+import com.squareup.otto.Subscribe;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -117,6 +120,9 @@ public class BluetoothMonitoringServiceTest {
     @Test
     public void discoverButtonDevices_oldButtonNotCommunicating() {
 
+        // NJD - Not really sure why, but I had to do this in order for 'advanceBy' to work...
+        ShadowSystemClock.setCurrentTimeMillis(0);
+
         // This would be a standard BT device that is one of our 'Button' arduino boards..
         Button availableButton = new Button("aa:bb:cc:dd:ee", "workCubicle", false, "/tmp/sdcard/image.png");
 
@@ -126,24 +132,77 @@ public class BluetoothMonitoringServiceTest {
 
         monitoringService.discoverButtonDevices();
 
-        need to figure out how to advance time.. this doesn't work...
+        OttoBusListener busListener = new OttoBusListener<ArduinoButtonLostEvent>();
+
         Robolectric.getUiThreadScheduler().advanceBy(50000);  // communications grace period is 10 seconds, so we want to make
-                                                              // this button expire
+
+        // this button expire
+        monitoringService.discoverButtonDevices();
+
+        HashMap<String, ButtonMonitor> currentButtonMap = monitoringService.getCurrentButtonMap();
+
+        assertThat("ButtonMonitor should have been killed.", currentButtonMap.size() == 0);
+
+        ArduinoButtonLostEvent expectedEvent = new ArduinoButtonLostEvent(availableButton);
+        assertThat("Lost Button event should have been published.", busListener.getReceivedEvent() != null && busListener.getReceivedEvent().equals(expectedEvent));
+    }
+
+    @Test
+    public void discoverButtonDevices_buttonCommunicating() {
+
+        // NJD - Not really sure why, but I had to do this in order for 'advanceBy' to work...
+        ShadowSystemClock.setCurrentTimeMillis(0);
+
+        // This would be a standard BT device that is one of our 'Button' arduino boards..
+        Button availableButton = new Button("aa:bb:cc:dd:ee", "workCubicle", false, "/tmp/sdcard/image.png");
+
+        Set<Button> availableButtons = new HashSet<Button>();
+        availableButtons.add(availableButton);
+        ((BluetoothProviderTestImpl) bluetoothProvider).setAvailableButtons(availableButtons);
+
+        monitoringService.discoverButtonDevices();
+
+        OttoBusListener busListener = new OttoBusListener<ArduinoButtonFoundEvent>();
+
+        ButtonMonitor buttonMonitor = monitoringService.getCurrentButtonMap().get(availableButton.getId());
+        buttonMonitor.setLocalButtonState(ButtonState.ON);
+
+        Robolectric.getUiThreadScheduler().advanceBy(5000);  // communications grace period is 10 seconds, so we want stay inside this.
 
         monitoringService.discoverButtonDevices();
 
         HashMap<String, ButtonMonitor> currentButtonMap = monitoringService.getCurrentButtonMap();
 
-        assertThat("Should be no ButtonMonitors.", currentButtonMap.size() == 0);
+        assertThat("Should be one ButtonMonitor.", currentButtonMap.size() == 1);
+        assertThat("ButtonMonitor should be configured for new Button.", currentButtonMap.get(availableButton.getId()).getButton().equals(availableButton));
+        assertThat("ButtonMonitor should be running.", currentButtonMap.get(availableButton.getId()).isRunning());
 
+        ArduinoButtonFoundEvent expectedEvent = new ArduinoButtonFoundEvent(availableButton);
+        assertThat("Found Button event should have been published.", busListener.getReceivedEvent() != null && busListener.getReceivedEvent().equals(expectedEvent));
+
+
+        need to add test for notification..
     }
 
-    private class OttoBusListener {
+    private class OttoBusListener<T> {
 
-        public OttoBusListener(Object desiredEventObject)
+        private boolean success = false;
 
+        T receivedEvent;
+
+        public OttoBusListener() {
+            BusProvider.getInstance().register(this);
+        }
+
+        @Subscribe
+        public void onEvent(T receivedEvent) {
+            this.receivedEvent = receivedEvent;
+        }
+
+        public Object getReceivedEvent() {
+            return receivedEvent;
+        }
     }
-    //BusProvider.getInstance().post(new ArduinoButtonLostEvent(lostButtonMonitor.getButton()));
 
     public static BluetoothMonitoringService startButtonMonitoringService(final boolean shouldRunInBackground) {
 

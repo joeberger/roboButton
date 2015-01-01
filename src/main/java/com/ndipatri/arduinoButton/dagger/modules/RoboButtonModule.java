@@ -10,7 +10,7 @@ import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.fragments.BeaconDetailsDialogFragment;
 import com.ndipatri.arduinoButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
-import com.ndipatri.arduinoButton.utils.ButtonMonitor;
+import com.ndipatri.arduinoButton.services.ButtonMonitor;
 import com.ndipatri.arduinoButton.utils.LeDeviceListAdapter;
 
 import javax.inject.Singleton;

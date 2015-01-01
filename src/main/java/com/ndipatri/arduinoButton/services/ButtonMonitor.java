@@ -1,4 +1,4 @@
-package com.ndipatri.arduinoButton.utils;
+package com.ndipatri.arduinoButton.services;
 
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
@@ -17,6 +17,7 @@ import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeReportEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeRequestEvent;
 import com.ndipatri.arduinoButton.models.Button;
+import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
 import java.io.IOException;

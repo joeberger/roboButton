@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -30,7 +31,6 @@ import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeReportEvent;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
-import com.ndipatri.arduinoButton.utils.ButtonMonitor;
 import com.squareup.otto.Subscribe;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -229,7 +229,7 @@ public class BluetoothMonitoringService extends Service {
                 // Ok, first make sure monitor isn't dead...
                 boolean buttonUnresponsive = false;
                 Long lastCommuncationsTimeMillis = buttonToLastCommunicationsTimeMap.get(buttonId);
-                Long nowMillis = System.currentTimeMillis();
+                Long nowMillis = SystemClock.currentThreadTimeMillis();
                 if ((nowMillis - lastCommuncationsTimeMillis) > communicationsGracePeriodMillis) {
                     Log.d(TAG, "Button has become unresponsive for '" + buttonId + "'");
                     buttonUnresponsive = true;
@@ -344,7 +344,7 @@ public class BluetoothMonitoringService extends Service {
 
         // The purpose of subscribing is just to ensure buttonMonitor is still communicating successfully.
         // This service serves as a watchdog to terminate any monitors that have become unresponsive
-        buttonToLastCommunicationsTimeMap.put(event.buttonId, System.currentTimeMillis());
+        buttonToLastCommunicationsTimeMap.put(event.buttonId, SystemClock.currentThreadTimeMillis());
     }
 
     private void monitorRegisteredBeacons(final BluetoothProvider bluetoothProvider) {
