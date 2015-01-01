@@ -1,5 +1,8 @@
 package com.ndipatri.arduinoButton.services;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
@@ -25,11 +28,13 @@ import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
+import org.robolectric.shadows.ShadowPendingIntent;
 import org.robolectric.shadows.ShadowSystemClock;
 
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -48,6 +53,8 @@ public class BluetoothMonitoringServiceTest {
 
     BluetoothMonitoringService monitoringService;
 
+    NotificationManager notificationManager;
+
     @Before
     public void setup() {
 
@@ -64,6 +71,8 @@ public class BluetoothMonitoringServiceTest {
         ArduinoButtonApplication.getInstance().inject(this);
 
         monitoringService = startButtonMonitoringService(false); // should run in foreground
+
+        notificationManager = (NotificationManager) Robolectric.application.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     @Test
@@ -102,7 +111,7 @@ public class BluetoothMonitoringServiceTest {
 
         Set<Button> availableButtons = new HashSet<Button>();
         availableButtons.add(availableButton);
-        ((BluetoothProviderTestImpl)bluetoothProvider).setAvailableButtons(availableButtons);
+        ((BluetoothProviderTestImpl) bluetoothProvider).setAvailableButtons(availableButtons);
 
         monitoringService.discoverButtonDevices();
 
@@ -128,7 +137,7 @@ public class BluetoothMonitoringServiceTest {
 
         Set<Button> availableButtons = new HashSet<Button>();
         availableButtons.add(availableButton);
-        ((BluetoothProviderTestImpl)bluetoothProvider).setAvailableButtons(availableButtons);
+        ((BluetoothProviderTestImpl) bluetoothProvider).setAvailableButtons(availableButtons);
 
         monitoringService.discoverButtonDevices();
 
@@ -148,7 +157,19 @@ public class BluetoothMonitoringServiceTest {
     }
 
     @Test
-    public void discoverButtonDevices_buttonCommunicating() {
+    public void discoverButtonDevices_buttonCommunicating_foreground() {
+        discoverButtonDevices_buttonCommunicating(true);
+    }
+
+    @Test
+    public void discoverButtonDevices_buttonCommunicating_background() {
+        discoverButtonDevices_buttonCommunicating(false);
+    }
+
+    public void discoverButtonDevices_buttonCommunicating(boolean runInForeground) {
+
+        // we want to test this while app is running in background, so the notification happens
+        monitoringService = startButtonMonitoringService(!runInForeground); // should run in foreground
 
         // NJD - Not really sure why, but I had to do this in order for 'advanceBy' to work...
         ShadowSystemClock.setCurrentTimeMillis(0);
@@ -180,8 +201,39 @@ public class BluetoothMonitoringServiceTest {
         ArduinoButtonFoundEvent expectedEvent = new ArduinoButtonFoundEvent(availableButton);
         assertThat("Found Button event should have been published.", busListener.getReceivedEvent() != null && busListener.getReceivedEvent().equals(expectedEvent));
 
+        // Test that system notification was emitted
+        Intent intent = new Intent(application, MainControllerActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(application, 0, intent, 0);
 
-        need to add test for notification..
+        Notification.Builder builder = new Notification.Builder(application);
+        builder.setWhen(System.currentTimeMillis());
+        //builder.setContentText(tickerText);
+        builder.setSmallIcon(buttonMonitor.getButtonState().smallDrawableResourceId); // this is what shows up in notification bar before you pull it down
+        builder.setNumber(1234);
+        builder.setAutoCancel(true);
+        builder.setOnlyAlertOnce(true);
+        builder.setContentIntent(pendingIntent);
+        builder.setVibrate(new long[]{0,     // start immediately
+                200,   // on
+                1000,  // off
+                200,   // on
+                1000,  // off
+                200,   // on
+                1000,  // off
+                200,   // on
+                -1});  // no repeat
+        Notification desiredNotification = builder.build();
+
+        List<Notification> notifications = Robolectric.shadowOf(notificationManager).getAllNotifications();
+
+        String msg = (runInForeground ? "Zero" : "One") + " notification should have been sent.";
+
+        assertThat(msg, notifications.size() == (runInForeground ? 0 : 1));
+
+        if (!runInForeground) {
+            ShadowPendingIntent shadowPendingIntent = shadowOf(notifications.get(0).contentIntent);
+            assertThat("Notification should launch the MainControllerActivity.", shadowPendingIntent.getSavedIntent().getComponent().getClassName().equals(MainControllerActivity.class.getCanonicalName()));
+        }
     }
 
     private class OttoBusListener<T> {
@@ -210,7 +262,7 @@ public class BluetoothMonitoringServiceTest {
         bluetoothMonitoringService.onCreate();
 
         final Intent buttonDiscoveryServiceIntent = new Intent();
-        buttonDiscoveryServiceIntent.putExtra(BluetoothMonitoringService.RUN_IN_BACKGROUND,  shouldRunInBackground);
+        buttonDiscoveryServiceIntent.putExtra(BluetoothMonitoringService.RUN_IN_BACKGROUND, shouldRunInBackground);
         bluetoothMonitoringService.onStartCommand(buttonDiscoveryServiceIntent, -1, -1);
 
         return bluetoothMonitoringService;

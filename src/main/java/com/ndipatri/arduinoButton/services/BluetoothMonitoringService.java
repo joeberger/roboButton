@@ -303,7 +303,7 @@ public class BluetoothMonitoringService extends Service {
 
         int notifId = 1234;
 
-        NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager notificationManager = (NotificationManager) ArduinoButtonApplication.getInstance().getSystemService(Context.NOTIFICATION_SERVICE);
 
         // construct the Notification object.
         Notification.Builder builder = new Notification.Builder(this);
