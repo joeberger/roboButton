@@ -4,11 +4,9 @@ import android.app.Application;
 import android.content.Intent;
 import android.util.Log;
 
-import com.ndipatri.arduinoButton.dagger.modules.RoboButtonModule;
-import com.ndipatri.arduinoButton.services.ButtonMonitoringService;
+import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
 import com.ndipatri.arduinoButton.utils.ActivityWatcher;
 
-import java.util.Arrays;
 import java.util.List;
 
 import dagger.ObjectGraph;
@@ -89,8 +87,8 @@ public abstract class ArduinoButtonApplication extends Application {
     }
 
     protected void startMonitoringService(final boolean shouldBackground) {
-        final Intent buttonDiscoveryServiceIntent = new Intent(this, ButtonMonitoringService.class);
-        buttonDiscoveryServiceIntent.putExtra(ButtonMonitoringService.RUN_IN_BACKGROUND,  shouldBackground);
+        final Intent buttonDiscoveryServiceIntent = new Intent(this, BluetoothMonitoringService.class);
+        buttonDiscoveryServiceIntent.putExtra(BluetoothMonitoringService.RUN_IN_BACKGROUND,  shouldBackground);
         startService(buttonDiscoveryServiceIntent);
     }
 

@@ -1,7 +1,5 @@
 package com.ndipatri.arduinoButton.utils;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Handler;
@@ -18,6 +16,7 @@ import com.ndipatri.arduinoButton.events.ArduinoButtonBluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeReportEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeRequestEvent;
+import com.ndipatri.arduinoButton.models.Button;
 import com.squareup.otto.Subscribe;
 
 import java.io.IOException;
@@ -55,16 +54,16 @@ public class ButtonMonitor {
 
     private ButtonState buttonState = null;
 
-    private BluetoothDevice bluetoothDevice;
+    private Button button;
 
     private Context context;
 
     // endregion
 
-    public ButtonMonitor(final Context context, final BluetoothDevice bluetoothDevice) {
+    public ButtonMonitor(final Context context, final Button button) {
 
         this.context = context;
-        this.bluetoothDevice = bluetoothDevice;
+        this.button = button;
 
         ((ArduinoButtonApplication)context).inject(this);
 
@@ -82,10 +81,6 @@ public class ButtonMonitor {
         setLocalButtonState(ButtonState.NEVER_CONNECTED);
 
         start();
-    }
-
-    protected String getButtonId() {
-        return bluetoothDevice.getAddress();
     }
 
     public void start() {
@@ -127,7 +122,7 @@ public class ButtonMonitor {
             @Override
             public void run() {
                 Log.d(TAG, "State is '" + buttonState + "'");
-                BusProvider.getInstance().post(new ArduinoButtonStateChangeReportEvent(getButtonId(), buttonState));
+                BusProvider.getInstance().post(new ArduinoButtonStateChangeReportEvent(button.getId(), buttonState));
             }
         });
     }
@@ -200,7 +195,7 @@ public class ButtonMonitor {
                         try {
                             setRemoteState();
                         } catch (Exception ex) {
-                            BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), getButtonId()));
+                            BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), button.getId()));
                         }
                     }
 
@@ -230,7 +225,7 @@ public class ButtonMonitor {
 
     public void disconnect() {
         if (socket != null) {
-            Log.d(TAG, "Shutting down Bluetooth Socket for Button('" + getButtonId() + "').");
+            Log.d(TAG, "Shutting down Bluetooth Socket for Button('" + button.getId() + "').");
             try {
                 socket.close();
             } catch (IOException ignored) {
@@ -246,7 +241,7 @@ public class ButtonMonitor {
         try {
             if (socket == null || !socket.isConnected()) {
                 Log.d(TAG, "Trying to create bluetooth connection...");
-                socket = createConnectionToBluetoothDevice(bluetoothProvider, bluetoothDevice);
+                socket = createConnectionToBluetoothDevice();
             }
 
             if (socket != null) {
@@ -306,8 +301,8 @@ public class ButtonMonitor {
 
         try {
             if (socket == null || !socket.isConnected()) {
-                BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.opening_bluetooth_socket), getButtonId()));
-                socket = createConnectionToBluetoothDevice(bluetoothProvider, bluetoothDevice);
+                BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.opening_bluetooth_socket), button.getId()));
+                socket = createConnectionToBluetoothDevice();
             }
 
             if (socket != null) {
@@ -320,7 +315,7 @@ public class ButtonMonitor {
             }
         } catch (IOException connectException) {
             // Unable to connect; close the socket and get out
-            BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), getButtonId()));
+            BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), button.getId()));
             Log.d(TAG, "Socket connect exception!", connectException);
             if (socket != null) {
                 try {
@@ -332,7 +327,7 @@ public class ButtonMonitor {
     }
 
     // Should not be run in UI thread.
-    private BluetoothSocket createConnectionToBluetoothDevice(BluetoothProvider bluetoothProvider, BluetoothDevice bluetoothDevice) {
+    private BluetoothSocket createConnectionToBluetoothDevice() {
 
         BluetoothSocket bluetoothSocket = null;
 
@@ -342,7 +337,7 @@ public class ButtonMonitor {
             // Cancel discovery because it will slow down the connection
             bluetoothProvider.cancelDiscovery();
 
-            bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
+            bluetoothSocket = button.getBluetoothDevice().createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
             //bluetoothSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
 
             // Connect the device through the socket. This will block
@@ -376,8 +371,8 @@ public class ButtonMonitor {
         return buttonState;
     }
 
-    public BluetoothDevice getBluetoothDevice() {
-        return bluetoothDevice;
+    public Button getButton() {
+        return button;
     }
 
     @Subscribe
@@ -392,6 +387,10 @@ public class ButtonMonitor {
 
     public synchronized void setTimeMultiplier(int timeMultiplier) {
         this.timeMultiplier = timeMultiplier;
+    }
+
+    public boolean isRunning() {
+        return shouldRun;
     }
 }
 

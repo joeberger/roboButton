@@ -1,12 +1,11 @@
 package com.ndipatri.arduinoButton.dagger.providers;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.RemoteException;
 
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
+import com.ndipatri.arduinoButton.models.Button;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -21,7 +20,7 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
 
     private BeaconManager.MonitoringListener btleListener;
 
-    private Set<BluetoothDevice> pairedDevices = new HashSet<BluetoothDevice>();
+    private Set<Button> availableButtons = new HashSet<Button>();
 
     private boolean isBluetoothSupported = false;
     private boolean isBluetoothEnabled = false;
@@ -34,8 +33,9 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
         beaconManager = new BeaconManager(context);
     }
 
-    public Set<BluetoothDevice> getPairedDevices() {
-        return pairedDevices;
+    @Override
+    public Set<Button> getAvailableButtons() {
+        return availableButtons;
     }
 
     @Override
@@ -79,12 +79,7 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
         this.isBluetoothEnabled = isBluetoothEnabled;
     }
 
-    public void setPairedDevices(Set<BluetoothDevice> pairedDevices) {
-        this.pairedDevices = pairedDevices;
-    }
-
-
-    public BeaconManager getBeaconManager() {
-        return beaconManager;
+    public void setAvailableButtons(Set<Button> availableButtons) {
+        this.availableButtons = availableButtons;
     }
 }

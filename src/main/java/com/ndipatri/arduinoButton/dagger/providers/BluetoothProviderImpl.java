@@ -4,11 +4,15 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.RemoteException;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
+import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.models.Button;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class BluetoothProviderImpl implements BluetoothProvider {
@@ -25,8 +29,28 @@ public class BluetoothProviderImpl implements BluetoothProvider {
         beaconManager = new BeaconManager(context);
     }
 
-    public Set<BluetoothDevice> getPairedDevices() {
-        return BluetoothAdapter.getDefaultAdapter().getBondedDevices();
+    @Override
+    public Set<Button> getAvailableButtons() {
+
+        final Set<Button> pairedButtons = new HashSet<Button>();
+
+        // we monitor all paired devices...
+        String discoverableButtonPatternString = context.getString(R.string.button_discovery_pattern);
+        Set<BluetoothDevice> pairedDevices = BluetoothAdapter.getDefaultAdapter().getBondedDevices();
+        if (pairedDevices != null) {
+            for (BluetoothDevice device : pairedDevices) {
+                Log.d(TAG, "Checking BT device: + '" + device.getName() + ":" + device.getAddress() + "'.");
+                if (device.getName().matches(discoverableButtonPatternString)) {
+                    Log.d(TAG, "We have a paired ArduinoButton device! + '" + device + "'.");
+
+                    Button pairedButton = new Button(device.getAddress(), device.getAddress(), false, null);
+                    pairedButton.setBluetoothDevice(device);
+                    pairedButtons.add(pairedButton);
+                }
+            }
+        }
+
+        return pairedButtons;
     }
 
     @Override

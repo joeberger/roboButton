@@ -7,12 +7,13 @@ import android.os.RemoteException;
 
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
+import com.ndipatri.arduinoButton.models.Button;
 
 import java.util.Set;
 
 public interface BluetoothProvider {
 
-    public Set<BluetoothDevice> getPairedDevices();
+    public Set<Button> getAvailableButtons();
 
     public boolean isBluetoothSupported();
 

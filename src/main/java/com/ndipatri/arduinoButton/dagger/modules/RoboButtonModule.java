@@ -9,7 +9,7 @@ import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderImpl;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.fragments.BeaconDetailsDialogFragment;
 import com.ndipatri.arduinoButton.fragments.ButtonDetailsDialogFragment;
-import com.ndipatri.arduinoButton.services.ButtonMonitoringService;
+import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
 import com.ndipatri.arduinoButton.utils.ButtonMonitor;
 import com.ndipatri.arduinoButton.utils.LeDeviceListAdapter;
 
@@ -23,7 +23,7 @@ import dagger.Provides;
                 ButtonDetailsDialogFragment.class,
                 BeaconDetailsDialogFragment.class,
                 LeDeviceListAdapter.class,
-                ButtonMonitoringService.class,
+                BluetoothMonitoringService.class,
                 ButtonMonitor.class,
                 MainControllerActivity.class
         }

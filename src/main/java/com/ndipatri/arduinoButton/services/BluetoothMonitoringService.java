@@ -44,9 +44,9 @@ import javax.inject.Inject;
  * Otto events when a button is discovered or becomes unresponsive... so this service only
  * discovers buttons, it doesn't control them...
  */
-public class ButtonMonitoringService extends Service {
+public class BluetoothMonitoringService extends Service {
 
-    public static final String TAG = ButtonMonitoringService.class.getCanonicalName();
+    public static final String TAG = BluetoothMonitoringService.class.getCanonicalName();
 
     public static final String RUN_IN_BACKGROUND = "run_in_background";
 
@@ -202,23 +202,9 @@ public class ButtonMonitoringService extends Service {
 
     // Here we determine if the device is actually on and communicating..
     // so we launch a monitor for each potential device to ascertain this...
-    private synchronized void discoverButtonDevices() {
+    protected synchronized void discoverButtonDevices() {
 
-        final Set<BluetoothDevice> pairedButtons = new HashSet<BluetoothDevice>();
-
-        // we monitor all paired devices...
-        String discoverableButtonPatternString = getString(R.string.button_discovery_pattern);
-        Set<BluetoothDevice> pairedDevices = bluetoothProvider.getPairedDevices();
-        if (pairedDevices != null) {
-            for (BluetoothDevice device : pairedDevices) {
-                Log.d(TAG, "Checking BT device: + '" + device.getName() + ":" + device.getAddress() + "'.");
-                if (device.getName().matches(discoverableButtonPatternString)) {
-                    Log.d(TAG, "We have a paired ArduinoButton device! + '" + device + "'.");
-
-                    pairedButtons.add(device);
-                }
-            }
-        }
+        final Set<Button> pairedButtons = bluetoothProvider.getAvailableButtons();
 
         // To keep track of buttons that have gone incommunicado.
 
@@ -229,11 +215,11 @@ public class ButtonMonitoringService extends Service {
         // These are all buttons with which we are still communicating.
         final HashMap<String, ButtonMonitor> newAndExistingButtonMap = new HashMap<String, ButtonMonitor>();
 
-        for (final BluetoothDevice pairedButton : pairedButtons) {
+        for (final Button pairedButton : pairedButtons) {
 
-            final String buttonId = getButtonId(pairedButton);
+            String buttonId = pairedButton.getId();
 
-            ButtonMonitor buttonMonitor = currentButtonMap.get(buttonId);
+            ButtonMonitor buttonMonitor = currentButtonMap.get(pairedButton.getId());
 
             if (buttonMonitor == null) {
                 // This is a paired button with no monitor.. So start monitoring.
@@ -243,7 +229,8 @@ public class ButtonMonitoringService extends Service {
                 // Ok, first make sure monitor isn't dead...
                 boolean buttonUnresponsive = false;
                 Long lastCommuncationsTimeMillis = buttonToLastCommunicationsTimeMap.get(buttonId);
-                if ((System.currentTimeMillis() - lastCommuncationsTimeMillis) > communicationsGracePeriodMillis) {
+                Long nowMillis = System.currentTimeMillis();
+                if ((nowMillis - lastCommuncationsTimeMillis) > communicationsGracePeriodMillis) {
                     Log.d(TAG, "Button has become unresponsive for '" + buttonId + "'");
                     buttonUnresponsive = true;
                 }
@@ -288,7 +275,7 @@ public class ButtonMonitoringService extends Service {
             new Handler(getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
-                    BusProvider.getInstance().post(new ArduinoButtonLostEvent(lostButtonMonitor.getBluetoothDevice()));
+                    BusProvider.getInstance().post(new ArduinoButtonLostEvent(lostButtonMonitor.getButton()));
                 }
             });
         }
@@ -364,14 +351,14 @@ public class ButtonMonitoringService extends Service {
         bluetoothProvider.setBTLEListener(new BeaconManager.MonitoringListener() {
             @Override
             public void onEnteredRegion(Region region, List<Beacon> beacons) {
-                Toast.makeText(ButtonMonitoringService.this, "onEnteredRegion: '" + region + "' with beacons: '" + beacons + "'.", Toast.LENGTH_LONG).show();
+                Toast.makeText(BluetoothMonitoringService.this, "onEnteredRegion: '" + region + "' with beacons: '" + beacons + "'.", Toast.LENGTH_LONG).show();
 
                 // NJD TODO - here we need to correlate these incoming regions with the regions that we've set locally based on our registered beacons
             }
 
             @Override
             public void onExitedRegion(Region region) {
-                Toast.makeText(ButtonMonitoringService.this, "onExitedREgion: '" + region + ".", Toast.LENGTH_LONG).show();
+                Toast.makeText(BluetoothMonitoringService.this, "onExitedREgion: '" + region + ".", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -394,5 +381,9 @@ public class ButtonMonitoringService extends Service {
 
     public boolean isRunning() {
         return running;
+    }
+
+    public HashMap<String, ButtonMonitor> getCurrentButtonMap() {
+        return currentButtonMap;
     }
 }

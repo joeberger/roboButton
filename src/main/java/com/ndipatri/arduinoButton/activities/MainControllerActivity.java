@@ -2,7 +2,6 @@ package com.ndipatri.arduinoButton.activities;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,7 +23,7 @@ import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageResponseEvent;
 import com.ndipatri.arduinoButton.fragments.ArduinoButtonFragment;
-import com.ndipatri.arduinoButton.services.ButtonMonitoringService;
+import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
@@ -111,7 +110,7 @@ public class MainControllerActivity extends Activity {
     }
 
     protected void startBluetoothMonitoringService() {
-        final Intent buttonDiscoveryServiceIntent = new Intent(this, ButtonMonitoringService.class);
+        final Intent buttonDiscoveryServiceIntent = new Intent(this, BluetoothMonitoringService.class);
         startService(buttonDiscoveryServiceIntent);
     }
 
@@ -192,10 +191,6 @@ public class MainControllerActivity extends Activity {
         publishProgress(arduinoButtonInformationEvent.message);
     }
 
-    protected String getButtonId(BluetoothDevice bluetoothDevice) {
-        return bluetoothDevice.getAddress();
-    }
-
     private ArduinoButtonFragment lookupButtonFragment(String buttonId) {
         return (ArduinoButtonFragment) getFragmentManager().findFragmentByTag(getButtonFragmentTag(buttonId));
     }
@@ -236,7 +231,7 @@ public class MainControllerActivity extends Activity {
 
     @Subscribe
     public void onButtonLostEvent(ArduinoButtonLostEvent arduinoButtonLostEvent) {
-        String lostButtonId = getButtonId(arduinoButtonLostEvent.bluetoothDevice);
+        String lostButtonId = arduinoButtonLostEvent.button.getId();
 
         forgetArduinoButton(lostButtonId);
     }
@@ -256,7 +251,7 @@ public class MainControllerActivity extends Activity {
     @Subscribe
     public void onArduinoButtonFoundEvent(ArduinoButtonFoundEvent arduinoButtonFoundEvent) {
 
-        String foundButtonId = getButtonId(arduinoButtonFoundEvent.bluetoothDevice);
+        String foundButtonId = arduinoButtonFoundEvent.button.getId();
 
         ArduinoButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
         if (existingButtonFragment == null) {

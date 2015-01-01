@@ -1,5 +1,7 @@
 package com.ndipatri.arduinoButton.models;
 
+import android.bluetooth.BluetoothDevice;
+
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
@@ -49,6 +51,8 @@ public class Button {
     @ForeignCollectionField
     private ForeignCollection<Beacon> beacons;
 
+    private BluetoothDevice bluetoothDevice;
+
     public ForeignCollection<Beacon> getBeacons() {
         return beacons;
     }
@@ -87,6 +91,14 @@ public class Button {
 
     public void setAutoModeEnabled(boolean autoModeEnabled) {
         this.autoModeEnabled = autoModeEnabled;
+    }
+
+    public BluetoothDevice getBluetoothDevice() {
+        return bluetoothDevice;
+    }
+
+    public void setBluetoothDevice(BluetoothDevice bluetoothDevice) {
+        this.bluetoothDevice = bluetoothDevice;
     }
 
     @Override
