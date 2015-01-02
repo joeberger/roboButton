@@ -23,6 +23,7 @@ import com.estimote.sdk.Region;
 import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
+import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
@@ -36,6 +37,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.inject.Inject;
 
@@ -53,6 +55,8 @@ public class BluetoothMonitoringService extends Service {
     public static final int DISCOVER_BUTTON_DEVICES = -102;
 
     protected boolean runInBackground = false;
+
+    @Inject protected BeaconProvider beaconProvider;
 
     @Inject protected ButtonProvider buttonProvider;
 
@@ -78,6 +82,8 @@ public class BluetoothMonitoringService extends Service {
     // Keeping track of last value received from button.
     HashMap<String, ButtonState> buttonToLastButtonStateMap = new HashMap<String, ButtonState>();
     //endregion
+
+    Set<com.ndipatri.arduinoButton.models.Beacon> nearbyBeacons = new ConcurrentSkipListSet<com.ndipatri.arduinoButton.models.Beacon>();
 
     public IBinder onBind(Intent intent) {
         return null;
@@ -288,13 +294,21 @@ public class BluetoothMonitoringService extends Service {
 
     private Set<Button> getAllNearbyBeaconPairedButtons() {
 
-        // All Buttons that have been associated with a Beacon
+        Set<Button> nearbyPairedButtons = new HashSet<Button>();
+
+        // All buttons that have been paired with a beacon
         List<Button> pairedButtons = buttonProvider.getBeaconPairedButtons();
 
-        // We need to determine which of these have beacons that have are in range...
-        // NJD TODO - need to check on beacon monitoring here...
+        // Now see which are in range...
+        for (Button button : pairedButtons) {
+            com.ndipatri.arduinoButton.models.Beacon nearbyBeacon = button.getBeacon();
 
-        return null;
+            if (nearbyBeacons.contains(nearbyBeacon)) {
+                nearbyPairedButtons.add(button);
+            }
+        }
+
+        return nearbyPairedButtons;
     }
 
     protected String getButtonId(final BluetoothDevice bluetoothDevice) {
@@ -366,14 +380,23 @@ public class BluetoothMonitoringService extends Service {
             public void onEnteredRegion(Region region, List<Beacon> beacons) {
                 Toast.makeText(BluetoothMonitoringService.this, "onEnteredRegion: '" + region + "' with beacons: '" + beacons + "'.", Toast.LENGTH_LONG).show();
 
-                // NJD TODO - here we need to correlate these incoming regions with the regions that we've set locally based on our registered beacons
-                // need to maintain a set of 'nearby' beacons that we know are associated with paried buttons... so
-                // we'll need a beaconProvider.getAssociatedBeacons() call and then from that, keep track of which are proximal..
+                for (Beacon beacon : beacons) {
+                    com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(beacon.getMacAddress(), true);
+
+                    if (pairedBeacon != null) {
+                        Log.d(TAG, "Paired beacon detected!");
+
+                        nearbyBeacons.add(pairedBeacon);
+                    }
+                }
             }
 
             @Override
             public void onExitedRegion(Region region) {
-                Toast.makeText(BluetoothMonitoringService.this, "onExitedREgion: '" + region + ".", Toast.LENGTH_LONG).show();
+                Toast.makeText(BluetoothMonitoringService.this, "onExitedRegion: '" + region + ".", Toast.LENGTH_LONG).show();
+
+                // I'm guessing, we get this callback when there are NO more detected beacons in the given region
+                nearbyBeacons.clear();
             }
         });
     }

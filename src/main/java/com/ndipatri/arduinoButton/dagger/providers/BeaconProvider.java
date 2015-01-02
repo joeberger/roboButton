@@ -38,7 +38,11 @@ public class BeaconProvider {
         OpenHelperManager.releaseHelper();
     }
 
-    public Beacon getBeacon(String macAddress) {
+    public Beacon getBeacon(final String macAddress) {
+        return getBeacon(macAddress, false);
+    }
+
+    public Beacon getBeacon(final String macAddress, final boolean mustBePaired) {
 
         Beacon beacon = null;
 
@@ -49,6 +53,10 @@ public class BeaconProvider {
         try {
             Where<Beacon, Long> where = queryBuilder.where();
             where.eq(Beacon.MAC_ADDRESS_COLUMN_NAME, macAddress);
+            if (mustBePaired) {
+                where.isNotNull(Beacon.BUTTON_ID);
+            }
+
             PreparedQuery<Beacon> preparedQuery = queryBuilder.prepare();
             List<Beacon> beacons = beaconDao.query(preparedQuery);
             if (beacons != null && beacons.size() == 1) {
