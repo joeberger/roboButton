@@ -94,7 +94,8 @@ public class RegisterBeaconsActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        beaconManager.disconnect();
+        // NJD TODO - not doing this here as I'm not sure how it effects our BT service that is also connected to this beaconManager.
+        //beaconManager.disconnect();
 
         super.onDestroy();
     }

@@ -6,9 +6,13 @@
             android:id="@+id/forget_all_buttons"
             android:icon="@android:drawable/stat_sys_data_bluetooth"
             android:title="@string/forget_all_buttons"/>
-
     <item
         android:id="@+id/register_beacons"
         android:icon="@drawable/beacon_gray"
-        android:title="@string/register_proximity_beacons"/>
+        android:title="@string/register_beacons"/>
+
+    <item
+        android:id="@+id/beacon_filter"
+        android:icon="@drawable/beacon_gray"
+        android:title="@string/turn_on_beacon_filter"/>
 </menu>

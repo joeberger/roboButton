@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.RemoteException;
 
 import com.estimote.sdk.BeaconManager;
-import com.estimote.sdk.Region;
 import com.ndipatri.arduinoButton.models.Button;
 
 import java.util.HashSet;
@@ -34,7 +33,7 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
     }
 
     @Override
-    public Set<Button> getAvailableButtons() {
+    public Set<Button> getAllNearbyButtons() {
         return availableButtons;
     }
 
@@ -58,12 +57,12 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
     }
 
     @Override
-    public void setBTLEListener(BeaconManager.MonitoringListener btleListener) {
+    public void startBTMonitoring(BeaconManager.MonitoringListener btleListener) {
         this.btleListener = btleListener;
     }
 
     @Override
-    public void disconnectFromBTLEServiceAndStopRanging(Region region) throws RemoteException {
+    public void stopBTMonitoring() throws RemoteException {
         // NJD TODO - noop for now.. eventually, should track which regions are being ranged...
     }
 

@@ -128,7 +128,6 @@ public class BluetoothMonitoringServiceTest {
 
     @Test
     public void discoverButtonDevices_oldButtonNotCommunicating() {
-
         // NJD - Not really sure why, but I had to do this in order for 'advanceBy' to work...
         ShadowSystemClock.setCurrentTimeMillis(0);
 
@@ -235,6 +234,8 @@ public class BluetoothMonitoringServiceTest {
             assertThat("Notification should launch the MainControllerActivity.", shadowPendingIntent.getSavedIntent().getComponent().getClassName().equals(MainControllerActivity.class.getCanonicalName()));
         }
     }
+
+    // NJD TODO - Need to write tests around new Beacon monitoring...
 
     private class OttoBusListener<T> {
 

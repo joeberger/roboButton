@@ -13,7 +13,7 @@ import java.util.Set;
 
 public interface BluetoothProvider {
 
-    public Set<Button> getAvailableButtons();
+    public Set<Button> getAllNearbyButtons();
 
     public boolean isBluetoothSupported();
 
@@ -22,7 +22,7 @@ public interface BluetoothProvider {
     public void cancelDiscovery();
 
     // Low Power Bluetooth (BTLE) interface...
-    public void setBTLEListener(BeaconManager.MonitoringListener listener);
+    public void startBTMonitoring(BeaconManager.MonitoringListener listener);
 
-    public void disconnectFromBTLEServiceAndStopRanging(Region region) throws RemoteException;
+    public void stopBTMonitoring() throws RemoteException;
 }

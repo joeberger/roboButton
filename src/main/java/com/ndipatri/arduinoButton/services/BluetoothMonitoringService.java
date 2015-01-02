@@ -52,10 +52,6 @@ public class BluetoothMonitoringService extends Service {
 
     public static final int DISCOVER_BUTTON_DEVICES = -102;
 
-    // region localVars
-    private static final String ESTIMOTE_PROXIMITY_UUID = "B9407F30-F5F8-466E-AFF9-25556B57FE6D";
-    private static final Region ALL_ESTIMOTE_BEACONS = new Region("regionId", ESTIMOTE_PROXIMITY_UUID, null, null);
-
     protected boolean runInBackground = false;
 
     @Inject protected ButtonProvider buttonProvider;
@@ -103,7 +99,7 @@ public class BluetoothMonitoringService extends Service {
         super.onDestroy();
 
         try {
-            bluetoothProvider.disconnectFromBTLEServiceAndStopRanging(ALL_ESTIMOTE_BEACONS);
+            bluetoothProvider.stopBTMonitoring();
         } catch (RemoteException e) {
             Log.d(TAG, "Error while stopping ranging", e);
         }
@@ -114,9 +110,6 @@ public class BluetoothMonitoringService extends Service {
         for (final ButtonMonitor thisMonitor : currentButtonMap.values()) {
             thisMonitor.stop();
         }
-    }
-
-    private void unsubscribeFromBeaconRangingNotifications(BeaconManager beaconManager) throws RemoteException {
     }
 
     // Recall that this can be called multiple times during the lifetime of the app...
@@ -204,7 +197,15 @@ public class BluetoothMonitoringService extends Service {
     // so we launch a monitor for each potential device to ascertain this...
     protected synchronized void discoverButtonDevices() {
 
-        final Set<Button> pairedButtons = bluetoothProvider.getAvailableButtons();
+        // This is the only code that distinguishes 'proximal' buttons from all available buttons... all the
+        // rest of the logic is identical (yaay)
+        Set<Button> buttons;
+        boolean beaconFilteringOn = ArduinoButtonApplication.getInstance().getBooleanPreference(ArduinoButtonApplication.BEACON_FILTER_ON_PREF, false) ;
+        if (beaconFilteringOn) {
+            buttons = getAllNearbyBeaconPairedButtons();
+        } else {
+            buttons = bluetoothProvider.getAllNearbyButtons();
+        }
 
         // To keep track of buttons that have gone incommunicado.
 
@@ -215,7 +216,7 @@ public class BluetoothMonitoringService extends Service {
         // These are all buttons with which we are still communicating.
         final HashMap<String, ButtonMonitor> newAndExistingButtonMap = new HashMap<String, ButtonMonitor>();
 
-        for (final Button pairedButton : pairedButtons) {
+        for (final Button pairedButton : buttons) {
 
             String buttonId = pairedButton.getId();
 
@@ -285,6 +286,17 @@ public class BluetoothMonitoringService extends Service {
         scheduleButtonDiscoveryMessage();
     }
 
+    private Set<Button> getAllNearbyBeaconPairedButtons() {
+
+        // All Buttons that have been associated with a Beacon
+        List<Button> pairedButtons = buttonProvider.getBeaconPairedButtons();
+
+        // We need to determine which of these have beacons that have are in range...
+        // NJD TODO - need to check on beacon monitoring here...
+
+        return null;
+    }
+
     protected String getButtonId(final BluetoothDevice bluetoothDevice) {
         return bluetoothDevice.getAddress();
     }
@@ -301,6 +313,7 @@ public class BluetoothMonitoringService extends Service {
         Intent intent = new Intent(this, MainControllerActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
+        // NJD TODO - Could use 'notificationManager.cancel(NOTIFICATION_ID)' at some point for cleanup
         int notifId = 1234;
 
         NotificationManager notificationManager = (NotificationManager) ArduinoButtonApplication.getInstance().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -348,12 +361,14 @@ public class BluetoothMonitoringService extends Service {
     }
 
     private void monitorRegisteredBeacons(final BluetoothProvider bluetoothProvider) {
-        bluetoothProvider.setBTLEListener(new BeaconManager.MonitoringListener() {
+        bluetoothProvider.startBTMonitoring(new BeaconManager.MonitoringListener() {
             @Override
             public void onEnteredRegion(Region region, List<Beacon> beacons) {
                 Toast.makeText(BluetoothMonitoringService.this, "onEnteredRegion: '" + region + "' with beacons: '" + beacons + "'.", Toast.LENGTH_LONG).show();
 
                 // NJD TODO - here we need to correlate these incoming regions with the regions that we've set locally based on our registered beacons
+                // need to maintain a set of 'nearby' beacons that we know are associated with paried buttons... so
+                // we'll need a beaconProvider.getAssociatedBeacons() call and then from that, keep track of which are proximal..
             }
 
             @Override

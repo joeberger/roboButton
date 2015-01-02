@@ -11,6 +11,7 @@ public class Beacon {
 
     public Beacon() {}
 
+    // NJD TODO - Need to add UUID to this (which by default is the same for all estimotes, but can be made unique)
     public Beacon(final String macAddress, final int major, final int minor, final String name) {
         this.macAddress = macAddress;
         this.major = major;

@@ -23,6 +23,8 @@
     <string name="disconnected">disconnected</string>
     <string name="unknown">uUnknown</string>
     <string name="is_connecting">is connecting</string>
-    <string name="register_proximity_beacons">Register Proximity Beacons</string>
+    <string name="register_beacons">Register Beacons</string>
     <string name="new_beacon">New Beacon</string>
+    <string name="turn_on_beacon_filter">Turn On Beacon Filter</string>
+    <string name="turn_off_beacon_filter">Turn Off Beacon Filter</string>
 </resources>

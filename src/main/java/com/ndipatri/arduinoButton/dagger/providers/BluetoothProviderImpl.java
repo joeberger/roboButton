@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.RemoteException;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
@@ -14,10 +13,14 @@ import com.ndipatri.arduinoButton.models.Button;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class BluetoothProviderImpl implements BluetoothProvider {
 
     private static final String TAG = BluetoothProviderImpl.class.getCanonicalName();
+
+    private static final int ROBOBUTTON_ESTIMOTE_MAJOR_VALUE = 23524123;
+    private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, ROBOBUTTON_ESTIMOTE_MAJOR_VALUE, null);
 
     private Context context;
 
@@ -30,7 +33,7 @@ public class BluetoothProviderImpl implements BluetoothProvider {
     }
 
     @Override
-    public Set<Button> getAvailableButtons() {
+    public Set<Button> getAllNearbyButtons() {
 
         final Set<Button> pairedButtons = new HashSet<Button>();
 
@@ -79,14 +82,29 @@ public class BluetoothProviderImpl implements BluetoothProvider {
     }
 
     @Override
-    public void setBTLEListener(BeaconManager.MonitoringListener listener) {
+    public void startBTMonitoring(BeaconManager.MonitoringListener listener) {
+
+        // Default values are 5s of scanning and 25s of waiting time to save CPU cycles.
+        // In order for this demo to be more responsive and immediate we lower down those values.
+        beaconManager.setBackgroundScanPeriod(TimeUnit.SECONDS.toMillis(1), 0);
+
         beaconManager.setMonitoringListener(listener);
+
+        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
+            @Override
+            public void onServiceReady() {
+                try {
+                    beaconManager.startMonitoring(ALL_ROBOBUTTON_BEACONS);
+                } catch (RemoteException e) {
+                    Log.d(TAG, "Error while starting monitoring");
+                }
+            }
+        });
     }
 
     @Override
-    public void disconnectFromBTLEServiceAndStopRanging(Region region) throws RemoteException {
-        beaconManager.stopRanging(region);
+    public void stopBTMonitoring() throws RemoteException {
+        beaconManager.stopMonitoring(ALL_ROBOBUTTON_BEACONS);
         beaconManager.disconnect();
     }
-
 }

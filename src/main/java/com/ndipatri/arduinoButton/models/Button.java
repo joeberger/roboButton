@@ -48,17 +48,18 @@ public class Button {
     @DatabaseField(columnName = ICONFILENAME_COLUMN_NAME)
     private String iconFileName;
 
-    @ForeignCollectionField
-    private ForeignCollection<Beacon> beacons;
+    public static final String BEACON_ID = "beacon_id";
+    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = BEACON_ID)
+    private Beacon beacon;
 
     private BluetoothDevice bluetoothDevice;
 
-    public ForeignCollection<Beacon> getBeacons() {
-        return beacons;
+    public Beacon getBeacon() {
+        return beacon;
     }
 
-    public void setBeacons(ForeignCollection<Beacon> beacons) {
-        this.beacons = beacons;
+    public void setBeacon(Beacon beacon) {
+        this.beacon = beacon;
     }
 
     public String getId() {

@@ -90,6 +90,8 @@ public class MainControllerActivityTest {
         verify(mockMainControllerActivity, times(1)).registerWithOttoBus();
     }
 
+    // NJD TODO - Need to write test around MenuItem (e.g. beaconFilterToggle)
+
     public static void registerOrmLiteProvider() {
         OrmLiteDatabaseHelper
                 helper = OpenHelperManager.getHelper(ArduinoButtonApplication.getInstance().getApplicationContext(),

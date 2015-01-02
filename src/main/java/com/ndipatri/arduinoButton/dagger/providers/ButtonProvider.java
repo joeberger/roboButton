@@ -13,8 +13,10 @@ import com.ndipatri.arduinoButton.models.Beacon;
 import com.ndipatri.arduinoButton.models.Button;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by ndipatri on 5/29/14.
@@ -27,6 +29,27 @@ public class ButtonProvider {
 
     public ButtonProvider(Context context) {
         this.context = context;
+    }
+
+    public List<Button> getBeaconPairedButtons() {
+        List<Button> pairedButtons = new ArrayList<Button>();
+
+        OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
+        RuntimeExceptionDao<Button, Long> buttonDao = helper.getButtonDao();
+        QueryBuilder<Button, Long> queryBuilder = buttonDao.queryBuilder();
+        try {
+            Where<Button, Long> where = queryBuilder.where();
+            where.isNotNull(Button.BEACON_ID);
+
+            PreparedQuery<Button> preparedQuery = queryBuilder.prepare();
+            pairedButtons = buttonDao.query(preparedQuery);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        OpenHelperManager.releaseHelper();
+
+        return pairedButtons;
     }
 
     public void createOrUpdateButton(final Button dirtyButton) {
@@ -50,6 +73,7 @@ public class ButtonProvider {
         try {
             Where<Button, Long> where = queryBuilder.where();
             where.eq(Button.ID_COLUMN_NAME, buttonId);
+
             PreparedQuery<Button> preparedQuery = queryBuilder.prepare();
             List<Button> buttons = buttonDao.query(preparedQuery);
             if (buttons != null && buttons.size() == 1) {

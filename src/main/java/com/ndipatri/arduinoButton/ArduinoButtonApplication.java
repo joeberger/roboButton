@@ -1,7 +1,9 @@
 package com.ndipatri.arduinoButton;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
@@ -14,6 +16,9 @@ import dagger.ObjectGraph;
 public abstract class ArduinoButtonApplication extends Application {
 
     private static final String TAG = ArduinoButtonApplication.class.getCanonicalName();
+    public static final String APPLICATION_PREFS = "RoboButton.prefs";
+
+    public static final String BEACON_FILTER_ON_PREF = "BEACON_FILTER_ON_PREF";
 
     private ActivityWatcher activityWatcher;
 
@@ -84,6 +89,33 @@ public abstract class ArduinoButtonApplication extends Application {
 
     protected void foregroundBluetoothMonitoringService() {
         startMonitoringService(false);
+    }
+
+    public void setPreference(final String key, final int value) {
+        SharedPreferences preferences = getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE);
+        preferences.edit().putInt(key, value).apply();
+    }
+
+    public void setPreference(final String key, final boolean value) {
+        SharedPreferences preferences = getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE);
+        preferences.edit().putBoolean(key, value).apply();
+    }
+
+    public void setPreference(final String key, final String value) {
+        SharedPreferences preferences = getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE);
+        preferences.edit().putString(key, value).apply();
+    }
+
+    public String getStringPreference(final String key, final String defaultValue) {
+        return getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE).getString(key, defaultValue);
+    }
+
+    public boolean getBooleanPreference(final String key, final boolean defaultValue) {
+        return getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE).getBoolean(key, defaultValue);
+    }
+
+    public int getIntegerPreference(final String key, final int defaultValue) {
+        return getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE).getInt(key, defaultValue);
     }
 
     protected void startMonitoringService(final boolean shouldBackground) {

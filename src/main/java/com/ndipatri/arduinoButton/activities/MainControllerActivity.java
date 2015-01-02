@@ -160,6 +160,10 @@ public class MainControllerActivity extends Activity {
         // Inflate the menu items for use in the action bar
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main_controller_activity, menu);
+
+        MenuItem beaconFilterItem = menu.getItem(2);
+        setBeaconFilterMenuItemValue(beaconFilterItem);
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -177,8 +181,42 @@ public class MainControllerActivity extends Activity {
 
                 registerBeacons();
 
+                return true;
+
+            case R.id.beacon_filter:
+
+                toggleBeaconFilter(item);
+
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private boolean getCurrentBeaconFilterValue() {
+        return ArduinoButtonApplication.getInstance().getBooleanPreference(ArduinoButtonApplication.BEACON_FILTER_ON_PREF, false);
+    }
+
+    private void toggleBeaconFilter(MenuItem beaconFilterMenuItem) {
+        boolean beaconFilterOn = getCurrentBeaconFilterValue();
+        beaconFilterOn = !beaconFilterOn;
+
+        setBeaconFilterMenuItemValue(beaconFilterMenuItem, beaconFilterOn);
+    }
+
+    private void setBeaconFilterMenuItemValue(MenuItem beaconFilterMenuItem) {
+        setBeaconFilterMenuItemValue(beaconFilterMenuItem, getCurrentBeaconFilterValue());
+    }
+
+    private void setBeaconFilterMenuItemValue(MenuItem beaconFilterMenuItem, final boolean beaconFilterOn) {
+
+        ArduinoButtonApplication.getInstance().setPreference(ArduinoButtonApplication.BEACON_FILTER_ON_PREF, beaconFilterOn);
+
+        if (beaconFilterOn) {
+            beaconFilterMenuItem.setTitle(getString(R.string.turn_off_beacon_filter));
+        } else {
+            beaconFilterMenuItem.setTitle(getString(R.string.turn_on_beacon_filter));
         }
     }
 
