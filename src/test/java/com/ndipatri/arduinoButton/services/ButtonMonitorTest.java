@@ -9,6 +9,7 @@ import android.content.Intent;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.table.TableUtils;
 import com.ndipatri.arduinoButton.ArduinoButtonApplication;
+import com.ndipatri.arduinoButton.TestUtils;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderTestImpl;
@@ -62,8 +63,8 @@ public class ButtonMonitorTest {
         // Enable Logging to stdout
         ShadowLog.stream = System.out;
 
-        registerOrmLiteProvider();
-        resetORMTable();
+        TestUtils.registerOrmLiteProvider();
+        TestUtils.resetORMTable();
 
         Context context = ArduinoButtonApplication.getInstance().getApplicationContext();
         activity = Robolectric.buildActivity(MainControllerActivity.class).create().get();
@@ -139,27 +140,5 @@ public class ButtonMonitorTest {
         bluetoothMonitoringService.onStartCommand(buttonDiscoveryServiceIntent, -1, -1);
 
         return bluetoothMonitoringService;
-    }
-
-    public static void registerOrmLiteProvider() {
-        OrmLiteDatabaseHelper
-                helper = OpenHelperManager.getHelper(ArduinoButtonApplication.getInstance().getApplicationContext(),
-                OrmLiteDatabaseHelper.class);
-        helper.onCreate(helper.getWritableDatabase(), helper.getConnectionSource());
-        helper.deleteDataFromAllTables();
-        OpenHelperManager.releaseHelper();
-    }
-
-    private void resetORMTable() {
-        OrmLiteDatabaseHelper
-                helper = OpenHelperManager.getHelper(ArduinoButtonApplication.getInstance().getApplicationContext(),
-                OrmLiteDatabaseHelper.class);
-        try {
-            TableUtils.dropTable(helper.getConnectionSource(), Beacon.class, true);
-            TableUtils.createTable(helper.getConnectionSource(), Beacon.class);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        OpenHelperManager.releaseHelper();
     }
 }

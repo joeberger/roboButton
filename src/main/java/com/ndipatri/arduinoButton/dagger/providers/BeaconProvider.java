@@ -13,6 +13,7 @@ import com.ndipatri.arduinoButton.models.Beacon;
 import com.ndipatri.arduinoButton.models.Button;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -69,6 +70,27 @@ public class BeaconProvider {
         OpenHelperManager.releaseHelper();
 
         return beacon;
+    }
+
+    public List<Beacon> getUnpairedBeacons() {
+        List<Beacon> unpairedBeacons = new ArrayList<Beacon>();
+
+        OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
+        RuntimeExceptionDao<Beacon, Long> beaconDao = helper.getBeaconDao();
+        QueryBuilder<Beacon, Long> queryBuilder = beaconDao.queryBuilder();
+        try {
+            Where<Beacon, Long> where = queryBuilder.where();
+            where.isNull(Beacon.BUTTON_ID);
+
+            PreparedQuery<Beacon> preparedQuery = queryBuilder.prepare();
+            unpairedBeacons = beaconDao.query(preparedQuery);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        OpenHelperManager.releaseHelper();
+
+        return unpairedBeacons;
     }
 
     public void delete(List<Beacon> beacons) {
