@@ -1,14 +1,18 @@
 package com.ndipatri.arduinoButton;
 
 import android.app.Activity;
+import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Intent;
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.table.TableUtils;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
+import com.ndipatri.arduinoButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.arduinoButton.models.Beacon;
 import com.ndipatri.arduinoButton.models.Button;
+import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
 
 import java.sql.SQLException;
 
@@ -56,5 +60,21 @@ public class TestUtils {
                 .add(fragment, null)
                 .commit();
         return fragment;
+    }
+
+    public static void startDialogFragment(Activity activity, DialogFragment dialogFragment) {
+        dialogFragment.show(activity.getFragmentManager().beginTransaction(), "dialog fragment");
+    }
+
+    public static BluetoothMonitoringService startButtonMonitoringService(final boolean shouldRunInBackground) {
+
+        BluetoothMonitoringService bluetoothMonitoringService = new BluetoothMonitoringService();
+        bluetoothMonitoringService.onCreate();
+
+        final Intent buttonDiscoveryServiceIntent = new Intent();
+        buttonDiscoveryServiceIntent.putExtra(BluetoothMonitoringService.RUN_IN_BACKGROUND, shouldRunInBackground);
+        bluetoothMonitoringService.onStartCommand(buttonDiscoveryServiceIntent, -1, -1);
+
+        return bluetoothMonitoringService;
     }
 }

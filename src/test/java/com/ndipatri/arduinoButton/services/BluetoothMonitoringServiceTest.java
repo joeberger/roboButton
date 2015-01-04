@@ -71,7 +71,7 @@ public class BluetoothMonitoringServiceTest {
 
         ArduinoButtonApplication.getInstance().inject(this);
 
-        monitoringService = startButtonMonitoringService(false); // should run in foreground
+        monitoringService = TestUtils.startButtonMonitoringService(false); // should run in foreground
 
         notificationManager = (NotificationManager) Robolectric.application.getSystemService(Context.NOTIFICATION_SERVICE);
     }
@@ -169,7 +169,7 @@ public class BluetoothMonitoringServiceTest {
     public void discoverButtonDevices_buttonCommunicating(boolean runInForeground) {
 
         // we want to test this while app is running in background, so the notification happens
-        monitoringService = startButtonMonitoringService(!runInForeground); // should run in foreground
+        monitoringService = TestUtils.startButtonMonitoringService(!runInForeground); // should run in foreground
 
         // NJD - Not really sure why, but I had to do this in order for 'advanceBy' to work...
         ShadowSystemClock.setCurrentTimeMillis(0);
@@ -256,17 +256,5 @@ public class BluetoothMonitoringServiceTest {
         public Object getReceivedEvent() {
             return receivedEvent;
         }
-    }
-
-    public static BluetoothMonitoringService startButtonMonitoringService(final boolean shouldRunInBackground) {
-
-        BluetoothMonitoringService bluetoothMonitoringService = new BluetoothMonitoringService();
-        bluetoothMonitoringService.onCreate();
-
-        final Intent buttonDiscoveryServiceIntent = new Intent();
-        buttonDiscoveryServiceIntent.putExtra(BluetoothMonitoringService.RUN_IN_BACKGROUND, shouldRunInBackground);
-        bluetoothMonitoringService.onStartCommand(buttonDiscoveryServiceIntent, -1, -1);
-
-        return bluetoothMonitoringService;
     }
 }

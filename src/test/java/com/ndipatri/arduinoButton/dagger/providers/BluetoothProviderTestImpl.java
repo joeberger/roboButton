@@ -39,7 +39,7 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
 
     @Override
     public boolean isBluetoothSupported() {
-        return false;
+        return isBluetoothSupported;
     }
 
     public void setIsBluetoothSupported(boolean isBluetoothSupported) {
@@ -48,7 +48,7 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
 
     @Override
     public boolean isBluetoothEnabled() {
-        return false;
+        return isBluetoothEnabled;
     }
 
     @Override

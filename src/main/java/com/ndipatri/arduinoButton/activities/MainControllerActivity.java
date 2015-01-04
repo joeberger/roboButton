@@ -300,5 +300,9 @@ public class MainControllerActivity extends Activity {
     }
 
     //endregion
+
+    public BluetoothProvider getBluetoothProvider() {
+        return bluetoothProvider;
+    }
 }
 

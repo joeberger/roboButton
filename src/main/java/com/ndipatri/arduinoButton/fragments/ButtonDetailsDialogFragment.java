@@ -1,5 +1,6 @@
 package com.ndipatri.arduinoButton.fragments;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -131,7 +132,32 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        buttonProvider.createOrUpdateButton(new Button(getButtonId(), nameEditText.getText().toString(), autoModeSwitch.isChecked(), iconFileNameString));
+
+                        // Until now, we don't necessarily have a persisted Button (for example, we could
+                        // just have a Button that is nearby.... if the user 'saves', we remember this button
+                        Button button = getButton();
+                        if (button == null) {
+                            button = new Button();
+                            button.setId(getButtonId());
+                        }
+
+                        button.setName(nameEditText.getText().toString());
+                        button.setAutoModeEnabled(autoModeSwitch.isChecked());
+                        button.setIconFileName(iconFileNameString);
+
+                        Beacon selectedBeacon = (Beacon) beaconSpinner.getSelectedItem();
+
+                        if (selectedBeacon.getName().equals("None")) {
+                            if (button.getBeacon() != null) {
+                                button.setBeacon(null);
+                            }
+                        } else {
+                            if (button.getBeacon() == null || !button.getBeacon().equals(selectedBeacon)) {
+                                button.setBeacon(selectedBeacon);
+                            }
+                        }
+
+                        buttonProvider.createOrUpdateButton(button);
                     }
                 });
 
@@ -175,9 +201,14 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
         });
     }
 
+    protected Button getButton() {
+        return buttonProvider.getButton(getButtonId());
+    }
+
     protected void populateViewsWithExistingData() {
 
-        Button existingButton = buttonProvider.getButton(getButtonId());
+        final Button existingButton = getButton();
+
         if (existingButton != null) {
             nameEditText.setText(existingButton.getName());
             autoModeSwitch.setChecked(existingButton.isAutoModeEnabled());
@@ -191,27 +222,18 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
         Beacon dummyBeacon = new Beacon();
         dummyBeacon.setName("None");
 
-        availableBeacons.add(dummyBeacon);
+        if (existingButton != null && existingButton.getBeacon() != null) {
+            availableBeacons.add(0, getButton().getBeacon());
+            availableBeacons.add(dummyBeacon);
+        } else {
+            availableBeacons.add(0, dummyBeacon);
+        }
 
         if (!availableBeacons.isEmpty()) {
             beaconSpinner.setVisibility(View.VISIBLE);
 
-            ArrayAdapter<Beacon> arrayAdapter = new BeaconAdapter(getActivity(), 0, availableBeacons);
+            final ArrayAdapter<Beacon> arrayAdapter = new BeaconAdapter(getActivity(), 0, availableBeacons);
             beaconSpinner.setAdapter(arrayAdapter);
-
-            beaconSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    // NJD TODO - Need to associated selected beacon with button (unless it's the 'None' beacon
-                    // keep in mind that this button might not have been saved yet...
-                    Log.d(TAG, "selection made!");
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
-
-                }
-            });
         } else {
             beaconSpinner.setVisibility(View.GONE);
         }
@@ -265,6 +287,11 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
         BusProvider.getInstance().post(new ButtonImageRequestEvent(getButtonId()));
     }
 
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+    }
+
     @Subscribe
     public void onButtonImageResponseEvent(ButtonImageResponseEvent response) {
         Uri selectedImageUri = response.selectedImage;
@@ -277,6 +304,10 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
         }
         Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
         overlayImageButton.setImageBitmap(selectedImage);
+    }
+
+    public Switch getAutoModeSwitch() {
+        return autoModeSwitch;
     }
 }
 
