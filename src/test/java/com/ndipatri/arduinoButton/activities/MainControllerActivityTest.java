@@ -13,10 +13,15 @@ import com.ndipatri.arduinoButton.TestUtils;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderImpl;
+import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderTestImpl;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
+import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
+import com.ndipatri.arduinoButton.fragments.ArduinoButtonFragment;
 import com.ndipatri.arduinoButton.models.Beacon;
 import com.ndipatri.arduinoButton.models.Button;
+import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
+import com.ndipatri.arduinoButton.utils.BusProvider;
 
 import org.hamcrest.MatcherAssert;
 import org.junit.Before;
@@ -26,8 +31,17 @@ import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowHandler;
+import org.robolectric.shadows.ShadowLog;
+import org.robolectric.shadows.ShadowLooper;
+import org.robolectric.util.ActivityController;
+import org.robolectric.util.Scheduler;
 
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.isNull;
@@ -36,25 +50,57 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public class MainControllerActivityTest {
 
-    BluetoothProvider bluetoothProvider;
-    ButtonProvider buttonProvider;
-    BeaconProvider beaconProvider;
+    MainControllerActivity activity;
+    BluetoothMonitoringService monitoringService;
+    Button singleButton;
 
     @Before
     public void setup() {
 
         Context context = ArduinoButtonApplication.getInstance().getApplicationContext();
 
-        bluetoothProvider = new BluetoothProviderImpl(context);
-        buttonProvider = new ButtonProvider(context);
-        beaconProvider = new BeaconProvider(context);
+        ActivityController controller = Robolectric.buildActivity(MainControllerActivity.class).create().start();
+        activity = (MainControllerActivity) controller.get();
+
+        BluetoothProviderTestImpl bluetoothProviderTestImpl = (BluetoothProviderTestImpl) activity.getBluetoothProvider();
+        bluetoothProviderTestImpl.setIsBluetoothEnabled(true);
+        bluetoothProviderTestImpl.setIsBluetoothSupported(true);
+
+        singleButton = new Button();
+        singleButton.setId("aa:bb:cc:dd:ee");
+
+        Set<Button> availableButtons = new HashSet<Button>();
+        availableButtons.add(singleButton);
+        bluetoothProviderTestImpl.setAvailableButtons(availableButtons);
+
+        controller.resume().visible().get();
 
         TestUtils.registerOrmLiteProvider();
         TestUtils.resetORMTable();
+
+        monitoringService = TestUtils.startButtonMonitoringService(false); // should run in foreground
+
+        // Enable Logging to stdout
+        ShadowLog.stream = System.out;
+
+        Robolectric.runUiThreadTasksIncludingDelayedTasks();
+        Robolectric.runBackgroundTasks();
+    }
+
+    @Test
+    public void testArduinoButtonFoundEventResultsInNewButtonFragment() {
+
+        BusProvider.getInstance().post(new ArduinoButtonFoundEvent(singleButton));
+
+        ArduinoButtonFragment fragment = (ArduinoButtonFragment) activity.getFragmentManager().findFragmentByTag(singleButton.getId());
+
+
+        assertThat("Can't find expected Fragment!", fragment != null);
     }
 
     @Test
@@ -85,11 +131,20 @@ public class MainControllerActivityTest {
     @Test
     public void testResumeActivity() {
         MainControllerActivity mockMainControllerActivity = mock(MainControllerActivity.class);
+
+        BluetoothProvider mockBluetoothProvider = mock(BluetoothProvider.class);
+        when(mockBluetoothProvider.isBluetoothEnabled()).thenReturn(false);
+
+        mockMainControllerActivity.bluetoothProvider =  mockBluetoothProvider;
         doCallRealMethod().when(mockMainControllerActivity).resumeActivity();
 
         mockMainControllerActivity.resumeActivity();
         verify(mockMainControllerActivity, times(1)).registerWithOttoBus();
     }
+
+
+
+
 
     // NJD TODO - Need to write test around MenuItem (e.g. beaconFilterToggle)
 }

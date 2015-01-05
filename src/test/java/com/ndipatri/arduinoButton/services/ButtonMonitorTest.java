@@ -110,6 +110,14 @@ public class ButtonMonitorTest {
         assertThat("Button State Change event should have been published.", busListener.getReceivedEvent() != null && busListener.getReceivedEvent().equals(expectedEvent));
     }
 
+    // NJD TODO - need to test actual communications with BT device and how that effects 'liveliness' of monitor...
+    // This is necessary to get the BTMonitoringService to fire of a monitor 'iteration'
+    //BluetoothMonitoringService.MessageHandler messageHandler = monitoringService.getBluetoothMessageHandler();
+    //Robolectric.shadowOf(messageHandler.getLooper()).getScheduler().runOneTask();
+
+    // We know we have one Button so after above 'iteration' there should be a ButtonMonitor assigned to
+    // this Button
+
     private class OttoBusListener<T> {
 
         private boolean success = false;

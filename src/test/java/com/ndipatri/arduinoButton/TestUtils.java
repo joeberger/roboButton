@@ -54,6 +54,15 @@ public class TestUtils {
         OpenHelperManager.releaseHelper();
     }
 
+    public static void createOrUpdateButton(Button button) {
+        OrmLiteDatabaseHelper
+                helper = OpenHelperManager.getHelper(ArduinoButtonApplication.getInstance().getApplicationContext(),
+                OrmLiteDatabaseHelper.class);
+        helper.getButtonDao().createOrUpdate(button);
+
+        OpenHelperManager.releaseHelper();
+    }
+
     public static Fragment startFragment(Activity activity, Fragment fragment) {
         FragmentManager fragmentManager = activity.getFragmentManager();
         fragmentManager.beginTransaction()
