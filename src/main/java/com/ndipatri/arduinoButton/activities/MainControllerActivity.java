@@ -299,7 +299,7 @@ public class MainControllerActivity extends Activity {
         }
     }
 
-    protected void 
+    protected void
 
     //endregion
 
