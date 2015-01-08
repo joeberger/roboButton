@@ -21,6 +21,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -232,23 +233,42 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
         if (!availableBeacons.isEmpty()) {
             beaconSpinner.setVisibility(View.VISIBLE);
 
-            final ArrayAdapter<Beacon> arrayAdapter = new BeaconAdapter(getActivity(), 0, availableBeacons);
-            beaconSpinner.setAdapter(arrayAdapter);
+            final BeaconAdapter adapter = new BeaconAdapter(getActivity(), availableBeacons);
+            beaconSpinner.setAdapter(adapter);
         } else {
             beaconSpinner.setVisibility(View.GONE);
         }
     }
 
-    private class BeaconAdapter extends ArrayAdapter<Beacon> {
+    private class BeaconAdapter extends BaseAdapter {
 
-        public BeaconAdapter(Context context, int resource, List<Beacon> objects) {
-            super(context, resource, objects);
+        Context context;
+        List<Beacon> availableBeacons;
+
+        public BeaconAdapter(final Context context, final List<Beacon> availableBeacons) {
+            this.context = context;
+            this.availableBeacons = availableBeacons;
+        }
+
+        @Override
+        public int getCount() {
+            return availableBeacons.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return availableBeacons.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
         }
 
         @Override
         public View getView(int position, View view, ViewGroup parent) {
             view = inflateIfRequired(view, position, parent);
-            bind(getItem(position), view);
+            bind((Beacon) getItem(position), view);
             return view;
         }
 

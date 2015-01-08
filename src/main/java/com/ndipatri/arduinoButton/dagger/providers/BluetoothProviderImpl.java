@@ -19,8 +19,11 @@ public class BluetoothProviderImpl implements BluetoothProvider {
 
     private static final String TAG = BluetoothProviderImpl.class.getCanonicalName();
 
-    private static final int ROBOBUTTON_ESTIMOTE_MAJOR_VALUE = 23524123;
-    private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, ROBOBUTTON_ESTIMOTE_MAJOR_VALUE, null);
+    // NJD TODO - Need to figure out how to maek this value different (currently, can't change value using andorid estimote app. so i'm using the default value
+    // i foudn on the estimote in my office)
+    private static final int ROBOBUTTON_ESTIMOTE_MAJOR_VALUE = 65535;
+    //private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, ROBOBUTTON_ESTIMOTE_MAJOR_VALUE, null);
+    private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, null, null);
 
     private Context context;
 
@@ -84,6 +87,8 @@ public class BluetoothProviderImpl implements BluetoothProvider {
     @Override
     public void startBTMonitoring(BeaconManager.MonitoringListener listener) {
 
+        Log.d(TAG, "Beginning Beacon Monitoring Process...");
+
         // Default values are 5s of scanning and 25s of waiting time to save CPU cycles.
         // In order for this demo to be more responsive and immediate we lower down those values.
         beaconManager.setBackgroundScanPeriod(TimeUnit.SECONDS.toMillis(1), 0);
@@ -94,6 +99,7 @@ public class BluetoothProviderImpl implements BluetoothProvider {
             @Override
             public void onServiceReady() {
                 try {
+                    Log.d(TAG, "Connected to BeaconManager.  Starting Monitoring...");
                     beaconManager.startMonitoring(ALL_ROBOBUTTON_BEACONS);
                 } catch (RemoteException e) {
                     Log.d(TAG, "Error while starting monitoring");
@@ -104,6 +110,8 @@ public class BluetoothProviderImpl implements BluetoothProvider {
 
     @Override
     public void stopBTMonitoring() throws RemoteException {
+        Log.d(TAG, "Stop Beacon Monitoring Process...");
+
         beaconManager.stopMonitoring(ALL_ROBOBUTTON_BEACONS);
         beaconManager.disconnect();
     }

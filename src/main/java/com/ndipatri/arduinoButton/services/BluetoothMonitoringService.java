@@ -83,7 +83,7 @@ public class BluetoothMonitoringService extends Service {
     HashMap<String, ButtonState> buttonToLastButtonStateMap = new HashMap<String, ButtonState>();
     //endregion
 
-    Set<com.ndipatri.arduinoButton.models.Beacon> nearbyBeacons = new ConcurrentSkipListSet<com.ndipatri.arduinoButton.models.Beacon>();
+    Set<com.ndipatri.arduinoButton.models.Beacon> nearbyBeacons = new HashSet<com.ndipatri.arduinoButton.models.Beacon>();
 
     public IBinder onBind(Intent intent) {
         return null;
