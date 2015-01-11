@@ -10,7 +10,7 @@
     <string name="transmission_failure">Transmission Failure ...</string>
     <string name="transmission_success">Transmission Success</string>
     <string name="forget_all_buttons">Forget All Buttons</string>
-    <string name="button_discovery_pattern">FireFly-|RNBT-340C</string>
+    <string name="button_discovery_pattern">.*BUTTON.*</string>
     <string name="configure_button">Configure Button</string>
     <string name="configure_beacon">Configure Beacon</string>
     <string name="robo_button">Robo Button</string>
