@@ -335,11 +335,11 @@ public class ButtonMonitor {
         try {
             Log.d(TAG, "Creating Bluetooth Socket ...");
 
+            //bluetoothSocket = button.getBluetoothDevice().createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
+            bluetoothSocket = button.getBluetoothDevice().createInsecureRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
+
             // Cancel discovery because it will slow down the connection
             bluetoothProvider.cancelDiscovery();
-
-            bluetoothSocket = button.getBluetoothDevice().createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
-            //bluetoothSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
 
             // Connect the device through the socket. This will block
             // until it succeeds or throws an exception
