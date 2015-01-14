@@ -122,6 +122,12 @@ public class BluetoothMonitoringService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        if (null == intent) {
+            String source = null == intent ? "intent" : "action";
+            Log.e (TAG, source + " was null, flags=" + flags + " bits=" + Integer.toBinaryString (flags));
+            return START_STICKY;
+        }
+
         runInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
         Log.d(TAG, "onStartCommand() (runInBackground='" + runInBackground + "').");
 
@@ -304,7 +310,11 @@ public class BluetoothMonitoringService extends Service {
             com.ndipatri.arduinoButton.models.Beacon nearbyBeacon = button.getBeacon();
 
             if (nearbyBeacons.contains(nearbyBeacon)) {
-                nearbyPairedButtons.add(button);
+
+                // Now that we know this Button is relevant, we need to get the actual
+                // nearby Button
+                Button nearbyButton = bluetoothProvider.getNearbyButton(button.getId());
+                nearbyPairedButtons.add(nearbyButton);
             }
         }
 

@@ -97,9 +97,6 @@ public class ButtonProviderTest {
         Beacon retrievedBeacon = beaconProvider.getBeacon("aa:bb:cc:dd");
 
         MatcherAssert.assertThat("Beacon not associated to Button properly.", retrievedBeacon.getButton().getId().equals("123"));
-
-        // NJD TODO - Testing that a Button has a set of beacons doesn't seem to work in Robolectric.. not sure why.. but in practice
-        // this one-to-many association does work.
     }
 }
 

@@ -15,6 +15,8 @@ public interface BluetoothProvider {
 
     public Set<Button> getAllNearbyButtons();
 
+    public Button getNearbyButton(String buttinId);
+
     public boolean isBluetoothSupported();
 
     public boolean isBluetoothEnabled();

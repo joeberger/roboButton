@@ -55,6 +55,7 @@ public class BeaconProvider {
             Where<Beacon, Long> where = queryBuilder.where();
             where.eq(Beacon.MAC_ADDRESS_COLUMN_NAME, macAddress);
             if (mustBePaired) {
+                where.and();
                 where.isNotNull(Beacon.BUTTON_ID);
             }
 

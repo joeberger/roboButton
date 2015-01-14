@@ -28,13 +28,24 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
     public BluetoothProviderTestImpl(Context context) {
         this.context = context;
 
-        // NJD TODO - Need to provide a facade for this so we can mock out all Bluetooth behavior.
         beaconManager = new BeaconManager(context);
     }
 
     @Override
     public Set<Button> getAllNearbyButtons() {
         return availableButtons;
+    }
+
+    @Override
+    public Button getNearbyButton(String buttonId) {
+        final Set<Button> pairedButtons = getAllNearbyButtons();
+        for (Button pairedDevice : pairedButtons) {
+            if (pairedDevice.getId().equals(buttonId)) {
+                return pairedDevice;
+            }
+        }
+
+        return null;
     }
 
     @Override

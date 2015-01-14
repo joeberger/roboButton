@@ -22,8 +22,8 @@ public class BluetoothProviderImpl implements BluetoothProvider {
     // NJD TODO - Need to figure out how to maek this value different (currently, can't change value using andorid estimote app. so i'm using the default value
     // i foudn on the estimote in my office)
     private static final int ROBOBUTTON_ESTIMOTE_MAJOR_VALUE = 65535;
-    //private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, ROBOBUTTON_ESTIMOTE_MAJOR_VALUE, null);
-    private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, null, null);
+    private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, ROBOBUTTON_ESTIMOTE_MAJOR_VALUE, null);
+    //private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, null, null);
 
     private Context context;
 
@@ -60,6 +60,18 @@ public class BluetoothProviderImpl implements BluetoothProvider {
     }
 
     @Override
+    public Button getNearbyButton(String buttonId) {
+        final Set<Button> pairedButtons = getAllNearbyButtons();
+        for (Button pairedDevice : pairedButtons) {
+            if (pairedDevice.getId().equals(buttonId)) {
+                return pairedDevice;
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public boolean isBluetoothSupported() {
         return BluetoothAdapter.getDefaultAdapter() != null;
     }
@@ -88,12 +100,15 @@ public class BluetoothProviderImpl implements BluetoothProvider {
     public void startBTMonitoring(BeaconManager.MonitoringListener listener) {
 
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
+        com.estimote.sdk.utils.L.enableDebugLogging(true);
 
         // Default values are 5s of scanning and 25s of waiting time to save CPU cycles.
         // In order for this demo to be more responsive and immediate we lower down those values.
         beaconManager.setBackgroundScanPeriod(TimeUnit.SECONDS.toMillis(1), 0);
 
         beaconManager.setMonitoringListener(listener);
+
+        // Configure verbose debug logging.
 
         beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
             @Override
