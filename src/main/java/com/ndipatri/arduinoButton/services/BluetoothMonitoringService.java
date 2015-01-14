@@ -279,7 +279,7 @@ public class BluetoothMonitoringService extends Service {
             Log.d(TAG, "Forgetting lost button '" + lostButtonId + "'.");
 
             final ButtonMonitor lostButtonMonitor = currentButtonMap.get(lostButtonId);
-            lostButtonMonitor.stop();
+            lostButtonMonitor.shutdown();
 
             currentButtonMap.remove(lostButtonId);
             buttonToLastCommunicationsTimeMap.remove(lostButtonId);

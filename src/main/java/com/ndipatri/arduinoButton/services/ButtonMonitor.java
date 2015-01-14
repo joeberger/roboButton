@@ -41,6 +41,7 @@ public class ButtonMonitor {
 
     protected static final int QUERY_STATE_MESSAGE = 0;
     protected static final int SET_STATE_MESSAGE = 1;
+    protected static final int AUTO_SHUTDOWN = 2;
 
     // Handler which uses background thread to handle BT communications
     private MessageHandler bluetoothMessageHandler;
@@ -97,7 +98,17 @@ public class ButtonMonitor {
         scheduleImmediateQueryStateMessage();
     }
 
-    public void stop() {
+    public void shutdown() {
+        if (buttonState.isCommunicating &&
+            button.isAutoModeEnabled()) {
+
+            bluetoothMessageHandler.queueAutoShutdownRequest();
+        } else {
+            stop();
+        }
+    }
+
+    protected void stop() {
         shouldRun = false;
 
         new Handler(context.getMainLooper()).post(new Runnable() {
@@ -174,6 +185,19 @@ public class ButtonMonitor {
             }
         }
 
+        public void queueAutoShutdownRequest() {
+
+            // If a set request is already pending, do nothing.
+            removeMessages(SET_STATE_MESSAGE);
+            removeMessages(QUERY_STATE_MESSAGE);
+
+            Message rawMessage = obtainMessage();
+            rawMessage.what = AUTO_SHUTDOWN;
+
+            // To be handled by separate thread.
+            sendMessage(rawMessage);
+        }
+
         @Override
         public void handleMessage(Message msg) {
 
@@ -208,6 +232,21 @@ public class ButtonMonitor {
                         Log.d(TAG, "setRemoteState()");
                         try {
                             setRemoteState();
+                        } catch (Exception ex) {
+                            BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), button.getId()));
+                        }
+                    }
+
+                    break;
+
+
+                case AUTO_SHUTDOWN:
+
+                    if (shouldRun) {
+                        Log.d(TAG, "Auto Shutdown!");
+                        try {
+                            setRemoteState(ButtonState.OFF);
+                            stop();
                         } catch (Exception ex) {
                             BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), button.getId()));
                         }
