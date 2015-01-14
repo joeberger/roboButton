@@ -388,7 +388,7 @@ public class BluetoothMonitoringService extends Service {
         bluetoothProvider.startBTMonitoring(new BeaconManager.MonitoringListener() {
             @Override
             public void onEnteredRegion(Region region, List<Beacon> beacons) {
-                Toast.makeText(BluetoothMonitoringService.this, "onEnteredRegion: '" + region + "' with beacons: '" + beacons + "'.", Toast.LENGTH_LONG).show();
+                Toast.makeText(BluetoothMonitoringService.this, "Entering beacon region!", Toast.LENGTH_LONG).show();
 
                 for (Beacon beacon : beacons) {
                     com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(beacon.getMacAddress(), true);
@@ -403,7 +403,7 @@ public class BluetoothMonitoringService extends Service {
 
             @Override
             public void onExitedRegion(Region region) {
-                Toast.makeText(BluetoothMonitoringService.this, "onExitedRegion: '" + region + ".", Toast.LENGTH_LONG).show();
+                Toast.makeText(BluetoothMonitoringService.this, "Leaving beacon region!", Toast.LENGTH_LONG).show();
 
                 // I'm guessing, we get this callback when there are NO more detected beacons in the given region
                 nearbyBeacons.clear();
