@@ -246,6 +246,8 @@ public class ButtonMonitor {
                         Log.d(TAG, "Auto Shutdown!");
                         try {
                             setRemoteState(ButtonState.OFF);
+                            Thread.sleep(1000);
+                            setRemoteState(ButtonState.OFF);
                             stop();
                         } catch (Exception ex) {
                             BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), button.getId()));
