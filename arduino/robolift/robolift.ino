@@ -147,7 +147,7 @@ void setup()
      bluetooth.print("$");  // Print three times individually
      bluetooth.print("$");
      bluetooth.print("$");  // Enter command mode
-     delay(300);  // Short delay, wait for the Mate to send back CMD
+     delay(100);  // Short delay, wait for the Mate to send back CMD
      bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
      // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
      bluetooth.begin(9600);  // Start bluetooth serial at 9600
