@@ -5,6 +5,7 @@ import android.content.Context;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
+import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderImpl;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderTestImpl;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.fragments.BeaconDetailsDialogFragment;
@@ -29,7 +30,8 @@ import dagger.Provides;
                 LeDeviceListAdapter.class,
                 BluetoothMonitoringService.class,
                 ButtonMonitor.class,
-                MainControllerActivity.class
+                MainControllerActivity.class,
+                BluetoothProviderImpl.class
         }
 )
 public class TestRoboButtonModule {

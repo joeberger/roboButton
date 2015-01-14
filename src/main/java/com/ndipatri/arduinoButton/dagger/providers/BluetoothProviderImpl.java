@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
+import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.models.Button;
 
@@ -15,9 +16,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+
 public class BluetoothProviderImpl implements BluetoothProvider {
 
     private static final String TAG = BluetoothProviderImpl.class.getCanonicalName();
+
+    @Inject
+    ButtonProvider buttonProvider;
 
     // NJD TODO - Need to figure out how to maek this value different (currently, can't change value using andorid estimote app. so i'm using the default value
     // i foudn on the estimote in my office)
@@ -33,6 +39,8 @@ public class BluetoothProviderImpl implements BluetoothProvider {
         this.context = context;
 
         beaconManager = new BeaconManager(context);
+
+        ArduinoButtonApplication.getInstance().inject(this);
     }
 
     @Override
@@ -49,8 +57,16 @@ public class BluetoothProviderImpl implements BluetoothProvider {
                 if (device.getName().matches(discoverableButtonPatternString)) {
                     Log.d(TAG, "We have a paired ArduinoButton device! + '" + device + "'.");
 
-                    Button pairedButton = new Button(device.getAddress(), device.getAddress(), false, null);
+                    Button pairedButton = null;
+
+                    Button persistedButton = buttonProvider.getButton(device.getAddress());
+                    if (persistedButton != null) {
+                        pairedButton = persistedButton;
+                    } else {
+                        pairedButton = new Button(device.getAddress(), device.getAddress(), false, null);
+                    }
                     pairedButton.setBluetoothDevice(device);
+
                     pairedButtons.add(pairedButton);
                 }
             }

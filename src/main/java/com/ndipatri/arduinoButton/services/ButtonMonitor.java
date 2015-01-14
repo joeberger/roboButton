@@ -184,7 +184,19 @@ public class ButtonMonitor {
                     if (shouldRun) {
 
                         Log.d(TAG, "queryRemoteState()");
-                        getRemoteState();
+                        ButtonState newRemoteState = getRemoteState();
+
+                        if (newRemoteState != null &&
+                            buttonState == ButtonState.NEVER_CONNECTED &&
+                            newRemoteState.isCommunicating &&
+                            button.isAutoModeEnabled()) {
+
+                            // Now that we've established we can communicate with newly discovered
+                            // button, let's set its auto-state....
+                            setRemoteState(ButtonState.ON);
+                        } else {
+                            setLocalButtonState(newRemoteState);
+                        }
                     }
 
                     break;
@@ -236,7 +248,10 @@ public class ButtonMonitor {
         }
     }
 
-    public void getRemoteState() {
+    protected ButtonState getRemoteState() {
+
+        ButtonState newButtonState = null;
+
         final ByteBuffer byteBuffer = ByteBuffer.allocate(1);
 
         try {
@@ -263,7 +278,7 @@ public class ButtonMonitor {
                     Log.d(TAG, "Reply received.. but not right length!");
                     disconnect();
 
-                    return;
+                    return null;
                 } else {
                     Log.d(TAG, "Reply received.");
                 }
@@ -288,14 +303,19 @@ public class ButtonMonitor {
             String responseChar = String.valueOf(new char[]{(char) byteBuffer.get()});
             Log.d(TAG, "Response from bluetooth device '" + this + " ', '" + responseChar + "'.");
             try {
-                final ButtonState newButtonState = Integer.valueOf(responseChar) > 0 ? ButtonState.ON : ButtonState.OFF;
-                setLocalButtonState(newButtonState);
+                newButtonState = Integer.valueOf(responseChar) > 0 ? ButtonState.ON : ButtonState.OFF;
             } catch (NumberFormatException nex) {
                 Log.d(TAG, "Invalid response from bluetooth device: '" + this + "'.");
                 disconnect();
             }
         }
 
+        return newButtonState;
+    }
+
+    public void setRemoteState(ButtonState buttonState) {
+        this.buttonState = buttonState;
+        setRemoteState();
     }
 
     public void setRemoteState() {
@@ -378,7 +398,12 @@ public class ButtonMonitor {
 
     @Subscribe
     public void onArduinoButtonStateChangeRequestEvent(final ArduinoButtonStateChangeRequestEvent event) {
-        this.buttonState = event.requestedButtonState;
+        queueSetStateRequest(event.requestedButtonState);
+    }
+
+    // Presumaby, this is called from the UI thread...
+    protected void queueSetStateRequest(final ButtonState buttonState) {
+        this.buttonState = buttonState;
         bluetoothMessageHandler.queueSetStateRequest();
     }
 

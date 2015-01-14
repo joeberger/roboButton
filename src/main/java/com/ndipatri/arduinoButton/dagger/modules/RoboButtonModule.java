@@ -25,7 +25,8 @@ import dagger.Provides;
                 LeDeviceListAdapter.class,
                 BluetoothMonitoringService.class,
                 ButtonMonitor.class,
-                MainControllerActivity.class
+                MainControllerActivity.class,
+                BluetoothProviderImpl.class
         }
 )
 public class RoboButtonModule {
