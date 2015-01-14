@@ -186,16 +186,17 @@ public class ButtonMonitor {
                         Log.d(TAG, "queryRemoteState()");
                         ButtonState newRemoteState = getRemoteState();
 
-                        if (newRemoteState != null &&
-                            buttonState == ButtonState.NEVER_CONNECTED &&
-                            newRemoteState.isCommunicating &&
-                            button.isAutoModeEnabled()) {
+                        if (newRemoteState != null) {
+                            if (buttonState == ButtonState.NEVER_CONNECTED &&
+                                newRemoteState.isCommunicating &&
+                                button.isAutoModeEnabled()) {
 
-                            // Now that we've established we can communicate with newly discovered
-                            // button, let's set its auto-state....
-                            setRemoteState(ButtonState.ON);
-                        } else {
-                            setLocalButtonState(newRemoteState);
+                                // Now that we've established we can communicate with newly discovered
+                                // button, let's set its auto-state....
+                                setRemoteState(ButtonState.ON);
+                            } else {
+                                setLocalButtonState(newRemoteState);
+                            }
                         }
                     }
 

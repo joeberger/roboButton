@@ -103,9 +103,6 @@ public class ArduinoButtonFragment extends Fragment {
     public void onPause() {
         super.onPause();
 
-        // NJD TODO - Maybe has something here to produces OTTO event to ButtonModule
-        // knows to shut down???
-
         BusProvider.getInstance().unregister(this);
     }
 
