@@ -64,6 +64,8 @@ public class ButtonMonitor {
 
     public ButtonMonitor(final Context context, final Button button) {
 
+        Log.d(TAG, "Starting new monitor for button '" + button.getId() + "'.");
+
         this.context = context;
         this.button = button;
 

@@ -379,6 +379,7 @@ public class BluetoothMonitoringService extends Service {
     @Subscribe
     public void onArduinoButtonStateChangeReportEvent(final ArduinoButtonStateChangeReportEvent event) {
 
+        Log.d(TAG, "Updating monitor timestamp for Button '" + event.buttonId + "'.");
         // The purpose of subscribing is just to ensure buttonMonitor is still communicating successfully.
         // This service serves as a watchdog to terminate any monitors that have become unresponsive
         buttonToLastCommunicationsTimeMap.put(event.buttonId, SystemClock.currentThreadTimeMillis());
