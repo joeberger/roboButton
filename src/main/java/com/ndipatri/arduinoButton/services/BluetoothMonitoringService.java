@@ -285,6 +285,10 @@ public class BluetoothMonitoringService extends Service {
             buttonToLastCommunicationsTimeMap.remove(lostButtonId);
             buttonToLastButtonStateMap.remove(lostButtonId);
 
+            if (runInBackground) {
+                sendActiveButtonNotification(lostButtonId, ButtonState.DISCONNECTED);
+            }
+
             new Handler(getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
@@ -352,10 +356,6 @@ public class BluetoothMonitoringService extends Service {
         builder.setOnlyAlertOnce(true);
         builder.setContentIntent(pendingIntent);
         builder.setVibrate(new long[]{0,     // start immediately
-                200,   // on
-                1000,  // off
-                200,   // on
-                1000,  // off
                 200,   // on
                 1000,  // off
                 200,   // on
