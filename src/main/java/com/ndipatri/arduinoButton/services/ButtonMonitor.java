@@ -101,7 +101,7 @@ public class ButtonMonitor {
     }
 
     public void shutdown() {
-        if (buttonState.isCommunicating &&
+        if ((buttonState == ButtonState.ON || buttonState == ButtonState.OFF) &&
             button.isAutoModeEnabled()) {
 
             bluetoothMessageHandler.queueAutoShutdownRequest();
@@ -249,7 +249,6 @@ public class ButtonMonitor {
                         try {
                             setRemoteState(ButtonState.OFF);
                             Thread.sleep(1000);
-                            setRemoteState(ButtonState.OFF);
                             stop();
                         } catch (Exception ex) {
                             BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), button.getId()));
