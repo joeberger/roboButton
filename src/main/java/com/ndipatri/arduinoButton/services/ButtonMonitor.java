@@ -212,10 +212,12 @@ public class ButtonMonitor {
                         Log.d(TAG, "queryRemoteState()");
                         ButtonState newRemoteState = getRemoteState();
 
+                        boolean isBeaconFilteringOn = ArduinoButtonApplication.getInstance().getBooleanPreference(ArduinoButtonApplication.BEACON_FILTER_ON_PREF, false);
+
                         if (newRemoteState != null) {
                             if (buttonState == ButtonState.NEVER_CONNECTED &&
                                 newRemoteState.isCommunicating &&
-                                button.isAutoModeEnabled()) {
+                                isBeaconFilteringOn && button.isAutoModeEnabled()) {
 
                                 // Now that we've established we can communicate with newly discovered
                                 // button, let's set its auto-state....
