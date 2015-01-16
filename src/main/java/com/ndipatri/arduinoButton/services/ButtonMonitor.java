@@ -301,10 +301,13 @@ public class ButtonMonitor {
             if (socket == null || !socket.isConnected()) {
                 Log.d(TAG, "Trying to create bluetooth connection...");
                 socket = createConnectionToBluetoothDevice();
+            } else {
+                Log.d(TAG, "Bluetooth already connected...");
             }
 
             if (socket != null) {
-                Log.d(TAG, "Bluetooth connect. Getting output stream ...");
+
+                Log.d(TAG, "Getting output stream ...");
 
                 // Tell Arduino to send us StateReport
                 OutputStream outputStream = socket.getOutputStream();
@@ -365,8 +368,10 @@ public class ButtonMonitor {
 
         try {
             if (socket == null || !socket.isConnected()) {
-                BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.opening_bluetooth_socket), button.getId()));
+                Log.d(TAG, "Trying to create bluetooth connection...");
                 socket = createConnectionToBluetoothDevice();
+            } else {
+                Log.d(TAG, "Bluetooth already connected...");
             }
 
             if (socket != null) {
