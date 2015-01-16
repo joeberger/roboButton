@@ -122,6 +122,8 @@ public class ArduinoButtonFragment extends Fragment {
 
     @Subscribe
     public void onArduinoButtonStateChangeReportEvent(final ArduinoButtonStateChangeReportEvent event) {
-        setButtonState(event.newButtonState);
+        if (event.buttonId.equals(getButtonId())) {
+            setButtonState(event.newButtonState);
+        }
     }
 }
