@@ -101,7 +101,7 @@ public class ButtonMonitor {
     }
 
     public void shutdown() {
-        if ((buttonState == ButtonState.ON || buttonState == ButtonState.OFF) &&
+        if (buttonState.isCommunicating &&
             button.isAutoModeEnabled()) {
 
             bluetoothMessageHandler.queueAutoShutdownRequest();
