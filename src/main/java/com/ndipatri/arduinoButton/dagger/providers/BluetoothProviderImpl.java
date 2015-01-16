@@ -27,7 +27,7 @@ public class BluetoothProviderImpl implements BluetoothProvider {
 
     // NJD TODO - Need to figure out how to maek this value different (currently, can't change value using andorid estimote app. so i'm using the default value
     // i foudn on the estimote in my office)
-    private static final int ROBOBUTTON_ESTIMOTE_MAJOR_VALUE = 65535;
+    private static final int ROBOBUTTON_ESTIMOTE_MAJOR_VALUE = 2112;
     private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, ROBOBUTTON_ESTIMOTE_MAJOR_VALUE, null);
     //private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, null, null);
 
