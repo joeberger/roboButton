@@ -27,9 +27,9 @@ import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
+import com.ndipatri.arduinoButton.events.ABStateChangeReport;
 import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
-import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeReportEvent;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.inject.Inject;
 
@@ -279,6 +278,7 @@ public class BluetoothMonitoringService extends Service {
             Log.d(TAG, "Forgetting lost button '" + lostButtonId + "'.");
 
             final ButtonMonitor lostButtonMonitor = currentButtonMap.get(lostButtonId);
+
             lostButtonMonitor.shutdown();
 
             currentButtonMap.remove(lostButtonId);
@@ -377,7 +377,7 @@ public class BluetoothMonitoringService extends Service {
     }
 
     @Subscribe
-    public void onArduinoButtonStateChangeReportEvent(final ArduinoButtonStateChangeReportEvent event) {
+    public void onArduinoButtonStateChangeReportEvent(final ABStateChangeReport event) {
 
         Log.d(TAG, "Updating monitor timestamp for Button '" + event.buttonId + "'.");
         // The purpose of subscribing is just to ensure buttonMonitor is still communicating successfully.

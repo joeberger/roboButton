@@ -12,10 +12,10 @@ import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
-import com.ndipatri.arduinoButton.events.ArduinoButtonBluetoothDisabledEvent;
+import com.ndipatri.arduinoButton.events.ABStateChangeReport;
+import com.ndipatri.arduinoButton.events.ABStateChangeRequest;
+import com.ndipatri.arduinoButton.events.BluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
-import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeReportEvent;
-import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeRequestEvent;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -136,7 +136,7 @@ public class ButtonMonitor {
             @Override
             public void run() {
                 Log.d(TAG, "State is '" + buttonState + "'");
-                BusProvider.getInstance().post(new ArduinoButtonStateChangeReportEvent(button.getId(), buttonState));
+                BusProvider.getInstance().post(new ABStateChangeReport(button.getId(), buttonState));
             }
         });
     }
@@ -249,6 +249,7 @@ public class ButtonMonitor {
                     if (shouldRun) {
                         Log.d(TAG, "Auto Shutdown!");
                         try {
+
                             setRemoteState(ButtonState.OFF);
                             Thread.sleep(1000);
                             stop();
@@ -429,7 +430,7 @@ public class ButtonMonitor {
             }
 
             if (connectException.getMessage().contains("Bluetooth is off")) {
-                BusProvider.getInstance().post(new ArduinoButtonBluetoothDisabledEvent());
+                BusProvider.getInstance().post(new BluetoothDisabledEvent());
             }
 
             bluetoothSocket = null;
@@ -447,7 +448,7 @@ public class ButtonMonitor {
     }
 
     @Subscribe
-    public void onArduinoButtonStateChangeRequestEvent(final ArduinoButtonStateChangeRequestEvent event) {
+    public void onArduinoButtonStateChangeRequestEvent(final ABStateChangeRequest event) {
         queueSetStateRequest(event.requestedButtonState);
     }
 

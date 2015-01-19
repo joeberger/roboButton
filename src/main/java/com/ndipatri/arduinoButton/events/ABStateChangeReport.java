@@ -5,12 +5,12 @@ import com.ndipatri.arduinoButton.enums.ButtonState;
 /**
  * Created by ndipatri on 1/1/14.
  */
-public class ArduinoButtonStateChangeReportEvent {
+public class ABStateChangeReport {
 
     public ButtonState newButtonState;
     public String buttonId;
 
-    public ArduinoButtonStateChangeReportEvent(final String buttonId, final ButtonState newButtonState) {
+    public ABStateChangeReport(final String buttonId, final ButtonState newButtonState) {
         this.buttonId = buttonId;
         this.newButtonState = newButtonState;
     }
@@ -20,7 +20,7 @@ public class ArduinoButtonStateChangeReportEvent {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ArduinoButtonStateChangeReportEvent that = (ArduinoButtonStateChangeReportEvent) o;
+        ABStateChangeReport that = (ABStateChangeReport) o;
 
         if (buttonId != null ? !buttonId.equals(that.buttonId) : that.buttonId != null)
             return false;

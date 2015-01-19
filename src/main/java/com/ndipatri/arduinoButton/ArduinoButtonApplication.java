@@ -1,6 +1,7 @@
 package com.ndipatri.arduinoButton;
 
 import android.app.Application;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -119,9 +120,30 @@ public abstract class ArduinoButtonApplication extends Application {
     }
 
     protected void startMonitoringService(final boolean shouldBackground) {
-        final Intent buttonDiscoveryServiceIntent = new Intent(this, BluetoothMonitoringService.class);
-        buttonDiscoveryServiceIntent.putExtra(BluetoothMonitoringService.RUN_IN_BACKGROUND,  shouldBackground);
-        startService(buttonDiscoveryServiceIntent);
+
+        // Don't even bother starting service if BT isn't running.. The main activity will try to convince user to
+        // do otherwise, and if so, will start the service manually at that time.
+
+        if (isBluetoothSupported() && isBluetoothEnabled()) {
+            final Intent buttonDiscoveryServiceIntent = new Intent(this, BluetoothMonitoringService.class);
+            buttonDiscoveryServiceIntent.putExtra(BluetoothMonitoringService.RUN_IN_BACKGROUND, shouldBackground);
+            startService(buttonDiscoveryServiceIntent);
+        }
+    }
+
+    public boolean isBluetoothSupported() {
+        return BluetoothAdapter.getDefaultAdapter() != null;
+    }
+
+    public boolean isBluetoothEnabled() {
+        boolean isEnabled = false;
+
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter != null) {
+            isEnabled = bluetoothAdapter.isEnabled();
+        }
+
+        return isEnabled;
     }
 
     public void inject(Object object) {

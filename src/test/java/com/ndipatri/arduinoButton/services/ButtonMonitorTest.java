@@ -1,26 +1,17 @@
 package com.ndipatri.arduinoButton.services;
 
-import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
-import com.j256.ormlite.android.apptools.OpenHelperManager;
-import com.j256.ormlite.table.TableUtils;
 import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.TestUtils;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderTestImpl;
-import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
 import com.ndipatri.arduinoButton.enums.ButtonState;
-import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
-import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
-import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeReportEvent;
-import com.ndipatri.arduinoButton.models.Beacon;
+import com.ndipatri.arduinoButton.events.ABStateChangeReport;
 import com.ndipatri.arduinoButton.models.Button;
-import com.ndipatri.arduinoButton.utils.ActivityWatcher;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
@@ -30,13 +21,9 @@ import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
-import org.robolectric.shadows.ShadowPendingIntent;
-import org.robolectric.shadows.ShadowSystemClock;
 
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -87,7 +74,7 @@ public class ButtonMonitorTest {
         availableButtons.add(availableButton);
         ((BluetoothProviderTestImpl) bluetoothProvider).setAvailableButtons(availableButtons);
 
-        OttoBusListener busListener = new OttoBusListener<ArduinoButtonStateChangeReportEvent>();
+        OttoBusListener busListener = new OttoBusListener<ABStateChangeReport>();
 
         monitoringService.discoverButtonDevices();
 
@@ -106,7 +93,7 @@ public class ButtonMonitorTest {
 
         assertThat("Query state discovery interval should be 1 second.", buttonMonitor.getQueryStateIntervalMillis() == 1000);
 
-        ArduinoButtonStateChangeReportEvent expectedEvent = new ArduinoButtonStateChangeReportEvent(availableButton.getId(), ButtonState.NEVER_CONNECTED);
+        ABStateChangeReport expectedEvent = new ABStateChangeReport(availableButton.getId(), ButtonState.NEVER_CONNECTED);
         assertThat("Button State Change event should have been published.", busListener.getReceivedEvent() != null && busListener.getReceivedEvent().equals(expectedEvent));
     }
 

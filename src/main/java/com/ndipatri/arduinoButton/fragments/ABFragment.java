@@ -10,8 +10,8 @@ import android.widget.ImageView;
 
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.enums.ButtonState;
-import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeReportEvent;
-import com.ndipatri.arduinoButton.events.ArduinoButtonStateChangeRequestEvent;
+import com.ndipatri.arduinoButton.events.ABStateChangeReport;
+import com.ndipatri.arduinoButton.events.ABStateChangeRequest;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
@@ -27,9 +27,9 @@ import butterknife.Views;
  * <p/>
  * Periodically, this fragment overwrites the current button state with the remote arduino button state.
  */
-public class ArduinoButtonFragment extends Fragment {
+public class ABFragment extends Fragment {
 
-    private static final String TAG = ArduinoButtonFragment.class.getCanonicalName();
+    private static final String TAG = ABFragment.class.getCanonicalName();
 
     // ButterKnife Injected Views
     protected
@@ -38,15 +38,15 @@ public class ArduinoButtonFragment extends Fragment {
 
     protected ButtonState buttonState = null;
 
-    public static ArduinoButtonFragment newInstance(String buttonId) {
+    public static ABFragment newInstance(String buttonId) {
 
-        ArduinoButtonFragment arduinoButtonFragment = new ArduinoButtonFragment();
+        ABFragment ABFragment = new ABFragment();
         Bundle args = new Bundle();
-        arduinoButtonFragment.setArguments(args);
+        ABFragment.setArguments(args);
 
-        arduinoButtonFragment.setButtonId(buttonId);
+        ABFragment.setButtonId(buttonId);
 
-        return arduinoButtonFragment;
+        return ABFragment;
     }
 
     @Override
@@ -90,7 +90,7 @@ public class ArduinoButtonFragment extends Fragment {
             setButtonState(ButtonState.ON_PENDING);
         }
 
-        BusProvider.getInstance().post(new ArduinoButtonStateChangeRequestEvent(getButtonId(), buttonState));
+        BusProvider.getInstance().post(new ABStateChangeRequest(getButtonId(), buttonState));
     }
 
     @Override
@@ -121,7 +121,7 @@ public class ArduinoButtonFragment extends Fragment {
     }
 
     @Subscribe
-    public void onArduinoButtonStateChangeReportEvent(final ArduinoButtonStateChangeReportEvent event) {
+    public void onArduinoButtonStateChangeReportEvent(final ABStateChangeReport event) {
         if (event.buttonId.equals(getButtonId())) {
             setButtonState(event.newButtonState);
         }

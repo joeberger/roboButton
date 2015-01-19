@@ -16,13 +16,13 @@ import android.widget.Toast;
 import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
-import com.ndipatri.arduinoButton.events.ArduinoButtonBluetoothDisabledEvent;
+import com.ndipatri.arduinoButton.events.BluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
 import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageResponseEvent;
-import com.ndipatri.arduinoButton.fragments.ArduinoButtonFragment;
+import com.ndipatri.arduinoButton.fragments.ABFragment;
 import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -36,8 +36,6 @@ import javax.inject.Inject;
 import butterknife.InjectView;
 import butterknife.Views;
 
-// This class coordinates all BT communications from its various ArduinoButtonFragments.  This class
-// schedules and provides thread resources for the querying and setting of button state.
 public class MainControllerActivity extends Activity {
 
     // region localVariables
@@ -87,15 +85,16 @@ public class MainControllerActivity extends Activity {
 
     protected void resumeActivity() {
         registerWithOttoBus();
+        promptUserForBluetoothActivationIfNecessary();
+    }
 
+    protected void promptUserForBluetoothActivationIfNecessary() {
         if (!bluetoothProvider.isBluetoothSupported()) {
             Toast.makeText(this, "Bluetooth not supported on this device!", Toast.LENGTH_SHORT).show();
             finish();
         } else {
             if (!bluetoothProvider.isBluetoothEnabled()) {
                 requestUserToEnableBluetooth();
-            } else {
-                startBluetoothMonitoringService();
             }
         }
     }
@@ -114,6 +113,11 @@ public class MainControllerActivity extends Activity {
         startService(buttonDiscoveryServiceIntent);
     }
 
+    protected void stopBluetoothMonitoringService() {
+        final Intent buttonDiscoveryServiceIntent = new Intent(this, BluetoothMonitoringService.class);
+        stopService(buttonDiscoveryServiceIntent);
+    }
+
     public void chooseImage(String requestingButtonId) {
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
@@ -129,6 +133,7 @@ public class MainControllerActivity extends Activity {
                 startBluetoothMonitoringService();
             } else {
                 Toast.makeText(this, "This application cannot run without Bluetooth enabled!", Toast.LENGTH_SHORT).show();
+                stopBluetoothMonitoringService();
                 finish();
             }
         } else {
@@ -229,8 +234,8 @@ public class MainControllerActivity extends Activity {
         publishProgress(arduinoButtonInformationEvent.message);
     }
 
-    private ArduinoButtonFragment lookupButtonFragment(String buttonId) {
-        return (ArduinoButtonFragment) getFragmentManager().findFragmentByTag(getButtonFragmentTag(buttonId));
+    private ABFragment lookupButtonFragment(String buttonId) {
+        return (ABFragment) getFragmentManager().findFragmentByTag(getButtonFragmentTag(buttonId));
     }
 
     private synchronized void forgetAllArduinoButtons() {
@@ -245,9 +250,9 @@ public class MainControllerActivity extends Activity {
 
     private synchronized void forgetArduinoButton(final String lostButtonId) {
 
-        final ArduinoButtonFragment arduinoButtonFragment = lookupButtonFragment(lostButtonId);
-        if (arduinoButtonFragment != null) {
-            getFragmentManager().beginTransaction().remove(arduinoButtonFragment).commitAllowingStateLoss();
+        final ABFragment ABFragment = lookupButtonFragment(lostButtonId);
+        if (ABFragment != null) {
+            getFragmentManager().beginTransaction().remove(ABFragment).commitAllowingStateLoss();
             buttonFragmentIds.remove(lostButtonId);
         }
     }
@@ -275,10 +280,10 @@ public class MainControllerActivity extends Activity {
     }
 
     @Subscribe
-    public void onArduinoButtonBluetoothDisabled(ArduinoButtonBluetoothDisabledEvent arduinoButtonBluetoothDisabledEvent) {
+    public void onArduinoButtonBluetoothDisabled(BluetoothDisabledEvent bluetoothDisabledEvent) {
         Log.d(TAG, "Bluetooth disabled!");
 
-        resumeActivity();
+        promptUserForBluetoothActivationIfNecessary();
     }
 
     @Subscribe
@@ -291,10 +296,10 @@ public class MainControllerActivity extends Activity {
 
         String foundButtonId = arduinoButtonFoundEvent.button.getId();
 
-        ArduinoButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
+        ABFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
         if (existingButtonFragment == null) {
-            final ArduinoButtonFragment newArduinoButtonFragment = ArduinoButtonFragment.newInstance(foundButtonId);
-            getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newArduinoButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
+            final ABFragment newABFragment = ABFragment.newInstance(foundButtonId);
+            getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newABFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
             buttonFragmentIds.add(foundButtonId);
         }
     }

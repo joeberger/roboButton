@@ -2,46 +2,29 @@ package com.ndipatri.arduinoButton.activities;
 
 import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 
-import com.j256.ormlite.android.apptools.OpenHelperManager;
-import com.j256.ormlite.table.TableUtils;
 import com.ndipatri.arduinoButton.ArduinoButtonApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.TestUtils;
-import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
-import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderImpl;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderTestImpl;
-import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
-import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
 import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
-import com.ndipatri.arduinoButton.fragments.ArduinoButtonFragment;
-import com.ndipatri.arduinoButton.models.Beacon;
+import com.ndipatri.arduinoButton.fragments.ABFragment;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 
-import org.hamcrest.MatcherAssert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowHandler;
 import org.robolectric.shadows.ShadowLog;
-import org.robolectric.shadows.ShadowLooper;
 import org.robolectric.util.ActivityController;
-import org.robolectric.util.Scheduler;
 
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.isNull;
@@ -97,7 +80,7 @@ public class MainControllerActivityTest {
 
         BusProvider.getInstance().post(new ArduinoButtonFoundEvent(singleButton));
 
-        ArduinoButtonFragment fragment = (ArduinoButtonFragment) activity.getFragmentManager().findFragmentByTag(singleButton.getId());
+        ABFragment fragment = (ABFragment) activity.getFragmentManager().findFragmentByTag(singleButton.getId());
 
 
         assertThat("Can't find expected Fragment!", fragment != null);
