@@ -13,6 +13,8 @@ import java.util.Set;
 
 public interface BluetoothProvider {
 
+    public Region getMonitoredRegion();
+
     public Set<Button> getAllBondedButtons();
 
     public Button getBondedButton(String buttinId);

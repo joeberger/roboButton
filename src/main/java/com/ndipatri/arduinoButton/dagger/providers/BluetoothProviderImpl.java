@@ -27,8 +27,8 @@ public class BluetoothProviderImpl implements BluetoothProvider {
 
     // NJD TODO - Need to figure out how to maek this value different (currently, can't change value using andorid estimote app. so i'm using the default value
     // i foudn on the estimote in my office)
-    private static final int ROBOBUTTON_ESTIMOTE_MAJOR_VALUE = 2112;
-    private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, ROBOBUTTON_ESTIMOTE_MAJOR_VALUE, null);
+    private static final int AB_ESTIMOTE_MAJOR_VALUE = 2112;
+    private static final Region AB_ESTIMOTE_REGION = new Region("regionId", null, AB_ESTIMOTE_MAJOR_VALUE, null);
     //private static final Region ALL_ROBOBUTTON_BEACONS = new Region("regionId", null, null, null);
 
     private Context context;
@@ -131,7 +131,7 @@ public class BluetoothProviderImpl implements BluetoothProvider {
             public void onServiceReady() {
                 try {
                     Log.d(TAG, "Connected to BeaconManager.  Starting Monitoring...");
-                    beaconManager.startMonitoring(ALL_ROBOBUTTON_BEACONS);
+                    beaconManager.startMonitoring(AB_ESTIMOTE_REGION);
                 } catch (RemoteException e) {
                     Log.d(TAG, "Error while starting monitoring");
                 }
@@ -143,7 +143,11 @@ public class BluetoothProviderImpl implements BluetoothProvider {
     public void stopBTMonitoring() throws RemoteException {
         Log.d(TAG, "Stop Beacon Monitoring Process...");
 
-        beaconManager.stopMonitoring(ALL_ROBOBUTTON_BEACONS);
+        beaconManager.stopMonitoring(AB_ESTIMOTE_REGION);
         beaconManager.disconnect();
+    }
+
+    public Region getMonitoredRegion() {
+        return AB_ESTIMOTE_REGION;
     }
 }

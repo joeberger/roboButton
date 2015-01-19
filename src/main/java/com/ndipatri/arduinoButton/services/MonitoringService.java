@@ -318,25 +318,33 @@ public class MonitoringService extends Service {
         bluetoothProvider.startBTMonitoring(new BeaconManager.MonitoringListener() {
             @Override
             public void onEnteredRegion(Region region, List<Beacon> beacons) {
-                Toast.makeText(MonitoringService.this, "Entering beacon region!", Toast.LENGTH_LONG).show();
+                String message = "Entering beacon region!";
+                Log.d(TAG, message + "(" + region + "').");
+                Toast.makeText(MonitoringService.this, message, Toast.LENGTH_LONG).show();
 
-                for (Beacon beacon : beacons) {
-                    com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(beacon.getMacAddress(), true);
+                if (region == bluetoothProvider.getMonitoredRegion()) {
+                    for (Beacon beacon : beacons) {
+                        com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(beacon.getMacAddress(), true);
 
-                    if (pairedBeacon != null) {
-                        Log.d(TAG, "Paired beacon detected!");
+                        if (pairedBeacon != null) {
+                            Log.d(TAG, "Paired beacon detected!");
 
-                        nearbyBeacons.add(pairedBeacon);
+                            nearbyBeacons.add(pairedBeacon);
+                        }
                     }
                 }
             }
 
             @Override
             public void onExitedRegion(Region region) {
-                Toast.makeText(MonitoringService.this, "Leaving beacon region!", Toast.LENGTH_LONG).show();
+                String message = "Leaving beacon region!";
+                Log.d(TAG, message + "(" + region + "').");
+                Toast.makeText(MonitoringService.this, message, Toast.LENGTH_LONG).show();
 
-                // I'm guessing, we get this callback when there are NO more detected beacons in the given region
-                nearbyBeacons.clear();
+                if (region == bluetoothProvider.getMonitoredRegion()) {
+                    // I'm guessing, we get this callback when there are NO more detected beacons in the given region
+                    nearbyBeacons.clear();
+                }
             }
         });
     }

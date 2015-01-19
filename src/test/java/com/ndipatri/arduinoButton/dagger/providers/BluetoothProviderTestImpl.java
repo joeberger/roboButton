@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.RemoteException;
 
 import com.estimote.sdk.BeaconManager;
+import com.estimote.sdk.Region;
 import com.ndipatri.arduinoButton.models.Button;
 
 import java.util.HashSet;
@@ -29,6 +30,11 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
         this.context = context;
 
         beaconManager = new BeaconManager(context);
+    }
+
+    @Override
+    public Region getMonitoredRegion() {
+        return new Region("regionId", null, 1234, null);
     }
 
     @Override
