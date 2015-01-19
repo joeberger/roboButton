@@ -4,7 +4,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 
-import com.ndipatri.arduinoButton.ArduinoButtonApplication;
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.TestUtils;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
@@ -29,18 +29,17 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.robolectric.Robolectric.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
 public class ButtonMonitorTest {
 
-    ArduinoButtonApplication application;
+    ABApplication application;
     MainControllerActivity activity;
 
     @Inject
     BluetoothProvider bluetoothProvider;
 
-    BluetoothMonitoringService monitoringService;
+    MonitoringService monitoringService;
 
     NotificationManager notificationManager;
 
@@ -53,11 +52,11 @@ public class ButtonMonitorTest {
         TestUtils.registerOrmLiteProvider();
         TestUtils.resetORMTable();
 
-        Context context = ArduinoButtonApplication.getInstance().getApplicationContext();
+        Context context = ABApplication.getInstance().getApplicationContext();
         activity = Robolectric.buildActivity(MainControllerActivity.class).create().get();
-        application = ArduinoButtonApplication.getInstance();
+        application = ABApplication.getInstance();
 
-        ArduinoButtonApplication.getInstance().inject(this);
+        ABApplication.getInstance().inject(this);
 
         monitoringService = startButtonMonitoringService(false); // should run in foreground
 
@@ -76,9 +75,10 @@ public class ButtonMonitorTest {
 
         OttoBusListener busListener = new OttoBusListener<ABStateChangeReport>();
 
-        monitoringService.discoverButtonDevices();
+        // NJD TODO - need to figure otu how to run this.... it's now the 'buttonMonitorDiscoveryRunnable' we have to call
+        //monitoringService.discoverButtonDevices();
 
-        HashMap<String, ButtonMonitor> currentButtonMap = monitoringService.getCurrentButtonMap();
+        HashMap<String, ButtonMonitor> currentButtonMap = monitoringService.getButtonMonitorMap();
 
         assertThat("Should be one ButtonMonitor.", currentButtonMap.size() == 1);
 
@@ -99,7 +99,7 @@ public class ButtonMonitorTest {
 
     // NJD TODO - need to test actual communications with BT device and how that effects 'liveliness' of monitor...
     // This is necessary to get the BTMonitoringService to fire of a monitor 'iteration'
-    //BluetoothMonitoringService.MessageHandler messageHandler = monitoringService.getBluetoothMessageHandler();
+    //BluetoothMonitoringService.MessageHandler messageHandler = monitoringService.getMonitorHandler();
     //Robolectric.shadowOf(messageHandler.getLooper()).getScheduler().runOneTask();
 
     // We know we have one Button so after above 'iteration' there should be a ButtonMonitor assigned to
@@ -125,15 +125,15 @@ public class ButtonMonitorTest {
         }
     }
 
-    public static BluetoothMonitoringService startButtonMonitoringService(final boolean shouldRunInBackground) {
+    public static MonitoringService startButtonMonitoringService(final boolean shouldRunInBackground) {
 
-        BluetoothMonitoringService bluetoothMonitoringService = new BluetoothMonitoringService();
-        bluetoothMonitoringService.onCreate();
+        MonitoringService monitoringService = new MonitoringService();
+        monitoringService.onCreate();
 
         final Intent buttonDiscoveryServiceIntent = new Intent();
-        buttonDiscoveryServiceIntent.putExtra(BluetoothMonitoringService.RUN_IN_BACKGROUND, shouldRunInBackground);
-        bluetoothMonitoringService.onStartCommand(buttonDiscoveryServiceIntent, -1, -1);
+        buttonDiscoveryServiceIntent.putExtra(MonitoringService.RUN_IN_BACKGROUND, shouldRunInBackground);
+        monitoringService.onStartCommand(buttonDiscoveryServiceIntent, -1, -1);
 
-        return bluetoothMonitoringService;
+        return monitoringService;
     }
 }

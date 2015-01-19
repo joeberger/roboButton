@@ -2,11 +2,8 @@ package com.ndipatri.arduinoButton.dagger.providers;
 
 import android.content.Context;
 
-import com.j256.ormlite.android.apptools.OpenHelperManager;
-import com.j256.ormlite.table.TableUtils;
-import com.ndipatri.arduinoButton.ArduinoButtonApplication;
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.TestUtils;
-import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
 import com.ndipatri.arduinoButton.models.Beacon;
 
 import org.hamcrest.MatcherAssert;
@@ -14,8 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-
-import java.sql.SQLException;
 
 @RunWith(RobolectricTestRunner.class)
 public class BeaconProviderTest {
@@ -25,7 +20,7 @@ public class BeaconProviderTest {
     @Before
     public void setup() {
 
-        Context context = ArduinoButtonApplication.getInstance().getApplicationContext();
+        Context context = ABApplication.getInstance().getApplicationContext();
 
         beaconProvider = new BeaconProvider(context);
 

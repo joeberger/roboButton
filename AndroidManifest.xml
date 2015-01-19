@@ -15,7 +15,7 @@
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
 
     <application
-            android:name=".ArduinoButtonApplicationImpl"
+            android:name=".ABApplicationImpl"
             android:debuggable="true"
             android:label="Arduino Button">
 
@@ -33,7 +33,7 @@
             android:label="Select Beacon"
             android:screenOrientation="portrait"/>
 
-        <service android:name=".services.BluetoothMonitoringService" android:exported="false"/>
+        <service android:name=".services.MonitoringService" android:exported="false"/>
         <service android:name="com.estimote.sdk.service.BeaconService" android:exported="false"/>
     </application>
 </manifest>

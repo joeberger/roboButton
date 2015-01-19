@@ -1,18 +1,15 @@
 package com.ndipatri.arduinoButton.events;
 
-import android.bluetooth.BluetoothDevice;
-
-import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.models.Button;
 
 /**
  * Created by ndipatri on 1/1/14.
  */
-public class ArduinoButtonFoundEvent {
+public class ABLostEvent {
 
     public Button button;
 
-    public ArduinoButtonFoundEvent(final Button button) {
+    public ABLostEvent(final Button button) {
         this.button = button;
     }
 
@@ -21,7 +18,7 @@ public class ArduinoButtonFoundEvent {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ArduinoButtonFoundEvent that = (ArduinoButtonFoundEvent) o;
+        ABLostEvent that = (ABLostEvent) o;
 
         if (button != null ? !button.equals(that.button) : that.button != null) return false;
 

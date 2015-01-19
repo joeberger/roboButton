@@ -4,15 +4,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.view.View;
 
-import com.ndipatri.arduinoButton.ArduinoButtonApplication;
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.TestUtils;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderTestImpl;
-import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
+import com.ndipatri.arduinoButton.events.ABFoundEvent;
 import com.ndipatri.arduinoButton.fragments.ABFragment;
 import com.ndipatri.arduinoButton.models.Button;
-import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
+import com.ndipatri.arduinoButton.services.MonitoringService;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 
 import org.junit.Before;
@@ -39,13 +39,13 @@ import static org.mockito.Mockito.when;
 public class MainControllerActivityTest {
 
     MainControllerActivity activity;
-    BluetoothMonitoringService monitoringService;
+    MonitoringService monitoringService;
     Button singleButton;
 
     @Before
     public void setup() {
 
-        Context context = ArduinoButtonApplication.getInstance().getApplicationContext();
+        Context context = ABApplication.getInstance().getApplicationContext();
 
         ActivityController controller = Robolectric.buildActivity(MainControllerActivity.class).create().start();
         activity = (MainControllerActivity) controller.get();
@@ -78,7 +78,7 @@ public class MainControllerActivityTest {
     @Test
     public void testArduinoButtonFoundEventResultsInNewButtonFragment() {
 
-        BusProvider.getInstance().post(new ArduinoButtonFoundEvent(singleButton));
+        BusProvider.getInstance().post(new ABFoundEvent(singleButton));
 
         ABFragment fragment = (ABFragment) activity.getFragmentManager().findFragmentByTag(singleButton.getId());
 

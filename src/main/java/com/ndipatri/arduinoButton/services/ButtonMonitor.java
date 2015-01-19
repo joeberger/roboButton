@@ -6,16 +6,16 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
 
-import com.ndipatri.arduinoButton.ArduinoButtonApplication;
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ABStateChangeReport;
 import com.ndipatri.arduinoButton.events.ABStateChangeRequest;
 import com.ndipatri.arduinoButton.events.BluetoothDisabledEvent;
-import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -36,6 +36,8 @@ public class ButtonMonitor {
 
     @Inject protected BluetoothProvider bluetoothProvider;
 
+    protected long communicationsGracePeriodMillis = -1;
+
     // region localArgs
     private BluetoothSocket socket = null;
 
@@ -54,11 +56,15 @@ public class ButtonMonitor {
 
     private static final String MY_UUID = "00001101-0000-1000-8000-00805F9B34FB";
 
-    private ButtonState buttonState = null;
+    // This value will always be set by what is received from Button itself
+    private ButtonState buttonState = ButtonState.NEVER_CONNECTED;
 
     private Button button;
 
     private Context context;
+
+    // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
+    private long lastButtonStateUpdateTimeMillis = 0;
 
     // endregion
 
@@ -69,7 +75,9 @@ public class ButtonMonitor {
         this.context = context;
         this.button = button;
 
-        ((ArduinoButtonApplication)context).inject(this);
+        communicationsGracePeriodMillis = context.getResources().getInteger(R.integer.communications_grace_period_millis);
+
+        ((ABApplication)context).inject(this);
 
         // Create thread for handling communication with Bluetooth
         // This thread only runs if it's passed a message.. so no need worrying about if it's running or not after this point.
@@ -81,8 +89,6 @@ public class ButtonMonitor {
 
         // Periodically query remote state...
         queryStateIntervalMillis = context.getResources().getInteger(R.integer.remote_state_check_interval_millis);
-
-        setLocalButtonState(ButtonState.NEVER_CONNECTED);
 
         start();
     }
@@ -100,8 +106,12 @@ public class ButtonMonitor {
         scheduleImmediateQueryStateMessage();
     }
 
+    private void scheduleImmediateQueryStateMessage() {
+        bluetoothMessageHandler.queueQueryStateRequest(0);
+    }
+
     public void shutdown() {
-        if (buttonState.isCommunicating &&
+        if (isCommunicating() &&
             button.isAutoModeEnabled()) {
 
             bluetoothMessageHandler.queueAutoShutdownRequest();
@@ -130,19 +140,21 @@ public class ButtonMonitor {
     // would presumably be called after we retrieve remote state (or during startup of this fragment)
     protected void setLocalButtonState(final ButtonState buttonState) {
 
-        this.buttonState = buttonState;
+        if (this.buttonState != buttonState) {
+            this.buttonState = buttonState;
+            this.lastButtonStateUpdateTimeMillis = SystemClock.currentThreadTimeMillis();
 
-        new Handler(context.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "State is '" + buttonState + "'");
-                BusProvider.getInstance().post(new ABStateChangeReport(button.getId(), buttonState));
-            }
-        });
-    }
+            new Handler(context.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "State is '" + buttonState + "'");
 
-    private void scheduleImmediateQueryStateMessage() {
-        bluetoothMessageHandler.queueQueryStateRequest(0);
+                    need to add a Provides for this event.
+
+                    BusProvider.getInstance().post(new ABStateChangeReport(button.getId(), buttonState));
+                }
+            });
+        }
     }
 
     private void scheduleQueryStateMessage() {
@@ -152,13 +164,15 @@ public class ButtonMonitor {
     // Hands outgoing bluetooth messages to background thread.
     protected final class MessageHandler extends Handler {
 
+        private ButtonState candidateButtonState;
+
         public MessageHandler(Looper looper) {
             super(looper);
         }
 
         public void queueQueryStateRequest(final long offsetMillis) {
 
-            // We only queue a query request if NO requests are already pending...
+            // query has lowest priority
             if (!hasMessages(SET_STATE_MESSAGE) &&
                     !hasMessages(QUERY_STATE_MESSAGE)) {
 
@@ -171,7 +185,7 @@ public class ButtonMonitor {
             }
         }
 
-        public void queueSetStateRequest() {
+        public void queueSetStateRequest(final ButtonState candidateButtonState) {
 
             // If a set request is already pending, do nothing.
             if (!hasMessages(SET_STATE_MESSAGE)) {
@@ -183,6 +197,8 @@ public class ButtonMonitor {
                 rawMessage.what = SET_STATE_MESSAGE;
 
                 // To be handled by separate thread.
+                this.candidateButtonState = candidateButtonState;
+
                 sendMessage(rawMessage);
             }
         }
@@ -212,12 +228,14 @@ public class ButtonMonitor {
                         Log.d(TAG, "queryRemoteState()");
                         ButtonState newRemoteState = getRemoteState();
 
-                        boolean isBeaconFilteringOn = ArduinoButtonApplication.getInstance().getBooleanPreference(ArduinoButtonApplication.BEACON_FILTER_ON_PREF, false);
-
                         if (newRemoteState != null) {
+
+                            boolean isBeaconFilteringOn = ABApplication.getInstance().getBooleanPreference(ABApplication.BEACON_FILTER_ON_PREF, false);
+
                             if (buttonState == ButtonState.NEVER_CONNECTED &&
-                                newRemoteState.isCommunicating &&
-                                isBeaconFilteringOn && button.isAutoModeEnabled()) {
+                                isBeaconFilteringOn &&
+                                button.isAutoModeEnabled() &&
+                                newRemoteState != ButtonState.ON) {
 
                                 // Now that we've established we can communicate with newly discovered
                                 // button, let's set its auto-state....
@@ -226,6 +244,8 @@ public class ButtonMonitor {
                                 setLocalButtonState(newRemoteState);
                             }
                         }
+
+                        scheduleQueryStateMessage();
                     }
 
                     break;
@@ -234,11 +254,7 @@ public class ButtonMonitor {
 
                     if (shouldRun) {
                         Log.d(TAG, "setRemoteState()");
-                        try {
-                            setRemoteState();
-                        } catch (Exception ex) {
-                            BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), button.getId()));
-                        }
+                        setRemoteState(candidateButtonState);
                     }
 
                     break;
@@ -248,25 +264,25 @@ public class ButtonMonitor {
 
                     if (shouldRun) {
                         Log.d(TAG, "Auto Shutdown!");
-                        try {
-
+                        if (isCommunicating() && buttonState != ButtonState.OFF) {
                             setRemoteState(ButtonState.OFF);
-                            Thread.sleep(1000);
-                            stop();
-                        } catch (Exception ex) {
-                            BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), button.getId()));
                         }
+
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            // who cares
+                        }
+
+                        stop();
                     }
 
                     break;
             }
-
-            scheduleQueryStateMessage();
         }
-
     }
 
-    public ByteBuffer encodeCurrentButtonState() {
+    public ByteBuffer encodeCurrentButtonState(final ButtonState buttonState) {
 
         ByteBuffer byteBuffer = ByteBuffer.allocate(1);
 
@@ -294,6 +310,7 @@ public class ButtonMonitor {
         }
     }
 
+    // Will be null if remote state could not be determined.
     protected ButtonState getRemoteState() {
 
         ButtonState newButtonState = null;
@@ -363,11 +380,6 @@ public class ButtonMonitor {
     }
 
     public void setRemoteState(ButtonState buttonState) {
-        this.buttonState = buttonState;
-        setRemoteState();
-    }
-
-    public void setRemoteState() {
 
         try {
             if (socket == null || !socket.isConnected()) {
@@ -379,7 +391,7 @@ public class ButtonMonitor {
 
             if (socket != null) {
 
-                ByteBuffer desiredState = encodeCurrentButtonState();
+                ByteBuffer desiredState = encodeCurrentButtonState(buttonState);
 
                 OutputStream outputStream = socket.getOutputStream();
                 outputStream.write(new byte[]{0x58, 0x58, 0x58}); // 'XXX' - StateChangeRequest
@@ -387,7 +399,6 @@ public class ButtonMonitor {
             }
         } catch (IOException connectException) {
             // Unable to connect; close the socket and get out
-            BusProvider.getInstance().post(new ArduinoButtonInformationEvent(context.getString(R.string.transmission_failure), button.getId()));
             Log.d(TAG, "Socket connect exception!", connectException);
             if (socket != null) {
                 try {
@@ -395,6 +406,8 @@ public class ButtonMonitor {
                 } catch (IOException ignored) {
                 }
             }
+        } finally {
+            scheduleQueryStateMessage();
         }
     }
 
@@ -453,9 +466,8 @@ public class ButtonMonitor {
     }
 
     // Presumaby, this is called from the UI thread...
-    protected void queueSetStateRequest(final ButtonState buttonState) {
-        this.buttonState = buttonState;
-        bluetoothMessageHandler.queueSetStateRequest();
+    protected void queueSetStateRequest(final ButtonState candidateButtonState) {
+        bluetoothMessageHandler.queueSetStateRequest(candidateButtonState);
     }
 
     public synchronized long getQueryStateIntervalMillis() {
@@ -473,5 +485,15 @@ public class ButtonMonitor {
     public boolean isRunning() {
         return shouldRun;
     }
+
+    public long getLastButtonStateUpdateTimeMillis() {
+        return lastButtonStateUpdateTimeMillis;
+    }
+
+    public boolean isCommunicating() {
+        return SystemClock.currentThreadTimeMillis() - lastButtonStateUpdateTimeMillis <= communicationsGracePeriodMillis;
+    }
 }
+
+
 

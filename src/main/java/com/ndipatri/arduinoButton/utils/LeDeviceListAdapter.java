@@ -5,18 +5,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.Utils;
-import com.ndipatri.arduinoButton.ArduinoButtonApplication;
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 import javax.inject.Inject;
 
@@ -36,7 +34,7 @@ public class LeDeviceListAdapter extends BaseAdapter {
         this.inflater = LayoutInflater.from(context);
         this.beacons = new ArrayList<Beacon>();
 
-        ((ArduinoButtonApplication)context.getApplicationContext()).inject(this);
+        ((ABApplication)context.getApplicationContext()).inject(this);
     }
 
     public void replaceWith(Collection<Beacon> newBeacons) {

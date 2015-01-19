@@ -8,7 +8,7 @@ import android.util.Log;
 
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
-import com.ndipatri.arduinoButton.ArduinoButtonApplication;
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.models.Button;
 
@@ -40,11 +40,11 @@ public class BluetoothProviderImpl implements BluetoothProvider {
 
         beaconManager = new BeaconManager(context);
 
-        ArduinoButtonApplication.getInstance().inject(this);
+        ABApplication.getInstance().inject(this);
     }
 
     @Override
-    public Set<Button> getAllNearbyButtons() {
+    public Set<Button> getAllBondedButtons() {
 
         final Set<Button> pairedButtons = new HashSet<Button>();
 
@@ -76,8 +76,8 @@ public class BluetoothProviderImpl implements BluetoothProvider {
     }
 
     @Override
-    public Button getNearbyButton(String buttonId) {
-        final Set<Button> pairedButtons = getAllNearbyButtons();
+    public Button getBondedButton(String buttonId) {
+        final Set<Button> pairedButtons = getAllBondedButtons();
         for (Button pairedDevice : pairedButtons) {
             if (pairedDevice.getId().equals(buttonId)) {
                 return pairedDevice;

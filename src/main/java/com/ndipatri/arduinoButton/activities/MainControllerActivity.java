@@ -13,17 +13,16 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.ndipatri.arduinoButton.ArduinoButtonApplication;
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
+import com.ndipatri.arduinoButton.events.ABFoundEvent;
+import com.ndipatri.arduinoButton.events.ABLostEvent;
 import com.ndipatri.arduinoButton.events.BluetoothDisabledEvent;
-import com.ndipatri.arduinoButton.events.ArduinoButtonFoundEvent;
-import com.ndipatri.arduinoButton.events.ArduinoButtonInformationEvent;
-import com.ndipatri.arduinoButton.events.ArduinoButtonLostEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageResponseEvent;
 import com.ndipatri.arduinoButton.fragments.ABFragment;
-import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
+import com.ndipatri.arduinoButton.services.MonitoringService;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
@@ -62,7 +61,7 @@ public class MainControllerActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_controller);
 
-        ((ArduinoButtonApplication)getApplicationContext()).inject(this);
+        ((ABApplication)getApplicationContext()).inject(this);
 
         Views.inject(this);
     }
@@ -109,12 +108,12 @@ public class MainControllerActivity extends Activity {
     }
 
     protected void startBluetoothMonitoringService() {
-        final Intent buttonDiscoveryServiceIntent = new Intent(this, BluetoothMonitoringService.class);
+        final Intent buttonDiscoveryServiceIntent = new Intent(this, MonitoringService.class);
         startService(buttonDiscoveryServiceIntent);
     }
 
     protected void stopBluetoothMonitoringService() {
-        final Intent buttonDiscoveryServiceIntent = new Intent(this, BluetoothMonitoringService.class);
+        final Intent buttonDiscoveryServiceIntent = new Intent(this, MonitoringService.class);
         stopService(buttonDiscoveryServiceIntent);
     }
 
@@ -200,7 +199,7 @@ public class MainControllerActivity extends Activity {
     }
 
     private boolean getCurrentBeaconFilterValue() {
-        return ArduinoButtonApplication.getInstance().getBooleanPreference(ArduinoButtonApplication.BEACON_FILTER_ON_PREF, false);
+        return ABApplication.getInstance().getBooleanPreference(ABApplication.BEACON_FILTER_ON_PREF, false);
     }
 
     private void toggleBeaconFilter(MenuItem beaconFilterMenuItem) {
@@ -216,7 +215,7 @@ public class MainControllerActivity extends Activity {
 
     private void setBeaconFilterMenuItemValue(MenuItem beaconFilterMenuItem, final boolean beaconFilterOn) {
 
-        ArduinoButtonApplication.getInstance().setPreference(ArduinoButtonApplication.BEACON_FILTER_ON_PREF, beaconFilterOn);
+        ABApplication.getInstance().setPreference(ABApplication.BEACON_FILTER_ON_PREF, beaconFilterOn);
 
         if (beaconFilterOn) {
             beaconFilterMenuItem.setTitle(getString(R.string.turn_off_beacon_filter));
@@ -226,13 +225,6 @@ public class MainControllerActivity extends Activity {
     }
 
     // region OTTO Subscriptions
-
-    @Subscribe
-    public void onArduinoButtonInformation(ArduinoButtonInformationEvent arduinoButtonInformationEvent) {
-        Log.d(TAG, "Information received detected for button '" + arduinoButtonInformationEvent.buttonId + "(" + arduinoButtonInformationEvent.buttonId + ")'.");
-
-        publishProgress(arduinoButtonInformationEvent.message);
-    }
 
     private ABFragment lookupButtonFragment(String buttonId) {
         return (ABFragment) getFragmentManager().findFragmentByTag(getButtonFragmentTag(buttonId));
@@ -273,8 +265,8 @@ public class MainControllerActivity extends Activity {
     }
 
     @Subscribe
-    public void onButtonLostEvent(ArduinoButtonLostEvent arduinoButtonLostEvent) {
-        String lostButtonId = arduinoButtonLostEvent.button.getId();
+    public void onButtonLostEvent(ABLostEvent ABLostEvent) {
+        String lostButtonId = ABLostEvent.button.getId();
 
         forgetArduinoButton(lostButtonId);
     }
@@ -292,9 +284,9 @@ public class MainControllerActivity extends Activity {
     }
 
     @Subscribe
-    public void onArduinoButtonFoundEvent(ArduinoButtonFoundEvent arduinoButtonFoundEvent) {
+    public void onArduinoButtonFoundEvent(ABFoundEvent ABFoundEvent) {
 
-        String foundButtonId = arduinoButtonFoundEvent.button.getId();
+        String foundButtonId = ABFoundEvent.button.getId();
 
         ABFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
         if (existingButtonFragment == null) {

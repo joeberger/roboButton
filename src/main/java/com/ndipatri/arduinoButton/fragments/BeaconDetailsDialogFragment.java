@@ -13,7 +13,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.estimote.sdk.Beacon;
-import com.ndipatri.arduinoButton.ArduinoButtonApplication;
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.utils.BusProvider;
@@ -47,7 +47,7 @@ public class BeaconDetailsDialogFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        ((ArduinoButtonApplication)getActivity().getApplication()).inject(this);
+        ((ABApplication)getActivity().getApplication()).inject(this);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 

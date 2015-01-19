@@ -32,13 +32,13 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
     }
 
     @Override
-    public Set<Button> getAllNearbyButtons() {
+    public Set<Button> getAllBondedButtons() {
         return availableButtons;
     }
 
     @Override
-    public Button getNearbyButton(String buttonId) {
-        final Set<Button> pairedButtons = getAllNearbyButtons();
+    public Button getBondedButton(String buttonId) {
+        final Set<Button> pairedButtons = getAllBondedButtons();
         for (Button pairedDevice : pairedButtons) {
             if (pairedDevice.getId().equals(buttonId)) {
                 return pairedDevice;

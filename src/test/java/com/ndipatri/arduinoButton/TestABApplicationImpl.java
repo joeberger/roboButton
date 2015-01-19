@@ -1,14 +1,13 @@
 package com.ndipatri.arduinoButton;
 
-import com.ndipatri.arduinoButton.dagger.modules.RoboButtonModule;
 import com.ndipatri.arduinoButton.dagger.modules.TestRoboButtonModule;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class TestArduinoButtonApplicationImpl extends ArduinoButtonApplication {
+public class TestABApplicationImpl extends ABApplication {
 
-    private static final String TAG = TestArduinoButtonApplicationImpl.class.getCanonicalName();
+    private static final String TAG = TestABApplicationImpl.class.getCanonicalName();
 
     protected List<? extends Object> getDependencyModules() {
         return Arrays.asList(

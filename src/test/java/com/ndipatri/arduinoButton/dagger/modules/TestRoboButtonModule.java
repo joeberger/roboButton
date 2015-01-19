@@ -10,8 +10,8 @@ import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderTestImpl;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.fragments.BeaconDetailsDialogFragment;
 import com.ndipatri.arduinoButton.fragments.ButtonDetailsDialogFragment;
-import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
-import com.ndipatri.arduinoButton.services.BluetoothMonitoringServiceTest;
+import com.ndipatri.arduinoButton.services.MonitoringService;
+import com.ndipatri.arduinoButton.services.MonitoringServiceTest;
 import com.ndipatri.arduinoButton.services.ButtonMonitor;
 import com.ndipatri.arduinoButton.services.ButtonMonitorTest;
 import com.ndipatri.arduinoButton.utils.LeDeviceListAdapter;
@@ -23,12 +23,12 @@ import dagger.Provides;
 
 @Module(
         injects = {
-                BluetoothMonitoringServiceTest.class,
+                MonitoringServiceTest.class,
                 ButtonMonitorTest.class,
                 ButtonDetailsDialogFragment.class,
                 BeaconDetailsDialogFragment.class,
                 LeDeviceListAdapter.class,
-                BluetoothMonitoringService.class,
+                MonitoringService.class,
                 ButtonMonitor.class,
                 MainControllerActivity.class,
                 BluetoothProviderImpl.class

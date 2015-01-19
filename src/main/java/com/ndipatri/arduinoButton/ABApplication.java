@@ -7,16 +7,16 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.ndipatri.arduinoButton.services.BluetoothMonitoringService;
+import com.ndipatri.arduinoButton.services.MonitoringService;
 import com.ndipatri.arduinoButton.utils.ActivityWatcher;
 
 import java.util.List;
 
 import dagger.ObjectGraph;
 
-public abstract class ArduinoButtonApplication extends Application {
+public abstract class ABApplication extends Application {
 
-    private static final String TAG = ArduinoButtonApplication.class.getCanonicalName();
+    private static final String TAG = ABApplication.class.getCanonicalName();
     public static final String APPLICATION_PREFS = "RoboButton.prefs";
 
     public static final String BEACON_FILTER_ON_PREF = "BEACON_FILTER_ON_PREF";
@@ -28,10 +28,10 @@ public abstract class ArduinoButtonApplication extends Application {
 
     private ObjectGraph graph;
 
-    private static ArduinoButtonApplication instance = null;
+    private static ABApplication instance = null;
     // endregion
 
-    public ArduinoButtonApplication() {
+    public ABApplication() {
         instance = this;
     }
 
@@ -68,7 +68,7 @@ public abstract class ArduinoButtonApplication extends Application {
 
     protected abstract List<? extends Object> getDependencyModules();
 
-    public static ArduinoButtonApplication getInstance() {
+    public static ABApplication getInstance() {
         return instance;
     }
 
@@ -125,8 +125,8 @@ public abstract class ArduinoButtonApplication extends Application {
         // do otherwise, and if so, will start the service manually at that time.
 
         if (isBluetoothSupported() && isBluetoothEnabled()) {
-            final Intent buttonDiscoveryServiceIntent = new Intent(this, BluetoothMonitoringService.class);
-            buttonDiscoveryServiceIntent.putExtra(BluetoothMonitoringService.RUN_IN_BACKGROUND, shouldBackground);
+            final Intent buttonDiscoveryServiceIntent = new Intent(this, MonitoringService.class);
+            buttonDiscoveryServiceIntent.putExtra(MonitoringService.RUN_IN_BACKGROUND, shouldBackground);
             startService(buttonDiscoveryServiceIntent);
         }
     }

@@ -5,9 +5,9 @@ import com.ndipatri.arduinoButton.dagger.modules.RoboButtonModule;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArduinoButtonApplicationImpl extends ArduinoButtonApplication {
+public class ABApplicationImpl extends ABApplication {
 
-    private static final String TAG = ArduinoButtonApplicationImpl.class.getCanonicalName();
+    private static final String TAG = ABApplicationImpl.class.getCanonicalName();
 
     protected List<? extends Object> getDependencyModules() {
         return Arrays.asList(

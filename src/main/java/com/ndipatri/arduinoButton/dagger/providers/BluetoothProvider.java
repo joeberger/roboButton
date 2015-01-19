@@ -13,9 +13,9 @@ import java.util.Set;
 
 public interface BluetoothProvider {
 
-    public Set<Button> getAllNearbyButtons();
+    public Set<Button> getAllBondedButtons();
 
-    public Button getNearbyButton(String buttinId);
+    public Button getBondedButton(String buttinId);
 
     public boolean isBluetoothSupported();
 

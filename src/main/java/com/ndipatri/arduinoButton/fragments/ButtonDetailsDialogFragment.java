@@ -10,7 +10,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -19,17 +18,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.ndipatri.arduinoButton.ArduinoButtonApplication;
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
@@ -88,7 +84,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
         this.inflater = LayoutInflater.from(getActivity());
 
-        ((ArduinoButtonApplication)getActivity().getApplication()).inject(this);
+        ((ABApplication)getActivity().getApplication()).inject(this);
 
         shrinkAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.button_shrink);
         shrinkAnimation.setAnimationListener(new Animation.AnimationListener() {
