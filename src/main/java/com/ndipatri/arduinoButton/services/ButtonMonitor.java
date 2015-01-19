@@ -66,6 +66,7 @@ public class ButtonMonitor {
 
     // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
     private long lastButtonStateUpdateTimeMillis = 0;
+    private long lastButtonStateChangeTimeMillis = 0;
 
     // endregion
 
@@ -141,9 +142,10 @@ public class ButtonMonitor {
     // would presumably be called after we retrieve remote state (or during startup of this fragment)
     protected void setLocalButtonState(final ButtonState buttonState) {
 
+        this.lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
         if (this.buttonState != buttonState) {
+            this.lastButtonStateChangeTimeMillis = SystemClock.uptimeMillis();
             this.buttonState = buttonState;
-            this.lastButtonStateUpdateTimeMillis = SystemClock.currentThreadTimeMillis();
 
             new Handler(context.getMainLooper()).post(new Runnable() {
                 @Override
@@ -490,12 +492,12 @@ public class ButtonMonitor {
         return shouldRun;
     }
 
-    public long getLastButtonStateUpdateTimeMillis() {
-        return lastButtonStateUpdateTimeMillis;
+    public long getLastButtonStateChangeTimeMillis() {
+        return lastButtonStateChangeTimeMillis;
     }
 
     public boolean isCommunicating() {
-        return SystemClock.currentThreadTimeMillis() - lastButtonStateUpdateTimeMillis <= communicationsGracePeriodMillis;
+        return SystemClock.uptimeMillis() - lastButtonStateUpdateTimeMillis <= communicationsGracePeriodMillis;
     }
 }
 

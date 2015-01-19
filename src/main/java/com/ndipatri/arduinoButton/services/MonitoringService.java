@@ -204,7 +204,9 @@ public class MonitoringService extends Service {
                             }
                         });
 
-                        boolean hasStateChangedSinceLastCheck = (SystemClock.currentThreadTimeMillis() - buttonMonitor.getLastButtonStateUpdateTimeMillis()) < buttonDiscoveryIntervalMillis;
+                        long timeOfLastCheck = SystemClock.uptimeMillis() - buttonDiscoveryIntervalMillis;
+                        boolean hasStateChangedSinceLastCheck = timeOfLastCheck > 0 &&
+                                                                buttonMonitor.getLastButtonStateChangeTimeMillis() > timeOfLastCheck;
                         if (runInBackground && hasStateChangedSinceLastCheck) {
                             sendActiveButtonNotification(buttonId, buttonMonitor.getButtonState());
                         }
