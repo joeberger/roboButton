@@ -20,6 +20,7 @@ import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.ndipatri.arduinoButton.ABApplication;
+import com.ndipatri.arduinoButton.BeaconDistanceListener;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
@@ -73,6 +74,8 @@ public class MonitoringService extends Service {
 
     Set<com.ndipatri.arduinoButton.models.Beacon> nearbyBeacons = new HashSet<com.ndipatri.arduinoButton.models.Beacon>();
 
+    private int beaconDetectionThresholdMeters = -1;
+
     public IBinder onBind(Intent intent) {
         return null;
     }
@@ -84,6 +87,8 @@ public class MonitoringService extends Service {
         ((ABApplication)getApplication()).inject(this);
 
         monitorRegisteredBeacons(bluetoothProvider);
+
+        beaconDetectionThresholdMeters = getResources().getInteger(R.integer.beacon_detection_threshold_meters);
 
         BusProvider.getInstance().register(this);
     }
@@ -331,34 +336,30 @@ public class MonitoringService extends Service {
     }
 
     private void monitorRegisteredBeacons(final BluetoothProvider bluetoothProvider) {
-        bluetoothProvider.startBTMonitoring(new BeaconManager.MonitoringListener() {
+        bluetoothProvider.startBTMonitoring(new BeaconDistanceListener() {
+
             @Override
-            public void onEnteredRegion(Region region, List<Beacon> beacons) {
-                String message = "Entering beacon region!";
-                Log.d(TAG, message + "(" + region + "').");
-                Toast.makeText(MonitoringService.this, message, Toast.LENGTH_LONG).show();
+            public void beaconDistanceUpdate(com.ndipatri.arduinoButton.models.Beacon beacon, double distanceInMeters) {
 
-                if (region == bluetoothProvider.getMonitoredRegion()) {
-                    for (Beacon beacon : beacons) {
-                        com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(beacon.getMacAddress(), true);
-
-                        if (pairedBeacon != null) {
-                            Log.d(TAG, "Paired beacon detected!");
-
-                            nearbyBeacons.add(pairedBeacon);
-                        }
-                    }
+                if (distanceInMeters < (double)beaconDetectionThresholdMeters) {
+                    String msg = "Beacon detected.";
+                    Log.d(TAG, msg + " ('" + beacon + "'.)");
+                    //Toast.makeText(MonitoringService.this, msg, Toast.LENGTH_SHORT).show();
+                    nearbyBeacons.add(beacon);
+                } else {
+                    String msg = "Beacon lost.";
+                    Log.d(TAG, msg + " ('" + beacon + "'.)");
+                    //Toast.makeText(MonitoringService.this, msg, Toast.LENGTH_SHORT).show();
+                    nearbyBeacons.remove(beacon);
                 }
             }
 
             @Override
-            public void onExitedRegion(Region region) {
-                String message = "Leaving beacon region!";
-                Log.d(TAG, message + "(" + region + "').");
-                Toast.makeText(MonitoringService.this, message, Toast.LENGTH_LONG).show();
+            public void leftRegion(Region region) {
 
                 if (region == bluetoothProvider.getMonitoredRegion()) {
                     // I'm guessing, we get this callback when there are NO more detected beacons in the given region
+                    Log.d(TAG, "Left beacon region.");
                     nearbyBeacons.clear();
                 }
             }

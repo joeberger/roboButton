@@ -20,7 +20,8 @@ import dagger.Provides;
         injects = {
                 MonitoringServiceTest.class,
                 ButtonMonitorTest.class,
-        }
+        },
+        overrides = true
 )
 public class TestABModule {
 

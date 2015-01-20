@@ -6,24 +6,31 @@ import android.content.Context;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
+import com.estimote.sdk.Utils;
 import com.ndipatri.arduinoButton.ABApplication;
+import com.ndipatri.arduinoButton.BeaconDistanceListener;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.models.Button;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-public class BluetoothProviderImpl implements BluetoothProvider {
+public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.MonitoringListener, BeaconManager.RangingListener {
 
     private static final String TAG = BluetoothProviderImpl.class.getCanonicalName();
 
     @Inject
     ButtonProvider buttonProvider;
+
+    @Inject
+    BeaconProvider beaconProvider;
 
     // NJD TODO - Need to figure out how to maek this value different (currently, can't change value using andorid estimote app. so i'm using the default value
     // i foudn on the estimote in my office)
@@ -34,6 +41,8 @@ public class BluetoothProviderImpl implements BluetoothProvider {
     private Context context;
 
     private BeaconManager beaconManager;
+
+    private BeaconDistanceListener beaconDistanceListener;
 
     public BluetoothProviderImpl(Context context) {
         this.context = context;
@@ -113,16 +122,20 @@ public class BluetoothProviderImpl implements BluetoothProvider {
     }
 
     @Override
-    public void startBTMonitoring(BeaconManager.MonitoringListener listener) {
+    public void startBTMonitoring(BeaconDistanceListener beaconDistanceListener) {
 
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
+
+        this.beaconDistanceListener = beaconDistanceListener;
+
         com.estimote.sdk.utils.L.enableDebugLogging(true);
 
         // Default values are 5s of scanning and 25s of waiting time to save CPU cycles.
         // In order for this demo to be more responsive and immediate we lower down those values.
         beaconManager.setBackgroundScanPeriod(TimeUnit.SECONDS.toMillis(1), 0);
 
-        beaconManager.setMonitoringListener(listener);
+        beaconManager.setMonitoringListener(this);
+        beaconManager.setRangingListener(this);
 
         // Configure verbose debug logging.
 
@@ -144,10 +157,70 @@ public class BluetoothProviderImpl implements BluetoothProvider {
         Log.d(TAG, "Stop Beacon Monitoring Process...");
 
         beaconManager.stopMonitoring(AB_ESTIMOTE_REGION);
+        beaconManager.stopRanging(AB_ESTIMOTE_REGION);
+
+        this.beaconDistanceListener = null;
+
         beaconManager.disconnect();
     }
 
     public Region getMonitoredRegion() {
         return AB_ESTIMOTE_REGION;
+    }
+
+    @Override
+    public void onEnteredRegion(Region region, List<Beacon> beacons) {
+        String message = "Entering beacon region!";
+        Log.d(TAG, message + "(" + region + "').");
+
+        if (region == getMonitoredRegion()) {
+            for (Beacon beacon : beacons) {
+                com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(beacon.getMacAddress(), true);
+
+                if (pairedBeacon != null) {
+                    Log.d(TAG, "Paired beacons detected!");
+
+                    // We've detected at least one, start ranging...
+                    try {
+                        // we're assuming a connection already to BeaconManager...
+                        beaconManager.startRanging(getMonitoredRegion());
+                    } catch (RemoteException e) {
+                        Log.d(TAG, "Error while starting ranging");
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onExitedRegion(Region region) {
+        String message = "Leaving beacon region!";
+        Log.d(TAG, message + "(" + region + "').");
+
+        this.beaconDistanceListener.leftRegion(region);
+
+        try {
+            beaconManager.stopRanging(getMonitoredRegion());
+        } catch (RemoteException e) {
+            Log.d(TAG, "Error while stopping ranging");
+        }
+    }
+
+    @Override
+    public void onBeaconsDiscovered(Region region, List<Beacon> beacons) {
+        if (region == getMonitoredRegion()) {
+            for (Beacon beacon : beacons) {
+                com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(beacon.getMacAddress(), true);
+
+                if (pairedBeacon != null) {
+                    double distance = Math.min(Utils.computeAccuracy(beacon), 6.0);
+                    Log.d(TAG, "Paired beacon distance update! ('" + distance + "'m)");
+
+                    this.beaconDistanceListener.beaconDistanceUpdate(pairedBeacon, distance);
+                }
+            }
+        }
     }
 }
