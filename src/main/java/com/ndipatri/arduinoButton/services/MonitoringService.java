@@ -34,6 +34,7 @@ import com.ndipatri.arduinoButton.utils.BusProvider;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -115,7 +116,14 @@ public class MonitoringService extends Service {
             return START_STICKY;
         }
 
-        runInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
+        boolean newRunInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
+
+        if (!runInBackground && newRunInBackground) {
+            sendABNotificationForAllButtons();
+        }
+
+        runInBackground = newRunInBackground;
+
         Log.d(TAG, "onStartCommand() (runInBackground='" + runInBackground + "').");
 
         int newTimeMultiplier = runInBackground ? getResources().getInteger(R.integer.background_time_multiplier) : 1;
@@ -208,7 +216,7 @@ public class MonitoringService extends Service {
                         boolean hasStateChangedSinceLastCheck = timeOfLastCheck > 0 &&
                                                                 buttonMonitor.getLastButtonStateChangeTimeMillis() > timeOfLastCheck;
                         if (runInBackground && hasStateChangedSinceLastCheck) {
-                            sendActiveButtonNotification(buttonId, buttonMonitor.getButtonState());
+                            sendABNotification(buttonId, buttonMonitor.getButtonState());
                         }
                     }
                 }
@@ -232,7 +240,7 @@ public class MonitoringService extends Service {
                 });
 
                 if (runInBackground) {
-                    sendActiveButtonNotification(lostButtonId, ButtonState.DISCONNECTED);
+                    sendABNotification(lostButtonId, ButtonState.DISCONNECTED);
                 }
             }
 
@@ -269,7 +277,13 @@ public class MonitoringService extends Service {
         return bluetoothDevice.getAddress();
     }
 
-    protected void sendActiveButtonNotification(String buttonId, ButtonState buttonState) {
+    protected void sendABNotificationForAllButtons() {
+        for (Map.Entry<String, ButtonMonitor> entry : buttonMonitorMap.entrySet()) {
+            sendABNotification(entry.getKey(), entry.getValue().getButtonState());
+        }
+    }
+
+    protected void sendABNotification(String buttonId, ButtonState buttonState) {
 
         String tickerText = this.getString(R.string.new_robo_button);
         Button button = buttonProvider.getButton(buttonId);
