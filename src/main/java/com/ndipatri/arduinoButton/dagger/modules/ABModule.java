@@ -29,11 +29,11 @@ import dagger.Provides;
                 BluetoothProviderImpl.class
         }
 )
-public class RoboButtonModule {
+public class ABModule {
 
     private Context context = null;
 
-    public RoboButtonModule (Context context) {
+    public ABModule(Context context) {
         this.context = context;
     }
 
