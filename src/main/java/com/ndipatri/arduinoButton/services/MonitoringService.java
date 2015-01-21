@@ -14,10 +14,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
-import com.estimote.sdk.Beacon;
-import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.BeaconDistanceListener;
@@ -344,12 +341,10 @@ public class MonitoringService extends Service {
                 if (distanceInMeters < (double)beaconDetectionThresholdMeters) {
                     String msg = "Beacon detected.";
                     Log.d(TAG, msg + " ('" + beacon + "'.)");
-                    //Toast.makeText(MonitoringService.this, msg, Toast.LENGTH_SHORT).show();
                     nearbyBeacons.add(beacon);
                 } else {
                     String msg = "Beacon lost.";
                     Log.d(TAG, msg + " ('" + beacon + "'.)");
-                    //Toast.makeText(MonitoringService.this, msg, Toast.LENGTH_SHORT).show();
                     nearbyBeacons.remove(beacon);
                 }
             }

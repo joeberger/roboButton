@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 
 import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.TestUtils;
@@ -84,7 +85,6 @@ public class MonitoringServiceTest {
         assertThat("ButtonMonitoringService should have been started.", startedIntent.getComponent().getClassName().equals(MonitoringService.class.getCanonicalName()));
     }
 
-    /**
 
     @Test
     public void onStartCommand() {
@@ -92,13 +92,18 @@ public class MonitoringServiceTest {
         assertThat("ButtonMonitoringService should be running.", monitoringService.isRunning());
         assertThat("ButtonMonitoringService should have been started in foreground.", !monitoringService.isRunInBackground());
 
-        MonitoringService.MessageHandler messageHandler = monitoringService.getMonitorHandler();
+        Handler messageHandler = monitoringService.getMonitorHandler();
 
         assertThat("MessageHandler thread should have been started and waiting for message.", messageHandler.getLooper().getThread().getState() == Thread.State.WAITING);
-        assertThat("MessageHandler thread should have a 'DISCOVER' message pending.", messageHandler.hasMessages(MonitoringService.DISCOVER_BUTTON_DEVICES));
-
         assertThat("Button discovery interval should be 4 seconds.", monitoringService.getButtonDiscoveryIntervalMillis() == 4000);
-        assertThat("Button communications grace period should be 10 seconds.", monitoringService.getCommunicationsGracePeriodMillis() == 10000);
+
+        shadowOf(monitoringService.getMonitorHandler())
+
+        // I would normally try to use the 'Shadow' version of the handler to see if the proper runnable was posted
+        // (e.g. shadowOf(monitoringService.getMonitorHandler()), but that information isnt' available, so we use
+        // mocking framework for this (stubs failed us, switch to mocks)
+
+        assertThat("MessageHandler thread should have a 'DISCOVER' message pending.", messageHandler.hasMessages(MonitoringService.DISCOVER_BUTTON_DEVICES));
     }
 
     @Test
@@ -254,5 +259,4 @@ public class MonitoringServiceTest {
             return receivedEvent;
         }
     }
-        **/
 }
