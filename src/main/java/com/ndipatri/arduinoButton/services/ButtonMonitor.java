@@ -143,8 +143,11 @@ public class ButtonMonitor {
     protected void setLocalButtonState(final ButtonState buttonState) {
 
         this.lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
+        Log.d(TAG, "Button state updated @'" + lastButtonStateChangeTimeMillis + ".'");
+
         if (this.buttonState != buttonState) {
-            this.lastButtonStateChangeTimeMillis = SystemClock.uptimeMillis();
+            this.lastButtonStateChangeTimeMillis = lastButtonStateUpdateTimeMillis;
+            Log.d(TAG, "Button state changed @'" + lastButtonStateChangeTimeMillis + ".'");
             this.buttonState = buttonState;
 
             new Handler(context.getMainLooper()).post(new Runnable() {
@@ -497,7 +500,8 @@ public class ButtonMonitor {
     }
 
     public boolean isCommunicating() {
-        return SystemClock.uptimeMillis() - lastButtonStateUpdateTimeMillis <= communicationsGracePeriodMillis;
+        long timeSinceLastUpdate = SystemClock.uptimeMillis() - lastButtonStateUpdateTimeMillis;
+        return timeSinceLastUpdate <= communicationsGracePeriodMillis;
     }
 }
 

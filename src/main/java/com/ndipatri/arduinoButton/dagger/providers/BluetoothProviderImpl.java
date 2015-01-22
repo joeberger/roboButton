@@ -62,6 +62,7 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
         Set<BluetoothDevice> pairedDevices = BluetoothAdapter.getDefaultAdapter().getBondedDevices();
         if (pairedDevices != null) {
             for (BluetoothDevice device : pairedDevices) {
+                Log.d(TAG, "Checking BT device: + '" + device.getName() + ":" + device.getAddress() + "'.");
                 if (device.getName().matches(discoverableButtonPatternString)) {
                     Log.d(TAG, "We have a paired ArduinoButton device! + '" + device + "'.");
 
@@ -131,8 +132,8 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
 
         // Default values are 5s of scanning and 25s of waiting time to save CPU cycles.
         // In order for this demo to be more responsive and immediate we lower down those values.
-        beaconManager.setBackgroundScanPeriod(TimeUnit.SECONDS.toMillis(1), 5);
-        beaconManager.setForegroundScanPeriod(TimeUnit.SECONDS.toMillis(1), 5);
+        beaconManager.setBackgroundScanPeriod(TimeUnit.SECONDS.toMillis(1), TimeUnit.SECONDS.toMillis(5));
+        beaconManager.setForegroundScanPeriod(TimeUnit.SECONDS.toMillis(5), TimeUnit.SECONDS.toMillis(5));
 
         beaconManager.setMonitoringListener(this);
         beaconManager.setRangingListener(this);
@@ -175,21 +176,19 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
 
         if (region == getMonitoredRegion()) {
             for (Beacon beacon : beacons) {
-                com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(beacon.getMacAddress(), true);
+                Log.d(TAG, "Paired beacons detected!");
 
-                if (pairedBeacon != null) {
-                    Log.d(TAG, "Paired beacons detected!");
-
-                    // We've detected at least one, start ranging...
-                    try {
-                        // we're assuming a connection already to BeaconManager...
-                        beaconManager.startRanging(getMonitoredRegion());
-                    } catch (RemoteException e) {
-                        Log.d(TAG, "Error while starting ranging");
-                    }
-
-                    break;
+                // We've entered one of our known regions, so we begin to range.. Even if no button is currently
+                // associated with the beacons.. this assocation might happen at any time within the app while we are
+                // in this region.
+                try {
+                    // we're assuming a connection already to BeaconManager...
+                    beaconManager.startRanging(getMonitoredRegion());
+                } catch (RemoteException e) {
+                    Log.d(TAG, "Error while starting ranging");
                 }
+
+                break;
             }
         }
     }
@@ -210,7 +209,6 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
 
     @Override
     public void onBeaconsDiscovered(Region region, List<Beacon> beacons) {
-        Log.d(TAG, "onBeaconsDiscovered()");
         if (region == getMonitoredRegion()) {
             for (Beacon beacon : beacons) {
                 com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(beacon.getMacAddress(), true);

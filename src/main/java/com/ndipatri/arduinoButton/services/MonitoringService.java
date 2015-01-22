@@ -175,8 +175,10 @@ public class MonitoringService extends Service {
             boolean beaconFilteringOn = ABApplication.getInstance().getBooleanPreference(ABApplication.BEACON_FILTER_ON_PREF, false);
             if (beaconFilteringOn) {
                 buttons = getAllNearbyBeaconPairedButtons();
+                Log.d(TAG, "Found '" + buttons.size() + "' nearby paired buttons.");
             } else {
                 buttons = bluetoothProvider.getAllBondedButtons();
+                Log.d(TAG, "Found '" + buttons.size() + "' bonded buttons.");
             }
 
             // To keep track of buttons that have gone incommunicado.
