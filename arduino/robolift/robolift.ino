@@ -166,9 +166,8 @@ void setup()
 
 void loop()
 {    
-
      debounceAndProcessSwitch();
-  
+
      processBluetooth();
 
      // and loop forever and ever!
@@ -210,6 +209,8 @@ void processBluetooth()
 
                     // we've received a request for local state report!
                     bluetooth.print(localState); // the print command encodes in ASCII
+                    Serial.print("done sending local state over BT.");      
+
                     inputBuffer = "";
                 } else 
     
