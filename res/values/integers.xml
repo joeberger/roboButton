@@ -4,5 +4,5 @@
     <integer name="button_discovery_interval_millis">4000</integer>
     <integer name="communications_grace_period_millis">10000</integer>
     <integer name="background_time_multiplier">5</integer>
-    <integer name="beacon_detection_threshold_meters">3</integer>
+    <integer name="beacon_detection_threshold_meters">7</integer>
 </resources>

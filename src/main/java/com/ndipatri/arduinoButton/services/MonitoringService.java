@@ -14,6 +14,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import com.estimote.sdk.Region;
 import com.ndipatri.arduinoButton.ABApplication;
@@ -340,6 +341,7 @@ public class MonitoringService extends Service {
             @Override
             public void beaconDistanceUpdate(com.ndipatri.arduinoButton.models.Beacon beacon, double distanceInMeters) {
 
+                Toast.makeText(MonitoringService.this, "BeaconDistance: '" + distanceInMeters + "m'", Toast.LENGTH_SHORT).show();
                 if (distanceInMeters < (double)beaconDetectionThresholdMeters) {
                     String msg = "Beacon detected.";
                     Log.d(TAG, msg + " ('" + beacon + "'.)");
