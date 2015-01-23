@@ -133,7 +133,7 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
         // Default values are 5s of scanning and 25s of waiting time to save CPU cycles.
         // In order for this demo to be more responsive and immediate we lower down those values.
         beaconManager.setBackgroundScanPeriod(TimeUnit.SECONDS.toMillis(1), TimeUnit.SECONDS.toMillis(5));
-        beaconManager.setForegroundScanPeriod(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(2));
+        beaconManager.setForegroundScanPeriod(TimeUnit.SECONDS.toMillis(5), TimeUnit.SECONDS.toMillis(1));
 
         beaconManager.setMonitoringListener(this);
         beaconManager.setRangingListener(this);
