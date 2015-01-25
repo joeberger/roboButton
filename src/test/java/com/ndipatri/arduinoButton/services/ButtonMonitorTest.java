@@ -93,8 +93,9 @@ public class ButtonMonitorTest {
 
         assertThat("Query state discovery interval should be 1 second.", buttonMonitor.getQueryStateIntervalMillis() == 1000);
 
-        ABStateChangeReport expectedEvent = new ABStateChangeReport(new ABStateChangeReport.ABStateChangeReportValue(ButtonState.NEVER_CONNECTED, .gavailableButton.getId());
-        assertThat("Button State Change event should have been published.", busListener.getReceivedEvent() != null && busListener.getReceivedEvent().equals(expectedEvent));
+        ABStateChangeReport expectedEvent = new ABStateChangeReport(new ABStateChangeReport.ABStateChangeReportValue(ButtonState.NEVER_CONNECTED, availableButton.getId()));
+        ABStateChangeReport receivedReport = ((ABStateChangeReport)busListener.getReceivedEvent());
+        assertThat("Button State Change event should have been published.", receivedReport != null && receivedReport.equals(expectedEvent));
     }
 
     // NJD TODO - need to test actual communications with BT device and how that effects 'liveliness' of monitor...
