@@ -2,37 +2,43 @@ package com.ndipatri.arduinoButton.events;
 
 import com.ndipatri.arduinoButton.enums.ButtonState;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Created by ndipatri on 1/1/14.
  */
 public class ABStateChangeReport {
 
-    public ButtonState newButtonState;
-    public String buttonId;
+    Set<ABStateChangeReportValue> changes = new HashSet<ABStateChangeReportValue>();
 
-    public ABStateChangeReport(final String buttonId, final ButtonState newButtonState) {
-        this.buttonId = buttonId;
-        this.newButtonState = newButtonState;
+    public ABStateChangeReport(Set<ABStateChangeReportValue> changes) {
+        this.changes = changes;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ABStateChangeReport that = (ABStateChangeReport) o;
-
-        if (buttonId != null ? !buttonId.equals(that.buttonId) : that.buttonId != null)
-            return false;
-        if (newButtonState != that.newButtonState) return false;
-
-        return true;
+    public ABStateChangeReport(ABStateChangeReportValue change) {
+        changes.add(change);
     }
 
-    @Override
-    public int hashCode() {
-        int result = newButtonState != null ? newButtonState.hashCode() : 0;
-        result = 31 * result + (buttonId != null ? buttonId.hashCode() : 0);
-        return result;
+    public static class ABStateChangeReportValue {
+        public ButtonState buttonState;
+        public String buttonId;
+
+        public ABStateChangeReportValue(final ButtonState buttonState, final String buttonId) {
+            this.buttonId = buttonId;
+            this.buttonState = buttonState;
+        }
+
+        public ButtonState getButtonState() {
+            return buttonState;
+        }
+
+        public String getButtonId() {
+            return buttonId;
+        }
+    }
+
+    public Set<ABStateChangeReportValue> getChanges() {
+        return changes;
     }
 }

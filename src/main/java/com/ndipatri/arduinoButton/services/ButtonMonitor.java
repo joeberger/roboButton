@@ -155,15 +155,10 @@ public class ButtonMonitor {
                 public void run() {
                     Log.d(TAG, "State is '" + buttonState + "'");
 
-                    BusProvider.getInstance().post(new ABStateChangeReport(button.getId(), buttonState));
+                    BusProvider.getInstance().post(new ABStateChangeReport(new ABStateChangeReport.ABStateChangeReportValue(buttonState, button.getId())));
                 }
             });
         }
-    }
-
-    @Produce
-    public ABStateChangeReport produceStateChangeReport() {
-        return new ABStateChangeReport(button.getId(), buttonState);
     }
 
     private void scheduleQueryStateMessage() {

@@ -27,8 +27,10 @@ import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ABFoundEvent;
 import com.ndipatri.arduinoButton.events.ABLostEvent;
+import com.ndipatri.arduinoButton.events.ABStateChangeReport;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
+import com.squareup.otto.Produce;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +39,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
+
+import static com.ndipatri.arduinoButton.events.ABStateChangeReport.*;
 
 /**
  * Constantly monitors all discovered Buttons and launches a ButtonMonitor for each... sends
@@ -363,6 +367,18 @@ public class MonitoringService extends Service {
                 }
             }
         });
+    }
+
+    @Produce
+    public ABStateChangeReport produceStateChangeReport() {
+        Set<ABStateChangeReport.ABStateChangeReportValue> values = new HashSet<ABStateChangeReport.ABStateChangeReportValue>();
+        for (ButtonMonitor buttonMonitor : buttonMonitorMap.values()) {
+            if (buttonMonitor.isCommunicating()) {
+                values.add(new ABStateChangeReport.ABStateChangeReportValue(buttonMonitor.getButtonState(), buttonMonitor.getButton().getId()));
+            }
+        }
+
+        return new ABStateChangeReport(values);
     }
 
     public boolean isRunInBackground() {
