@@ -29,7 +29,7 @@
         </activity>
 
         <activity
-            android:name=".activities.RegisterBeaconsActivity"
+            android:name=".activities.ViewNearbyBeaconsActivity"
             android:label="Select Beacon"
             android:screenOrientation="portrait"/>
 

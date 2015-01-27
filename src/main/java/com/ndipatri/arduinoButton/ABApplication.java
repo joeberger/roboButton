@@ -19,8 +19,6 @@ public abstract class ABApplication extends Application {
     private static final String TAG = ABApplication.class.getCanonicalName();
     public static final String APPLICATION_PREFS = "RoboButton.prefs";
 
-    public static final String BEACON_FILTER_ON_PREF = "BEACON_FILTER_ON_PREF";
-
     private ActivityWatcher activityWatcher;
 
     // region localVars

@@ -234,10 +234,7 @@ public class ButtonMonitor {
 
                         if (newRemoteState != null) {
 
-                            boolean isBeaconFilteringOn = ABApplication.getInstance().getBooleanPreference(ABApplication.BEACON_FILTER_ON_PREF, false);
-
                             if (buttonState == ButtonState.NEVER_CONNECTED &&
-                                isBeaconFilteringOn &&
                                 button.isAutoModeEnabled() &&
                                 newRemoteState != ButtonState.ON) {
 

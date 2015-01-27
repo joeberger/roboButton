@@ -172,9 +172,6 @@ public class MainControllerActivity extends Activity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main_controller_activity, menu);
 
-        MenuItem beaconFilterItem = menu.getItem(2);
-        setBeaconFilterMenuItemValue(beaconFilterItem);
-
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -188,46 +185,14 @@ public class MainControllerActivity extends Activity {
 
                 return true;
 
-            case R.id.register_beacons:
+            case R.id.view_nearby_beacons:
 
-                registerBeacons();
-
-                return true;
-
-            case R.id.beacon_filter:
-
-                toggleBeaconFilter(item);
+                viewNearbyBeacons();
 
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
-        }
-    }
-
-    private boolean getCurrentBeaconFilterValue() {
-        return ABApplication.getInstance().getBooleanPreference(ABApplication.BEACON_FILTER_ON_PREF, false);
-    }
-
-    private void toggleBeaconFilter(MenuItem beaconFilterMenuItem) {
-        boolean beaconFilterOn = getCurrentBeaconFilterValue();
-        beaconFilterOn = !beaconFilterOn;
-
-        setBeaconFilterMenuItemValue(beaconFilterMenuItem, beaconFilterOn);
-    }
-
-    private void setBeaconFilterMenuItemValue(MenuItem beaconFilterMenuItem) {
-        setBeaconFilterMenuItemValue(beaconFilterMenuItem, getCurrentBeaconFilterValue());
-    }
-
-    private void setBeaconFilterMenuItemValue(MenuItem beaconFilterMenuItem, final boolean beaconFilterOn) {
-
-        ABApplication.getInstance().setPreference(ABApplication.BEACON_FILTER_ON_PREF, beaconFilterOn);
-
-        if (beaconFilterOn) {
-            beaconFilterMenuItem.setTitle(getString(R.string.turn_off_beacon_filter));
-        } else {
-            beaconFilterMenuItem.setTitle(getString(R.string.turn_on_beacon_filter));
         }
     }
 
@@ -243,8 +208,8 @@ public class MainControllerActivity extends Activity {
         }
     }
 
-    private void registerBeacons() {
-        startActivity(new Intent(this, RegisterBeaconsActivity.class));
+    private void viewNearbyBeacons() {
+        startActivity(new Intent(this, ViewNearbyBeaconsActivity.class));
     }
 
     private synchronized void forgetArduinoButton(final String lostButtonId) {

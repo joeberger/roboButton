@@ -31,6 +31,27 @@ public class ButtonProvider {
         this.context = context;
     }
 
+    public List<Button> getUnpairedButtons() {
+        List<Button> unpairedButtons = new ArrayList<Button>();
+
+        OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
+        RuntimeExceptionDao<Button, Long> buttonDao = helper.getButtonDao();
+        QueryBuilder<Button, Long> queryBuilder = buttonDao.queryBuilder();
+        try {
+            Where<Button, Long> where = queryBuilder.where();
+            where.isNull(Button.BEACON_ID);
+
+            PreparedQuery<Button> preparedQuery = queryBuilder.prepare();
+            unpairedButtons = buttonDao.query(preparedQuery);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        OpenHelperManager.releaseHelper();
+
+        return unpairedButtons;
+    }
+
     public List<Button> getBeaconPairedButtons() {
         List<Button> pairedButtons = new ArrayList<Button>();
 

@@ -175,17 +175,18 @@ public class MonitoringService extends Service {
     protected Runnable buttonMonitorDiscoveryRunnable = new Runnable() {
         public void run() {
 
-            // This is the only code that distinguishes 'proximal' buttons from all available buttons... all the
-            // rest of the logic is identical (yaay)
-            Set<Button> buttons;
-            boolean beaconFilteringOn = ABApplication.getInstance().getBooleanPreference(ABApplication.BEACON_FILTER_ON_PREF, false);
-            if (beaconFilteringOn) {
-                buttons = getAllNearbyBeaconPairedButtons();
-                Log.d(TAG, "Found '" + buttons.size() + "' nearby paired buttons.");
-            } else {
-                buttons = bluetoothProvider.getAllBondedButtons();
-                Log.d(TAG, "Found '" + buttons.size() + "' bonded buttons.");
-            }
+            // We want to try and connect to all buttons that are unpaired with a beacon, but we only want to connect
+            // to paired buttons if their beacon is nearby...
+
+            // Start with all bonded (paired) buttons
+            Set<Button> buttons = bluetoothProvider.getAllBondedButtons();
+
+            // Remove all buttons that are paired with a beacon
+            buttons.removeAll(buttonProvider.getBeaconPairedButtons());
+
+            buttons.addAll(getAllNearbyBeaconPairedButtons());
+
+            Log.d(TAG, "Looking for '" + buttons.size() + "' buttons.");
 
             // To keep track of buttons that have gone incommunicado.
 
