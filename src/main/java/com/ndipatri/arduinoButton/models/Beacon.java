@@ -12,10 +12,8 @@ public class Beacon {
     public Beacon() {}
 
     // NJD TODO - Need to add UUID to this (which by default is the same for all estimotes, but can be made unique)
-    public Beacon(final String macAddress, final int major, final int minor, final String name) {
+    public Beacon(final String macAddress, final String name) {
         this.macAddress = macAddress;
-        this.major = major;
-        this.minor = minor;
         this.name = name;
     }
 
@@ -24,14 +22,6 @@ public class Beacon {
     public static final String MAC_ADDRESS_COLUMN_NAME = "mac_address";
     @DatabaseField(id = true, columnName = MAC_ADDRESS_COLUMN_NAME)
     private String macAddress;
-
-    public static final String MAJOR_COLUMN_NAME = "major";
-    @DatabaseField(columnName = MAJOR_COLUMN_NAME)
-    private int major;
-
-    public static final String MINOR_COLUMN_NAME = "minor";
-    @DatabaseField(columnName = MINOR_COLUMN_NAME)
-    private int minor;
 
     public static final String NAME_COLUMN_NAME = "name";
     @DatabaseField(columnName = NAME_COLUMN_NAME)
@@ -57,22 +47,6 @@ public class Beacon {
         this.macAddress = macAddress;
     }
 
-    public int getMajor() {
-        return major;
-    }
-
-    public void setMajor(int major) {
-        this.major = major;
-    }
-
-    public int getMinor() {
-        return minor;
-    }
-
-    public void setMinor(int minor) {
-        this.minor = minor;
-    }
-
     public String getName() {
         return name;
     }
@@ -88,8 +62,6 @@ public class Beacon {
 
         Beacon beacon = (Beacon) o;
 
-        if (major != beacon.major) return false;
-        if (minor != beacon.minor) return false;
         if (macAddress != null ? !macAddress.equals(beacon.macAddress) : beacon.macAddress != null)
             return false;
         if (name != null ? !name.equals(beacon.name) : beacon.name != null) return false;
@@ -100,8 +72,6 @@ public class Beacon {
     @Override
     public int hashCode() {
         int result = macAddress != null ? macAddress.hashCode() : 0;
-        result = 31 * result + major;
-        result = 31 * result + minor;
         result = 31 * result + (name != null ? name.hashCode() : 0);
         return result;
     }

@@ -82,8 +82,6 @@ public class ButtonProviderTest {
 
         Beacon beacon = new Beacon();
         beacon.setName("aBeacon");
-        beacon.setMajor(1);
-        beacon.setMinor(2);
         beacon.setMacAddress("aa:bb:cc:dd");
         beacon.setButton(button);
 

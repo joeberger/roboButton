@@ -16,6 +16,7 @@ import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import com.estimote.sdk.Beacon;
 import com.estimote.sdk.Region;
 import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.BeaconDistanceListener;
@@ -28,6 +29,8 @@ import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ABFoundEvent;
 import com.ndipatri.arduinoButton.events.ABLostEvent;
 import com.ndipatri.arduinoButton.events.ABStateChangeReport;
+import com.ndipatri.arduinoButton.events.UnpairedBeaconInRangeEvent;
+import com.ndipatri.arduinoButton.events.UnpairedBeaconOutOfRangeEvent;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Produce;
@@ -39,8 +42,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
-
-import static com.ndipatri.arduinoButton.events.ABStateChangeReport.*;
 
 /**
  * Constantly monitors all discovered Buttons and launches a ButtonMonitor for each... sends
@@ -221,6 +222,12 @@ public class MonitoringService extends Service {
                             }
                         });
 
+                        Button persistedButton = buttonProvider.getButton(buttonId);
+                        if (persistedButton == null) {
+                            // This is the first time we've communicated with this button..  persist it!
+                            buttonProvider.createOrUpdateButton(pairedButton);
+                        }
+
                         long timeOfLastCheck = SystemClock.uptimeMillis() - buttonDiscoveryIntervalMillis;
                         boolean hasStateChangedSinceLastCheck = timeOfLastCheck > 0 &&
                                                                 buttonMonitor.getLastButtonStateChangeTimeMillis() > timeOfLastCheck;
@@ -343,17 +350,42 @@ public class MonitoringService extends Service {
         bluetoothProvider.startBTMonitoring(new BeaconDistanceListener() {
 
             @Override
-            public void beaconDistanceUpdate(com.ndipatri.arduinoButton.models.Beacon beacon, double distanceInMeters) {
+            public void beaconDistanceUpdate(final Beacon estimoteBeacon, double distanceInMeters) {
 
                 Toast.makeText(MonitoringService.this, "BeaconDistance: '" + distanceInMeters + "m'", Toast.LENGTH_SHORT).show();
-                if (distanceInMeters < (double)beaconDetectionThresholdMeters) {
-                    String msg = "Beacon detected.";
-                    Log.d(TAG, msg + " ('" + beacon + "'.)");
-                    nearbyBeacons.add(beacon);
+                com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(estimoteBeacon.getMacAddress(), true);
+
+                if (distanceInMeters < (double) beaconDetectionThresholdMeters) {
+                    // in range!
+                    if (pairedBeacon == null) {
+                        // advertise this beacon as available for association with a button...
+                        new Handler(getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                BusProvider.getInstance().post(new UnpairedBeaconInRangeEvent(estimoteBeacon));
+                            }
+                        });
+                    } else
+                    if (!nearbyBeacons.contains(pairedBeacon)) {
+                        nearbyBeacons.add(pairedBeacon);
+                        String msg = "Beacon detected.";
+                        Log.d(TAG, msg + " ('" + pairedBeacon + "'.)");
+                    }
                 } else {
-                    String msg = "Beacon lost.";
-                    Log.d(TAG, msg + " ('" + beacon + "'.)");
-                    nearbyBeacons.remove(beacon);
+                    // not in range!
+                    if (pairedBeacon == null) {
+                        // advertise this beacon as no longer for association ...
+                        new Handler(getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                BusProvider.getInstance().post(new UnpairedBeaconOutOfRangeEvent(estimoteBeacon));
+                            }
+                        });
+                    } else {
+                        String msg = "Beacon lost.";
+                        Log.d(TAG, msg + " ('" + pairedBeacon + "'.)");
+                        nearbyBeacons.remove(pairedBeacon);
+                    }
                 }
             }
 

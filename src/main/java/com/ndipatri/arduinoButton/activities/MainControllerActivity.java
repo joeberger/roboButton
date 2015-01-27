@@ -21,7 +21,10 @@ import com.ndipatri.arduinoButton.events.ABLostEvent;
 import com.ndipatri.arduinoButton.events.BluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageResponseEvent;
+import com.ndipatri.arduinoButton.events.UnpairedBeaconInRangeEvent;
+import com.ndipatri.arduinoButton.events.UnpairedBeaconOutOfRangeEvent;
 import com.ndipatri.arduinoButton.fragments.ABFragment;
+import com.ndipatri.arduinoButton.fragments.AutoPairDialogFragment;
 import com.ndipatri.arduinoButton.services.MonitoringService;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -50,7 +53,11 @@ public class MainControllerActivity extends Activity {
     private static final String TAG = MainControllerActivity.class.getCanonicalName();
 
     // All buttons that have been rendered into fragments.
-    private Set<String> buttonFragmentIds = new HashSet<String>();
+    private Set<String> buttonsWithFragments = new HashSet<String>();
+
+    // We only request once for the user to auto-pair a Button with a nearby Beacon, until that
+    // beacon goes out of range...
+    private Set<String> autoPairChallengedButtonIds = new HashSet<String>();
 
     // The main ViewGroup to which all ArduinoButtonFragments are added.
     protected @InjectView(R.id.mainViewGroup) ViewGroup mainViewGroup;
@@ -231,7 +238,7 @@ public class MainControllerActivity extends Activity {
     }
 
     private synchronized void forgetAllArduinoButtons() {
-        for (final String buttonFragmentId : buttonFragmentIds) {
+        for (final String buttonFragmentId : buttonsWithFragments) {
             forgetArduinoButton(buttonFragmentId);
         }
     }
@@ -245,7 +252,7 @@ public class MainControllerActivity extends Activity {
         final ABFragment ABFragment = lookupButtonFragment(lostButtonId);
         if (ABFragment != null) {
             getFragmentManager().beginTransaction().remove(ABFragment).commitAllowingStateLoss();
-            buttonFragmentIds.remove(lostButtonId);
+            buttonsWithFragments.remove(lostButtonId);
         }
     }
 
@@ -292,7 +299,33 @@ public class MainControllerActivity extends Activity {
         if (existingButtonFragment == null) {
             final ABFragment newABFragment = ABFragment.newInstance(foundButtonId);
             getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newABFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
-            buttonFragmentIds.add(foundButtonId);
+            buttonsWithFragments.add(foundButtonId);
+        }
+    }
+
+    @Subscribe
+    public synchronized void onUnpairedBeaconInRangeEvent(final UnpairedBeaconInRangeEvent unpairedBeaconInRangeEvent) {
+        if (buttonsWithFragments.size() == 1) {
+            // for simplicity, auto-association is only supported when one button is being controlled
+
+            String buttonId = (String) buttonsWithFragments.toArray()[0];
+
+            if (!autoPairChallengedButtonIds.contains(buttonId)) {
+                autoPairChallengedButtonIds.add(buttonId);
+
+                AutoPairDialogFragment dialog = AutoPairDialogFragment.newInstance(unpairedBeaconInRangeEvent.beacon, buttonId);
+                dialog.show(getFragmentManager().beginTransaction(), "auto-pair dialog");
+            }
+        }
+    }
+
+    @Subscribe
+    public synchronized void onUnpairedBeaconOutOfRangeEvent(final UnpairedBeaconOutOfRangeEvent unpairedBeaconOutOfRangeEvent) {
+        if (buttonsWithFragments.size() == 1) {
+            // for simplicity, auto-association is only supported when one button is being controlled
+
+            String buttonId = (String) buttonsWithFragments.toArray()[0];
+            autoPairChallengedButtonIds.remove(buttonId);
         }
     }
 

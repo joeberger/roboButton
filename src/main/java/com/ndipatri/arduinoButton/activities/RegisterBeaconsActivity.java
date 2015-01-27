@@ -18,7 +18,6 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.estimote.sdk.utils.L;
 import com.ndipatri.arduinoButton.R;
-import com.ndipatri.arduinoButton.fragments.BeaconDetailsDialogFragment;
 import com.ndipatri.arduinoButton.utils.LeDeviceListAdapter;
 
 import java.util.Collections;
@@ -164,8 +163,7 @@ public class RegisterBeaconsActivity extends Activity {
         return new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                BeaconDetailsDialogFragment dialog = BeaconDetailsDialogFragment.newInstance(adapter.getItem(position));
-                dialog.show(getFragmentManager().beginTransaction(), "button details dialog");
+                // NJD TODO - Need to add ability to 'un pair' a beacon from here
 
             }
         };

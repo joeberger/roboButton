@@ -33,8 +33,6 @@ public class BeaconProviderTest {
 
         Beacon beacon = new Beacon();
         beacon.setName("aBeacon");
-        beacon.setMajor(1);
-        beacon.setMinor(2);
         beacon.setMacAddress("aa:bb:cc:dd");
 
         beaconProvider.createOrUpdateBeacon(beacon);
@@ -49,8 +47,6 @@ public class BeaconProviderTest {
 
         Beacon beacon = new Beacon();
         beacon.setName("aBeacon");
-        beacon.setMajor(1);
-        beacon.setMinor(2);
         beacon.setMacAddress("aa:bb:cc:dd");
 
         beaconProvider.createOrUpdateBeacon(beacon);

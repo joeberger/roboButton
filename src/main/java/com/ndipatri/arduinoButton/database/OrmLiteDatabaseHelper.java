@@ -23,7 +23,7 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     private static final String DATABASE_NAME = "ormliteArduinoButton.db";
 
     // any time you make changes to your database objects, you may have to increase the database version
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 7;
 
     // the DAO object we use to access the SimpleData table
     private Dao<Button, Long> buttonDao = null;

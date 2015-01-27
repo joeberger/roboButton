@@ -1,7 +1,7 @@
 package com.ndipatri.arduinoButton;
 
+import com.estimote.sdk.Beacon;
 import com.estimote.sdk.Region;
-import com.ndipatri.arduinoButton.models.Beacon;
 
 /**
  * Created by ndipatri on 1/19/15.

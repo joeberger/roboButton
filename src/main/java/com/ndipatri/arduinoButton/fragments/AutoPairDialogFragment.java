@@ -16,6 +16,8 @@ import com.estimote.sdk.Beacon;
 import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
+import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
+import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 
 import javax.inject.Inject;
@@ -23,23 +25,26 @@ import javax.inject.Inject;
 import butterknife.InjectView;
 import butterknife.Views;
 
-public class BeaconDetailsDialogFragment extends DialogFragment {
+public class AutoPairDialogFragment extends DialogFragment {
 
     // ButterKnife Injected Views
-    protected @InjectView(R.id.nameEditText) EditText nameEditText;
+    protected @InjectView(R.id.text1TextView) TextView text1TextView;
+    protected @InjectView(R.id.text2TextView) TextView text2TextView;
 
     @Inject
     protected BeaconProvider beaconProvider;
 
-    public static BeaconDetailsDialogFragment newInstance(Beacon beacon) {
+    @Inject
+    protected ButtonProvider buttonProvider;
 
-        BeaconDetailsDialogFragment fragment = new BeaconDetailsDialogFragment();
+    public static AutoPairDialogFragment newInstance(Beacon beacon, String buttonId) {
+
+        AutoPairDialogFragment fragment = new AutoPairDialogFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
 
         fragment.setMacAddress(beacon.getMacAddress());
-        fragment.setMinor(beacon.getMinor());
-        fragment.setMajor(beacon.getMajor());
+        fragment.setButtonId(buttonId);
 
         return fragment;
     }
@@ -51,29 +56,39 @@ public class BeaconDetailsDialogFragment extends DialogFragment {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
-        String dialogTitle = getResources().getString(R.string.configure_beacon);
+        String dialogTitle = getResources().getString(R.string.unpaired_beacon_detected);
         TextView titleView = new TextView(getActivity());
         titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         titleView.setText(dialogTitle);
         titleView.setGravity(Gravity.CENTER);
 
-        View dialogView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_beacon_details, null);
+        View dialogView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_auto_pair_details, null);
 
         Views.inject(this, dialogView);
 
         builder.setTitle(dialogTitle)
                 //.setCustomTitle(titleView)
                 .setView(dialogView)
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dismiss();
                     }
                 })
-                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        beaconProvider.createOrUpdateBeacon(new com.ndipatri.arduinoButton.models.Beacon(getMacAddress(), getMajor(), getMinor(), nameEditText.getText().toString()));
+
+                        Button button = buttonProvider.getButton(getButtonId());
+                        beaconProvider.createOrUpdateBeacon(new com.ndipatri.arduinoButton.models.Beacon(getMacAddress(), "Beacon for " + button.getName()));
+                        com.ndipatri.arduinoButton.models.Beacon beacon = beaconProvider.getBeacon(getMacAddress());
+
+                        button.setBeacon(beacon);
+                        beacon.setButton(button);
+
+                        buttonProvider.createOrUpdateButton(button);
+                        beaconProvider.createOrUpdateBeacon(beacon); // transitive persistence sucks in
+                                                                     // ormLite so we need to be explicit here...
                     }
                 });
 
@@ -104,10 +119,10 @@ public class BeaconDetailsDialogFragment extends DialogFragment {
     }
 
     protected void populateViewsWithExistingData() {
-        com.ndipatri.arduinoButton.models.Beacon existingBeacon = beaconProvider.getBeacon(getMacAddress());
-        if (existingBeacon != null) {
-            nameEditText.setText(existingBeacon.getName());
-        }
+        Button button = buttonProvider.getButton(getButtonId());
+
+        text1TextView.setText("Beacon Found ('" + getMacAddress() + "')");
+        text2TextView.setText("Shall we pair it with the '" + button.getName() + "' Button?");
     }
 
     public String getMacAddress() {
@@ -118,20 +133,12 @@ public class BeaconDetailsDialogFragment extends DialogFragment {
         getArguments().putString("macAddress", macAddress);
     }
 
-    public int getMinor() {
-        return getArguments().getInt("minor");
+    public String getButtonId() {
+        return getArguments().getString("buttonId");
     }
 
-    private void setMinor(int minor) {
-        getArguments().putInt("minor", minor);
-    }
-
-    public int getMajor() {
-        return getArguments().getInt("major");
-    }
-
-    private void setMajor(int major) {
-        getArguments().putInt("major", major);
+    private void setButtonId(String buttonId) {
+        getArguments().putString("buttonId", buttonId);
     }
 }
 

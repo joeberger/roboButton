@@ -211,14 +211,10 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
     public void onBeaconsDiscovered(Region region, List<Beacon> beacons) {
         if (region == getMonitoredRegion()) {
             for (Beacon beacon : beacons) {
-                com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(beacon.getMacAddress(), true);
+                double distance = Math.min(Utils.computeAccuracy(beacon), 10.0);
+                Log.d(TAG, "Beacon distance update! ('" + distance + "'m)");
 
-                if (pairedBeacon != null) {
-                    double distance = Math.min(Utils.computeAccuracy(beacon), 10.0);
-                    Log.d(TAG, "Paired beacon distance update! ('" + distance + "'m)");
-
-                    this.beaconDistanceListener.beaconDistanceUpdate(pairedBeacon, distance);
-                }
+                this.beaconDistanceListener.beaconDistanceUpdate(beacon, distance);
             }
         }
     }
