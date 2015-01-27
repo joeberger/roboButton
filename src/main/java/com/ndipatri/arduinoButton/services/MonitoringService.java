@@ -374,19 +374,12 @@ public class MonitoringService extends Service {
                     }
                 } else {
                     // not in range!
-                    if (pairedBeacon == null) {
-                        // advertise this beacon as no longer for association ...
-                        new Handler(getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                BusProvider.getInstance().post(new UnpairedBeaconOutOfRangeEvent(estimoteBeacon));
-                            }
-                        });
-                    } else {
-                        String msg = "Beacon lost.";
-                        Log.d(TAG, msg + " ('" + pairedBeacon + "'.)");
-                        nearbyBeacons.remove(pairedBeacon);
-                    }
+                    String msg = "Beacon lost.";
+                    Log.d(TAG, msg + " ('" + pairedBeacon + "'.)");
+                    nearbyBeacons.remove(pairedBeacon);
+
+                    // advertise this beacon as no longer for association ...
+                    emitUnpairedBeaconOutOfRangeEvent(estimoteBeacon);
                 }
             }
 
@@ -397,7 +390,20 @@ public class MonitoringService extends Service {
                     // I'm guessing, we get this callback when there are NO more detected beacons in the given region
                     Log.d(TAG, "Left beacon region.");
                     nearbyBeacons.clear();
+
+                    // advertise this beacon as no longer for association ...
+                    emitUnpairedBeaconOutOfRangeEvent(null);
                 }
+            }
+        });
+    }
+
+    protected void emitUnpairedBeaconOutOfRangeEvent(final Beacon estimoteBeacon) {
+        // advertise this beacon as no longer for association ...
+        new Handler(getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                BusProvider.getInstance().post(new UnpairedBeaconOutOfRangeEvent(estimoteBeacon));
             }
         });
     }

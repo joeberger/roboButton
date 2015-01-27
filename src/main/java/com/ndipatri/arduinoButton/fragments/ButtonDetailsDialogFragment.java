@@ -145,18 +145,19 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
                         Beacon selectedBeacon = (Beacon) beaconSpinner.getSelectedItem();
 
                         if (selectedBeacon.getName().equals("None")) {
+                            beaconProvider.delete(button.getBeacon());
                             button.setBeacon(null);
-                            selectedBeacon.setButton(null);
+                            buttonProvider.createOrUpdateButton(button);
                         } else {
                             if (button.getBeacon() == null || !button.getBeacon().equals(selectedBeacon)) {
                                 button.setBeacon(selectedBeacon);
                                 selectedBeacon.setButton(button);
+
+                                buttonProvider.createOrUpdateButton(button);
+                                beaconProvider.createOrUpdateBeacon(selectedBeacon); // transitive persistence sucks in
+                                                                                     // ormLite so we need to be explicit here...
                             }
                         }
-
-                        beaconProvider.createOrUpdateBeacon(selectedBeacon); // transitive persistence sucks in
-                        buttonProvider.createOrUpdateButton(button);
-                        // ormLite so we need to be explicit here...
             }
                 });
 

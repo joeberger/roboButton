@@ -94,6 +94,10 @@ public class MainControllerActivity extends Activity {
         promptUserForBluetoothActivationIfNecessary();
     }
 
+    protected void resetAutoPairChallengeButtonIds() {
+        autoPairChallengedButtonIds.clear();
+    }
+
     protected void promptUserForBluetoothActivationIfNecessary() {
         if (!bluetoothProvider.isBluetoothSupported()) {
             Toast.makeText(this, "Bluetooth not supported on this device!", Toast.LENGTH_SHORT).show();
@@ -290,7 +294,11 @@ public class MainControllerActivity extends Activity {
             // for simplicity, auto-association is only supported when one button is being controlled
 
             String buttonId = (String) buttonsWithFragments.toArray()[0];
-            autoPairChallengedButtonIds.remove(buttonId);
+            if (buttonId != null) {
+                autoPairChallengedButtonIds.remove(buttonId);
+            } else {
+                resetAutoPairChallengeButtonIds();
+            }
         }
     }
 
