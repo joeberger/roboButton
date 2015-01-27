@@ -145,9 +145,8 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
                         Beacon selectedBeacon = (Beacon) beaconSpinner.getSelectedItem();
 
                         if (selectedBeacon.getName().equals("None")) {
-                            if (button.getBeacon() != null) {
-                                button.setBeacon(null);
-                            }
+                            button.setBeacon(null);
+                            selectedBeacon.setButton(null);
                         } else {
                             if (button.getBeacon() == null || !button.getBeacon().equals(selectedBeacon)) {
                                 button.setBeacon(selectedBeacon);
@@ -155,10 +154,10 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
                             }
                         }
 
-                        buttonProvider.createOrUpdateButton(button);
                         beaconProvider.createOrUpdateBeacon(selectedBeacon); // transitive persistence sucks in
+                        buttonProvider.createOrUpdateButton(button);
                         // ormLite so we need to be explicit here...
-                    }
+            }
                 });
 
         Dialog dialog = builder.create();

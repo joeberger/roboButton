@@ -121,8 +121,8 @@ public class AutoPairDialogFragment extends DialogFragment {
     protected void populateViewsWithExistingData() {
         Button button = buttonProvider.getButton(getButtonId());
 
-        text1TextView.setText("Beacon Found ('" + getMacAddress() + "')");
-        text2TextView.setText("Shall we pair it with the '" + button.getName() + "' Button?");
+        text1TextView.setText(getString(R.string.beacon_found));
+        text2TextView.setText(getString(R.string.shall_we_pair_it_with_this_button));
     }
 
     public String getMacAddress() {

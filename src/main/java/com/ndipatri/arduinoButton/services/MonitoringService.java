@@ -358,7 +358,7 @@ public class MonitoringService extends Service {
 
                 if (distanceInMeters < (double) beaconDetectionThresholdMeters) {
                     // in range!
-                    if (pairedBeacon == null) {
+                    if (pairedBeacon == null || pairedBeacon.getButton() == null) {
                         // advertise this beacon as available for association with a button...
                         new Handler(getMainLooper()).post(new Runnable() {
                             @Override

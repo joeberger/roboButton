@@ -25,6 +25,7 @@
     <string name="is_connecting">is connecting</string>
     <string name="view_nearby_beacons">View Nearby Beacons</string>
     <string name="new_beacon">New Beacon</string>
-    <string name="would_you_like_to_pair_with_this_beacon">Would you like to pair with this beacon?</string>
     <string name="unpaired_beacon_detected">Unpaired Beacon Detected</string>
+    <string name="beacon_found">Beacon Found!</string>
+    <string name="shall_we_pair_it_with_this_button">Shall we pair it with this Button?</string>
 </resources>
