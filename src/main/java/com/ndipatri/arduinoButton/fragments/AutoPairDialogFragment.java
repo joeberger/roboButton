@@ -28,8 +28,7 @@ import butterknife.Views;
 public class AutoPairDialogFragment extends DialogFragment {
 
     // ButterKnife Injected Views
-    protected @InjectView(R.id.text1TextView) TextView text1TextView;
-    protected @InjectView(R.id.text2TextView) TextView text2TextView;
+    protected @InjectView(R.id.descriptionTextView) TextView descriptionTextView;
 
     @Inject
     protected BeaconProvider beaconProvider;
@@ -56,7 +55,7 @@ public class AutoPairDialogFragment extends DialogFragment {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
-        String dialogTitle = getResources().getString(R.string.unpaired_beacon_detected);
+        String dialogTitle = getResources().getString(R.string.beacon_detected);
         TextView titleView = new TextView(getActivity());
         titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         titleView.setText(dialogTitle);
@@ -119,10 +118,7 @@ public class AutoPairDialogFragment extends DialogFragment {
     }
 
     protected void populateViewsWithExistingData() {
-        Button button = buttonProvider.getButton(getButtonId());
-
-        text1TextView.setText(getString(R.string.beacon_found));
-        text2TextView.setText(getString(R.string.shall_we_pair_it_with_this_button));
+        descriptionTextView.setText(getString(R.string.shall_we_pair_it_with_this_beacon));
     }
 
     public String getMacAddress() {

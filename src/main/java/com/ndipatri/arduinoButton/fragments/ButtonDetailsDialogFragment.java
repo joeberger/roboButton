@@ -4,24 +4,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.BaseAdapter;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -30,15 +19,8 @@ import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
-import com.ndipatri.arduinoButton.events.ButtonImageResponseEvent;
-import com.ndipatri.arduinoButton.models.Beacon;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
-import com.squareup.otto.Subscribe;
-
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -49,13 +31,10 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
     private static final String TAG = ButtonDetailsDialogFragment.class.getCanonicalName();
 
-    private Animation shrinkAnimation = null;
-
     // ButterKnife Injected Views
     protected @InjectView(R.id.nameEditText) EditText nameEditText;
     protected @InjectView(R.id.autoModeSwitch) Switch autoModeSwitch;
-    protected @InjectView(R.id.overlayImageButton) ImageButton overlayImageButton;
-    protected @InjectView(R.id.beaconSpinner) Spinner beaconSpinner;
+    protected @InjectView(R.id.pairButton) android.widget.Button pairButton;
 
     @Inject
     protected ButtonProvider buttonProvider;
@@ -65,8 +44,6 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
     // Need to integrate this with view..
     protected String iconFileNameString = "";
-
-    private LayoutInflater inflater;
 
     public static ButtonDetailsDialogFragment newInstance(String buttonId) {
 
@@ -82,27 +59,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        this.inflater = LayoutInflater.from(getActivity());
-
         ((ABApplication)getActivity().getApplication()).inject(this);
-
-        shrinkAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.button_shrink);
-        shrinkAnimation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                requestImageFromUser();
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
@@ -142,23 +99,12 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
                         button.setAutoModeEnabled(autoModeSwitch.isChecked());
                         button.setIconFileName(iconFileNameString);
 
-                        Beacon selectedBeacon = (Beacon) beaconSpinner.getSelectedItem();
-
-                        if (selectedBeacon.getName().equals("None")) {
+                        if (shouldUnpair()) {
                             beaconProvider.delete(button.getBeacon());
                             button.setBeacon(null);
                             buttonProvider.createOrUpdateButton(button);
-                        } else {
-                            if (button.getBeacon() == null || !button.getBeacon().equals(selectedBeacon)) {
-                                button.setBeacon(selectedBeacon);
-                                selectedBeacon.setButton(button);
-
-                                buttonProvider.createOrUpdateButton(button);
-                                beaconProvider.createOrUpdateBeacon(selectedBeacon); // transitive persistence sucks in
-                                                                                     // ormLite so we need to be explicit here...
-                            }
                         }
-            }
+                    }
                 });
 
         Dialog dialog = builder.create();
@@ -184,21 +130,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     }
 
     private void setupViews() {
-
         populateViewsWithExistingData();
-
-        overlayImageButton.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    overlayImageButton.startAnimation(shrinkAnimation);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        });
     }
 
     protected Button getButton() {
@@ -209,88 +141,50 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
         final Button existingButton = getButton();
 
-        if (existingButton != null) {
-            nameEditText.setText(existingButton.getName());
-            autoModeSwitch.setChecked(existingButton.isAutoModeEnabled());
+        nameEditText.setText(existingButton.getName());
+        autoModeSwitch.setChecked(existingButton.isAutoModeEnabled());
 
-            iconFileNameString = existingButton.getIconFileName();
-            // NJD TODO - Need to retrieve image from file name and populate the overlayImageButton view
-        }
+        iconFileNameString = existingButton.getIconFileName();
+        // NJD TODO - Need to retrieve image from file name and populate the overlayImageButton view
 
-        List<Beacon> availableBeacons = beaconProvider.getUnpairedBeacons();
+        if (existingButton.getBeacon() != null) {
 
-        Beacon dummyBeacon = new Beacon();
-        dummyBeacon.setName("None");
+            // We need to give user the ability to unpair, since a pairing exists...
 
-        if (existingButton != null && existingButton.getBeacon() != null) {
-            availableBeacons.add(0, getButton().getBeacon());
-            availableBeacons.add(dummyBeacon);
+            setPairButtonState(true);
+
+            pairButton.setEnabled(true);
+            pairButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // We're essentially implementing a 'toggle' here
+                    togglePairButtonState();
+                }
+            });
         } else {
-            availableBeacons.add(0, dummyBeacon);
-        }
-
-        if (!availableBeacons.isEmpty()) {
-            beaconSpinner.setVisibility(View.VISIBLE);
-
-            final BeaconAdapter adapter = new BeaconAdapter(getActivity(), availableBeacons);
-            beaconSpinner.setAdapter(adapter);
-        } else {
-            beaconSpinner.setVisibility(View.GONE);
+            setPairButtonState(false);
+            pairButton.setEnabled(false);
         }
     }
 
-    private class BeaconAdapter extends BaseAdapter {
+    protected boolean shouldUnpair() {
+        return getButton().getBeacon() != null &&
+               pairButton.getText().equals(getString(R.string.not_paired_with_beacon));
+    }
 
-        Context context;
-        List<Beacon> availableBeacons;
-
-        public BeaconAdapter(final Context context, final List<Beacon> availableBeacons) {
-            this.context = context;
-            this.availableBeacons = availableBeacons;
-        }
-
-        @Override
-        public int getCount() {
-            return availableBeacons.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return availableBeacons.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int position, View view, ViewGroup parent) {
-            view = inflateIfRequired(view, position, parent);
-            bind((Beacon) getItem(position), view);
-            return view;
-        }
-
-        private void bind(Beacon beacon, View view) {
-            final ViewHolder holder = (ViewHolder) view.getTag();
-
-            holder.beaconTextView.setText(beacon.getName());
-        }
-
-        private View inflateIfRequired(View view, int position, ViewGroup parent) {
-            if (view == null) {
-                view = inflater.inflate(R.layout.beacon_item, null);
-                view.setTag(new ViewHolder(view));
-            }
-            return view;
+    protected void togglePairButtonState() {
+        if (shouldUnpair()) {
+            setPairButtonState(true);
+        } else {
+            setPairButtonState(false);
         }
     }
 
-    private class ViewHolder {
-        public TextView beaconTextView;
-
-        ViewHolder(View view) {
-            beaconTextView = (TextView) view.findViewById(R.id.beaconTextView);
+    protected void setPairButtonState(final boolean paired) {
+        if (paired) {
+            pairButton.setText(getString(R.string.unpair_from_beacon));
+        } else {
+            pairButton.setText(getString(R.string.not_paired_with_beacon));
         }
     }
 
@@ -309,20 +203,6 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-    }
-
-    @Subscribe
-    public void onButtonImageResponseEvent(ButtonImageResponseEvent response) {
-        Uri selectedImageUri = response.selectedImage;
-
-        InputStream imageStream = null;
-        try {
-            imageStream = getActivity().getContentResolver().openInputStream(selectedImageUri);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-        overlayImageButton.setImageBitmap(selectedImage);
     }
 
     public Switch getAutoModeSwitch() {

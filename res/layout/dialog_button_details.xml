@@ -14,7 +14,7 @@
             android:inputType="textPersonName"
             android:hint="Button Name"
             android:ems="10"
-            android:layout_gravity="left|center_vertical"
+            android:gravity="center_horizontal|center_vertical"
             android:layout_margin="20dp"/>
 
     <Switch
@@ -24,30 +24,14 @@
             android:text="Auto Mode"
             android:layout_gravity="center"
             android:checked="false"
-            android:layout_margin="20dp"/>
+        android:layout_margin="20dp"/>
 
-    <Spinner
-        android:id="@+id/beaconSpinner"
-        android:spinnerMode="dialog"
-        android:visibility="gone"
+    <Button
+        android:id="@+id/pairButton"
+        android:text="@string/not_paired_with_beacon"
+        android:layout_gravity="center_horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true" />
+        android:layout_margin="20dp"/>
 
-    <FrameLayout
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/grey_gradiant_box">
-
-        <ImageButton
-                android:id="@+id/overlayImageButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/transparent"
-                android:src="@drawable/green_button"
-                android:layout_gravity="center"
-                android:layout_margin="10dp"/>
-    </FrameLayout>
 </LinearLayout>

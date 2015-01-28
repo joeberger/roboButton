@@ -51,37 +51,4 @@ public class ButtonDetailsDialogFragmentTest {
         // Enable Logging to stdout
         ShadowLog.stream = System.out;
     }
-
-    @Test
-    public void testBeaconSelection() {
-
-        // By default, this will be a newly detected button that has never been persisted.
-        ButtonDetailsDialogFragment buttonDetailsDialogFragment = ButtonDetailsDialogFragment.newInstance("123");
-
-        Beacon beacon = new Beacon();
-        beacon.setName("workDesk");
-        beacon.setMacAddress("aa:bb:cc:dd:ee");
-
-        TestUtils.createOrUpdateBeacon(beacon);
-
-        // Now we start fragment
-        TestUtils.startDialogFragment(activity, buttonDetailsDialogFragment);
-
-        Robolectric.runUiThreadTasksIncludingDelayedTasks();
-
-        buttonDetailsDialogFragment.getAutoModeSwitch().performClick();
-
-        Spinner beaconSpinner = (Spinner) buttonDetailsDialogFragment.beaconSpinner;
-
-        ShadowAbsSpinner shadowAbsSpinner = (ShadowAbsSpinner) shadowOf(beaconSpinner);
-
-        shadowAbsSpinner.setSelection(0, false); // This should be none
-
-        AlertDialog alertDialog = ShadowAlertDialog.getLatestAlertDialog();
-
-        //ShadowAlertDialog shadowAlertDialog = shadowOf(ShadowAlertDialog.getLatestAlertDialog());
-        //shadowAlertDialog.clickOnItem(0);
-
-        assertThat("shouldn't crash.", true);
-    }
 }

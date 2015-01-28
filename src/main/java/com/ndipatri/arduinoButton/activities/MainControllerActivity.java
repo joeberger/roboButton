@@ -20,7 +20,6 @@ import com.ndipatri.arduinoButton.events.ABFoundEvent;
 import com.ndipatri.arduinoButton.events.ABLostEvent;
 import com.ndipatri.arduinoButton.events.BluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
-import com.ndipatri.arduinoButton.events.ButtonImageResponseEvent;
 import com.ndipatri.arduinoButton.events.UnpairedBeaconInRangeEvent;
 import com.ndipatri.arduinoButton.events.UnpairedBeaconOutOfRangeEvent;
 import com.ndipatri.arduinoButton.fragments.ABFragment;
@@ -128,13 +127,6 @@ public class MainControllerActivity extends Activity {
         stopService(buttonDiscoveryServiceIntent);
     }
 
-    public void chooseImage(String requestingButtonId) {
-        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-        photoPickerIntent.setType("image/*");
-
-        startActivityForResult(photoPickerIntent, getNextImageRequestId(requestingButtonId));
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent returnedIntent) {
 
@@ -145,14 +137,6 @@ public class MainControllerActivity extends Activity {
                 Toast.makeText(this, "This application cannot run without Bluetooth enabled!", Toast.LENGTH_SHORT).show();
                 stopBluetoothMonitoringService();
                 finish();
-            }
-        } else {
-            String requestingButtonId = getButtonForRequestId(requestCode);
-            if (requestingButtonId != null && resultCode == RESULT_OK) {
-
-                Uri selectedImage = returnedIntent.getData();
-                BusProvider.getInstance().post(new ButtonImageResponseEvent(requestingButtonId, selectedImage));
-                finishedRequest(requestCode);
             }
         }
     }
@@ -252,11 +236,6 @@ public class MainControllerActivity extends Activity {
         Log.d(TAG, "Bluetooth disabled!");
 
         promptUserForBluetoothActivationIfNecessary();
-    }
-
-    @Subscribe
-    public void onButtonImageRequestEvent(ButtonImageRequestEvent request) {
-        chooseImage(request.buttonId);
     }
 
     @Subscribe
