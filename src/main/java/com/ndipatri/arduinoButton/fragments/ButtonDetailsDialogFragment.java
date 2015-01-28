@@ -87,13 +87,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
-                        // Until now, we don't necessarily have a persisted Button (for example, we could
-                        // just have a Button that is nearby.... if the user 'saves', we remember this button
                         Button button = getButton();
-                        if (button == null) {
-                            button = new Button();
-                            button.setId(getButtonId());
-                        }
 
                         button.setName(nameEditText.getText().toString());
                         button.setAutoModeEnabled(autoModeSwitch.isChecked());
@@ -102,8 +96,9 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
                         if (shouldUnpair()) {
                             beaconProvider.delete(button.getBeacon());
                             button.setBeacon(null);
-                            buttonProvider.createOrUpdateButton(button);
                         }
+
+                        buttonProvider.createOrUpdateButton(button);
                     }
                 });
 
