@@ -28,7 +28,8 @@ import dagger.Provides;
                 ButtonMonitor.class,
                 MainControllerActivity.class,
                 AutoPairDialogFragment.class,
-                BluetoothProviderImpl.class
+                BluetoothProviderImpl.class,
+                ButtonProvider.class
         }
 )
 public class ABModule {

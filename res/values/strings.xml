@@ -9,7 +9,7 @@
     <string name="transmitting_data">Transmitting Data ...</string>
     <string name="transmission_failure">Transmission Failure ...</string>
     <string name="transmission_success">Transmission Success</string>
-    <string name="forget_all_buttons">Forget All Buttons</string>
+    <string name="forget_all_pairing">Forget All Pairing</string>
     <string name="button_discovery_pattern">.*BUTTON|RNBT.*</string>
     <string name="configure_button">Configure Button</string>
     <string name="configure_beacon">Configure Beacon</string>

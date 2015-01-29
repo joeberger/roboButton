@@ -3,9 +3,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-            android:id="@+id/forget_all_buttons"
+            android:id="@+id/forget_all_pairing"
             android:icon="@android:drawable/stat_sys_data_bluetooth"
-            android:title="@string/forget_all_buttons"/>
+            android:title="@string/forget_all_pairing"/>
     <item
         android:id="@+id/view_nearby_beacons"
         android:icon="@drawable/beacon_gray"

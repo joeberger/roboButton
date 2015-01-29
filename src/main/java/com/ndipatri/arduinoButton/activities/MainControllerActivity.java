@@ -14,7 +14,9 @@ import android.widget.Toast;
 
 import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
+import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.events.ABFoundEvent;
 import com.ndipatri.arduinoButton.events.ABLostEvent;
 import com.ndipatri.arduinoButton.events.BluetoothDisabledEvent;
@@ -36,6 +38,8 @@ public class MainControllerActivity extends Activity {
 
     // region localVariables
     @Inject protected BluetoothProvider bluetoothProvider;
+
+    @Inject protected ButtonProvider buttonProvider;
 
     private AtomicInteger imageRequestIdGenerator = new AtomicInteger();
 
@@ -154,9 +158,9 @@ public class MainControllerActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle presses on the action bar items
         switch (item.getItemId()) {
-            case R.id.forget_all_buttons:
+            case R.id.forget_all_pairing:
 
-                forgetAllArduinoButtons();
+                forgetAllPairing();
 
                 return true;
 
@@ -169,6 +173,10 @@ public class MainControllerActivity extends Activity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void forgetAllPairing() {
+        buttonProvider.unpairAllButtons();
     }
 
     // region OTTO Subscriptions
@@ -188,7 +196,6 @@ public class MainControllerActivity extends Activity {
     }
 
     private synchronized void forgetArduinoButton(final String lostButtonId) {
-
         final ABFragment ABFragment = lookupButtonFragment(lostButtonId);
         if (ABFragment != null) {
             getFragmentManager().beginTransaction().remove(ABFragment).commitAllowingStateLoss();

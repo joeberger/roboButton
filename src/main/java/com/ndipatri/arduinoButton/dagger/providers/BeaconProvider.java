@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
@@ -92,16 +93,6 @@ public class BeaconProvider {
         OpenHelperManager.releaseHelper();
 
         return unpairedBeacons;
-    }
-
-    public void delete(List<Beacon> beacons) {
-        if (beacons == null || beacons.isEmpty()) {
-            return;
-        }
-
-        for (Beacon beacon : beacons) {
-            delete(beacon);
-        }
     }
 
     public void delete(Beacon beacon) {
