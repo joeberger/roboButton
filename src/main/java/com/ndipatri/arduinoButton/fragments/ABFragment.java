@@ -8,12 +8,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
+import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ABStateChangeReport;
 import com.ndipatri.arduinoButton.events.ABStateChangeRequest;
+import com.ndipatri.arduinoButton.events.UnpairedBeaconInRangeEvent;
+import com.ndipatri.arduinoButton.events.UnpairedBeaconOutOfRangeEvent;
+import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
+
+import javax.inject.Inject;
 
 import butterknife.InjectView;
 import butterknife.Views;
@@ -31,12 +38,25 @@ public class ABFragment extends Fragment {
 
     private static final String TAG = ABFragment.class.getCanonicalName();
 
+    @Inject
+    protected ButtonProvider buttonProvider;
+
     // ButterKnife Injected Views
     protected
     @InjectView(R.id.imageView)
     ImageView imageView;
 
     protected ButtonState buttonState = null;
+
+    ButtonDetailsDialogFragment dialog = null;
+
+    // This indicates that since an unpaired beacon has come in range, we've already asked
+    // the user once if they would like to pair...
+    boolean alreadyAutoPairChallenged = false;
+
+    public ABFragment() {
+        ABApplication.getInstance().registerForDependencyInjection(this);
+    }
 
     public static ABFragment newInstance(String buttonId) {
 
@@ -70,7 +90,7 @@ public class ABFragment extends Fragment {
             @Override
             public boolean onLongClick(View v) {
 
-                ButtonDetailsDialogFragment dialog = ButtonDetailsDialogFragment.newInstance(getButtonId());
+                dialog = ButtonDetailsDialogFragment.newInstance(getButtonId());
                 dialog.show(getFragmentManager().beginTransaction(), "button details dialog");
 
                 return false;
@@ -114,6 +134,10 @@ public class ABFragment extends Fragment {
         getArguments().putString("buttonId", buttonId);
     }
 
+    private Button getButton() {
+        return buttonProvider.getButton(getButtonId());
+    }
+
     private void setButtonState(ButtonState buttonState) {
         this.buttonState = buttonState;
 
@@ -127,6 +151,24 @@ public class ABFragment extends Fragment {
                 setButtonState(buttonStateChange.getButtonState());
                 break;
             }
+        }
+    }
+
+
+    //need to move this into ABFragment so we can prevent handling this if the ButtonDetailsFragment is being shown....
+
+    @Subscribe
+    public synchronized void onUnpairedBeaconOutOfRangeEvent(final UnpairedBeaconOutOfRangeEvent unpairedBeaconOutOfRangeEvent) {
+        alreadyAutoPairChallenged = false;
+    }
+
+    @Subscribe
+    public synchronized void onUnpairedBeaconInRangeEvent(final UnpairedBeaconInRangeEvent unpairedBeaconInRangeEvent) {
+        if (getButton().getBeacon() == null && alreadyAutoPairChallenged == false) {
+
+            alreadyAutoPairChallenged = true;
+            AutoPairDialogFragment dialog = AutoPairDialogFragment.newInstance(unpairedBeaconInRangeEvent.beacon, getButtonId());
+            dialog.show(getFragmentManager().beginTransaction(), "auto-pair dialog");
         }
     }
 }

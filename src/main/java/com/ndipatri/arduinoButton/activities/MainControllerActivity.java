@@ -3,7 +3,6 @@ package com.ndipatri.arduinoButton.activities;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseArray;
@@ -19,11 +18,7 @@ import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.arduinoButton.events.ABFoundEvent;
 import com.ndipatri.arduinoButton.events.ABLostEvent;
 import com.ndipatri.arduinoButton.events.BluetoothDisabledEvent;
-import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
-import com.ndipatri.arduinoButton.events.UnpairedBeaconInRangeEvent;
-import com.ndipatri.arduinoButton.events.UnpairedBeaconOutOfRangeEvent;
 import com.ndipatri.arduinoButton.fragments.ABFragment;
-import com.ndipatri.arduinoButton.fragments.AutoPairDialogFragment;
 import com.ndipatri.arduinoButton.services.MonitoringService;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -54,10 +49,6 @@ public class MainControllerActivity extends Activity {
     // All buttons that have been rendered into fragments.
     private Set<String> buttonsWithFragments = new HashSet<String>();
 
-    // We only request once for the user to auto-pair a Button with a nearby Beacon, until that
-    // beacon goes out of range...
-    private Set<String> autoPairChallengedButtonIds = new HashSet<String>();
-
     // The main ViewGroup to which all ArduinoButtonFragments are added.
     protected @InjectView(R.id.mainViewGroup) ViewGroup mainViewGroup;
     //endregion
@@ -67,7 +58,7 @@ public class MainControllerActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_controller);
 
-        ((ABApplication)getApplicationContext()).inject(this);
+        ((ABApplication)getApplicationContext()).registerForDependencyInjection(this);
 
         Views.inject(this);
     }
@@ -91,10 +82,6 @@ public class MainControllerActivity extends Activity {
     protected void resumeActivity() {
         registerWithOttoBus();
         promptUserForBluetoothActivationIfNecessary();
-    }
-
-    protected void resetAutoPairChallengeButtonIds() {
-        autoPairChallengedButtonIds.clear();
     }
 
     protected void promptUserForBluetoothActivationIfNecessary() {
@@ -248,36 +235,6 @@ public class MainControllerActivity extends Activity {
             final ABFragment newABFragment = ABFragment.newInstance(foundButtonId);
             getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newABFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
             buttonsWithFragments.add(foundButtonId);
-        }
-    }
-
-    @Subscribe
-    public synchronized void onUnpairedBeaconInRangeEvent(final UnpairedBeaconInRangeEvent unpairedBeaconInRangeEvent) {
-        if (buttonsWithFragments.size() == 1) {
-            // for simplicity, auto-association is only supported when one button is being controlled
-
-            String buttonId = (String) buttonsWithFragments.toArray()[0];
-
-            if (!autoPairChallengedButtonIds.contains(buttonId)) {
-                autoPairChallengedButtonIds.add(buttonId);
-
-                AutoPairDialogFragment dialog = AutoPairDialogFragment.newInstance(unpairedBeaconInRangeEvent.beacon, buttonId);
-                dialog.show(getFragmentManager().beginTransaction(), "auto-pair dialog");
-            }
-        }
-    }
-
-    @Subscribe
-    public synchronized void onUnpairedBeaconOutOfRangeEvent(final UnpairedBeaconOutOfRangeEvent unpairedBeaconOutOfRangeEvent) {
-        if (buttonsWithFragments.size() == 1) {
-            // for simplicity, auto-association is only supported when one button is being controlled
-
-            String buttonId = (String) buttonsWithFragments.toArray()[0];
-            if (buttonId != null) {
-                autoPairChallengedButtonIds.remove(buttonId);
-            } else {
-                resetAutoPairChallengeButtonIds();
-            }
         }
     }
 

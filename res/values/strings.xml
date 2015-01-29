@@ -29,5 +29,4 @@
     <string name="beacon_found">Beacon Found!</string>
     <string name="shall_we_pair_it_with_this_beacon">Shall we pair it with this Beacon?</string>
     <string name="unpair_from_beacon">Unpair from Beacon</string>
-    <string name="not_paired_with_beacon">Not Paired With Beacon</string>
 </resources>

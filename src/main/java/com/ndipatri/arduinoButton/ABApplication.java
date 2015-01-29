@@ -144,7 +144,7 @@ public abstract class ABApplication extends Application {
         return isEnabled;
     }
 
-    public void inject(Object object) {
+    public void registerForDependencyInjection(Object object) {
         graph.inject(object);
     }
 }

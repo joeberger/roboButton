@@ -11,6 +11,8 @@
         android:id="@+id/nameEditText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:maxLength="20"
+            android:minWidth="150dp"
             android:inputType="textPersonName"
             android:hint="Button Name"
             android:gravity="center_horizontal"
@@ -27,8 +29,8 @@
         android:layout_margin="20dp"/>
 
     <Button
-        android:id="@+id/pairButton"
-        android:text="@string/not_paired_with_beacon"
+        android:id="@+id/unpairButton"
+        android:text="@string/unpair_from_beacon"
         android:layout_gravity="center_horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -87,7 +87,7 @@ public class MonitoringService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        ((ABApplication)getApplication()).inject(this);
+        ((ABApplication)getApplication()).registerForDependencyInjection(this);
 
         monitorRegisteredBeacons(bluetoothProvider);
 

@@ -56,7 +56,7 @@ public class ButtonMonitorTest {
         activity = Robolectric.buildActivity(MainControllerActivity.class).create().get();
         application = ABApplication.getInstance();
 
-        ABApplication.getInstance().inject(this);
+        ABApplication.getInstance().registerForDependencyInjection(this);
 
         monitoringService = startButtonMonitoringService(false); // should run in foreground
 

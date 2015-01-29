@@ -18,7 +18,6 @@ import com.ndipatri.arduinoButton.events.ABStateChangeRequest;
 import com.ndipatri.arduinoButton.events.BluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
-import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
 
 import java.io.IOException;
@@ -79,7 +78,7 @@ public class ButtonMonitor {
 
         communicationsGracePeriodMillis = context.getResources().getInteger(R.integer.communications_grace_period_millis);
 
-        ((ABApplication)context).inject(this);
+        ((ABApplication)context).registerForDependencyInjection(this);
 
         // Create thread for handling communication with Bluetooth
         // This thread only runs if it's passed a message.. so no need worrying about if it's running or not after this point.

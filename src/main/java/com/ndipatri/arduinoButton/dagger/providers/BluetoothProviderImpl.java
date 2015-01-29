@@ -49,7 +49,7 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
 
         beaconManager = new BeaconManager(context);
 
-        ABApplication.getInstance().inject(this);
+        ABApplication.getInstance().registerForDependencyInjection(this);
     }
 
     @Override

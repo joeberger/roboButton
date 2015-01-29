@@ -9,7 +9,6 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.estimote.sdk.Beacon;
@@ -51,7 +50,7 @@ public class AutoPairDialogFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        ((ABApplication)getActivity().getApplication()).inject(this);
+        ((ABApplication)getActivity().getApplication()).registerForDependencyInjection(this);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
