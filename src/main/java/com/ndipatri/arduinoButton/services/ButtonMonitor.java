@@ -165,6 +165,15 @@ public class ButtonMonitor {
         bluetoothMessageHandler.queueQueryStateRequest(getQueryStateIntervalMillis());
     }
 
+    @Override
+    public String toString() {
+        return "ButtonMonitor{" +
+                "button=" + button +
+                ", buttonState=" + buttonState +
+                ", socket=" + socket +
+                '}';
+    }
+
     // Hands outgoing bluetooth messages to background thread.
     protected final class MessageHandler extends Handler {
 

@@ -72,7 +72,7 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
                     if (persistedButton != null) {
                         pairedButton = persistedButton;
                     } else {
-                        pairedButton = new Button(device.getAddress(), device.getAddress(), false, null);
+                        pairedButton = new Button(device.getAddress(), device.getAddress(), true);
                     }
                     pairedButton.setBluetoothDevice(device);
 

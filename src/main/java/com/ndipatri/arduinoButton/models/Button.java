@@ -22,11 +22,10 @@ public class Button {
 
     public Button() {}
 
-    public Button(final String id, final String name, final boolean autoModeEnabled, final String iconFileName) {
+    public Button(final String id, final String name, final boolean autoModeEnabled) {
         this.id = id;
         this.name = name;
         this.autoModeEnabled = autoModeEnabled;
-        this.iconFileName = iconFileName;
     }
 
     private static final String TAG = Button.class.getCanonicalName();
@@ -43,10 +42,6 @@ public class Button {
 
     @DatabaseField(columnName = AUTOMODEENABLED_COLUMN_NAME)
     private boolean autoModeEnabled;
-
-    public static final String ICONFILENAME_COLUMN_NAME = "icon_file_name";
-    @DatabaseField(columnName = ICONFILENAME_COLUMN_NAME)
-    private String iconFileName;
 
     public static final String BEACON_ID = "beacon_id";
     @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = BEACON_ID)
@@ -78,14 +73,6 @@ public class Button {
         this.name = name;
     }
 
-    public String getIconFileName() {
-        return iconFileName;
-    }
-
-    public void setIconFileName(String iconFileName) {
-        this.iconFileName = iconFileName;
-    }
-
     public boolean isAutoModeEnabled() {
         return autoModeEnabled;
     }
@@ -110,8 +97,6 @@ public class Button {
         Button button = (Button) o;
 
         if (autoModeEnabled != button.autoModeEnabled) return false;
-        if (iconFileName != null ? !iconFileName.equals(button.iconFileName) : button.iconFileName != null)
-            return false;
         if (id != null ? !id.equals(button.id) : button.id != null) return false;
         if (name != null ? !name.equals(button.name) : button.name != null) return false;
 
@@ -123,7 +108,17 @@ public class Button {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (autoModeEnabled ? 1 : 0);
-        result = 31 * result + (iconFileName != null ? iconFileName.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Button{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", autoModeEnabled=" + autoModeEnabled +
+                ", beacon=" + beacon +
+                ", bluetoothDevice=" + bluetoothDevice +
+                '}';
     }
 }

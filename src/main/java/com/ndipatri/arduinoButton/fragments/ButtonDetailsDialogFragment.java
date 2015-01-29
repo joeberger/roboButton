@@ -42,9 +42,6 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     @Inject
     protected BeaconProvider beaconProvider;
 
-    // Need to integrate this with view..
-    protected String iconFileNameString = "";
-
     public static ButtonDetailsDialogFragment newInstance(String buttonId) {
 
         ButtonDetailsDialogFragment fragment = new ButtonDetailsDialogFragment();
@@ -91,7 +88,6 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
                         button.setName(nameEditText.getText().toString());
                         button.setAutoModeEnabled(autoModeSwitch.isChecked());
-                        button.setIconFileName(iconFileNameString);
 
                         if (shouldUnpair()) {
                             beaconProvider.delete(button.getBeacon());
@@ -138,9 +134,6 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
         nameEditText.setText(existingButton.getName());
         autoModeSwitch.setChecked(existingButton.isAutoModeEnabled());
-
-        iconFileNameString = existingButton.getIconFileName();
-        // NJD TODO - Need to retrieve image from file name and populate the overlayImageButton view
 
         if (existingButton.getBeacon() != null) {
 
