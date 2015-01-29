@@ -366,7 +366,8 @@ public class MonitoringService extends Service {
                                 BusProvider.getInstance().post(new UnpairedBeaconInRangeEvent(estimoteBeacon));
                             }
                         });
-                    } else
+                    }
+
                     if (!nearbyBeacons.contains(pairedBeacon)) {
                         nearbyBeacons.add(pairedBeacon);
                         String msg = "Beacon detected.";
