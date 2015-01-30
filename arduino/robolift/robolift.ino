@@ -148,10 +148,19 @@ void setup()
      bluetooth.print("$");
      bluetooth.print("$");  // Enter command mode
      delay(100);  // Short delay, wait for the Mate to send back CMD
-     bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
+     
+     bluetooth.println("Q"); // disable BT connections
+     bluetooth.println("ST,253"); // stay in command mode until reset.
+     
+     bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity  
      // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
      bluetooth.begin(9600);  // Start bluetooth serial at 9600
-
+     
+     bluetooth.println("SA,2"); // turn off authentication.... So device doesn't have to be 'bonded' to communicate.
+     bluetooth.println("SN,arduinoButton");
+     bluetooth.println("W"); // re-enable BT connections
+     bluetooth.println("---");
+     
      // Switch Setup
      pinMode(switchPinIn, INPUT_PULLUP); // This means there's an internal pull-up resistor which sets the input high.  The physical
                                            // switch should be tied directly to ground.  When the switch is actuated, the input goes from goes
