@@ -136,7 +136,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
         final Button existingButton = getButton();
 
-        nameEditText.setText(existingButton.getName());
+        nameEditText.setHint(existingButton.getName());
         autoModeSwitch.setChecked(existingButton.isAutoModeEnabled());
 
         iconFileNameString = existingButton.getIconFileName();
