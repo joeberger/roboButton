@@ -9,8 +9,8 @@
     <string name="transmitting_data">Transmitting Data ...</string>
     <string name="transmission_failure">Transmission Failure ...</string>
     <string name="transmission_success">Transmission Success</string>
-    <string name="forget_all_buttons">Forget All Buttons</string>
-    <string name="button_discovery_pattern">.*BUTTON|RNBT.*</string>
+    <string name="forget_all_pairing">Forget All Pairing</string>
+    <string name="button_discovery_pattern">arduinoButton</string>
     <string name="configure_button">Configure Button</string>
     <string name="configure_beacon">Configure Beacon</string>
     <string name="robo_button">Robo Button</string>
@@ -29,5 +29,4 @@
     <string name="beacon_found">Beacon Found!</string>
     <string name="shall_we_pair_it_with_this_beacon">Shall we pair it with this Beacon?</string>
     <string name="unpair_from_beacon">Unpair from Beacon</string>
-    <string name="not_paired_with_beacon">Not Paired With Beacon</string>
 </resources>

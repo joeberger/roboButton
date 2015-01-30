@@ -34,7 +34,7 @@ public class LeDeviceListAdapter extends BaseAdapter {
         this.inflater = LayoutInflater.from(context);
         this.beacons = new ArrayList<Beacon>();
 
-        ((ABApplication)context.getApplicationContext()).inject(this);
+        ((ABApplication)context.getApplicationContext()).registerForDependencyInjection(this);
     }
 
     public void replaceWith(Collection<Beacon> newBeacons) {

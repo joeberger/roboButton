@@ -56,7 +56,7 @@ public class ButtonMonitorTest {
         activity = Robolectric.buildActivity(MainControllerActivity.class).create().get();
         application = ABApplication.getInstance();
 
-        ABApplication.getInstance().inject(this);
+        ABApplication.getInstance().registerForDependencyInjection(this);
 
         monitoringService = startButtonMonitoringService(false); // should run in foreground
 
@@ -67,7 +67,7 @@ public class ButtonMonitorTest {
     public void startButtonMonitor() {
 
         // This would be a standard BT device that is one of our 'Button' arduino boards..
-        Button availableButton = new Button("aa:bb:cc:dd:ee", "workCubicle", false, "/tmp/sdcard/image.png");
+        Button availableButton = new Button("aa:bb:cc:dd:ee", "workCubicle", false);
 
         Set<Button> availableButtons = new HashSet<Button>();
         availableButtons.add(availableButton);

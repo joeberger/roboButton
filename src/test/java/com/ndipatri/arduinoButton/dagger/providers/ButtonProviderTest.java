@@ -37,7 +37,6 @@ public class ButtonProviderTest {
         Button button = new Button();
         button.setId("123");
         button.setName("mrButton");
-        button.setIconFileName("/mnt/sdcard/file.png");
         button.setAutoModeEnabled(true);
 
         buttonProvider.createOrUpdateButton(button);
@@ -53,7 +52,6 @@ public class ButtonProviderTest {
         Button button = new Button();
         button.setId("123");
         button.setName("mrButton");
-        button.setIconFileName("/mnt/sdcard/file.png");
         button.setAutoModeEnabled(true);
 
         buttonProvider.createOrUpdateButton(button);
@@ -75,7 +73,6 @@ public class ButtonProviderTest {
         Button button = new Button();
         button.setId("123");
         button.setName("mrButton");
-        button.setIconFileName("/mnt/sdcard/file.png");
         button.setAutoModeEnabled(true);
 
         buttonProvider.createOrUpdateButton(button);

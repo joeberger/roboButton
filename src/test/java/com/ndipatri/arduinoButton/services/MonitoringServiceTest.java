@@ -1,21 +1,13 @@
 package com.ndipatri.arduinoButton.services;
 
-import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
 
 import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.TestUtils;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.dagger.providers.BluetoothProvider;
-import com.ndipatri.arduinoButton.dagger.providers.BluetoothProviderTestImpl;
-import com.ndipatri.arduinoButton.enums.ButtonState;
-import com.ndipatri.arduinoButton.events.ABFoundEvent;
-import com.ndipatri.arduinoButton.events.ABLostEvent;
-import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.ActivityWatcher;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -26,13 +18,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
-import org.robolectric.shadows.ShadowPendingIntent;
-import org.robolectric.shadows.ShadowSystemClock;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -65,7 +50,7 @@ public class MonitoringServiceTest {
         activity = Robolectric.buildActivity(MainControllerActivity.class).create().get();
         application = ABApplication.getInstance();
 
-        ABApplication.getInstance().inject(this);
+        ABApplication.getInstance().registerForDependencyInjection(this);
 
         monitoringService = TestUtils.startButtonMonitoringService(false); // should run in foreground
 

@@ -8,6 +8,7 @@ import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
+import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.database.OrmLiteDatabaseHelper;
 import com.ndipatri.arduinoButton.models.Beacon;
 import com.ndipatri.arduinoButton.models.Button;
@@ -18,6 +19,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /**
  * Created by ndipatri on 5/29/14.
  */
@@ -25,10 +28,15 @@ public class ButtonProvider {
 
     private static final String TAG = ButtonProvider.class.getCanonicalName();
 
+    protected @Inject
+    BeaconProvider beaconProvider;
+
     private Context context;
 
     public ButtonProvider(Context context) {
         this.context = context;
+
+        ABApplication.getInstance().registerForDependencyInjection(this);
     }
 
     public List<Button> getUnpairedButtons() {
@@ -50,6 +58,17 @@ public class ButtonProvider {
         OpenHelperManager.releaseHelper();
 
         return unpairedButtons;
+    }
+
+    public void unpairAllButtons() {
+        List<Button> pairedButtons = getBeaconPairedButtons();
+        for (Button pairedButton : pairedButtons) {
+            Beacon beacon = pairedButton.getBeacon();
+            beaconProvider.delete(beacon);
+
+            pairedButton.setBeacon(null);
+            createOrUpdateButton(pairedButton);
+        }
     }
 
     public List<Button> getBeaconPairedButtons() {
@@ -107,16 +126,6 @@ public class ButtonProvider {
         OpenHelperManager.releaseHelper();
 
         return button;
-    }
-
-    public void delete(List<Button> buttons) {
-        if (buttons == null || buttons.isEmpty()) {
-            return;
-        }
-
-        for (Button button : buttons) {
-            delete(button);
-        }
     }
 
     public void delete(Button button) {

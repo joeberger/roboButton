@@ -6,10 +6,13 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -34,16 +37,13 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     // ButterKnife Injected Views
     protected @InjectView(R.id.nameEditText) EditText nameEditText;
     protected @InjectView(R.id.autoModeSwitch) Switch autoModeSwitch;
-    protected @InjectView(R.id.pairButton) android.widget.Button pairButton;
+    protected @InjectView(R.id.unpairButton) android.widget.Button unpairButton;
 
     @Inject
     protected ButtonProvider buttonProvider;
 
     @Inject
     protected BeaconProvider beaconProvider;
-
-    // Need to integrate this with view..
-    protected String iconFileNameString = "";
 
     public static ButtonDetailsDialogFragment newInstance(String buttonId) {
 
@@ -59,7 +59,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        ((ABApplication)getActivity().getApplication()).inject(this);
+        ((ABApplication)getActivity().getApplication()).registerForDependencyInjection(this);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
@@ -77,28 +77,10 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
         builder.setTitle(dialogTitle)
                 //.setCustomTitle(titleView)
                 .setView(dialogView)
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                .setNeutralButton("Done", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dismiss();
-                    }
-                })
-                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        Button button = getButton();
-
-                        button.setName(nameEditText.getText().toString());
-                        button.setAutoModeEnabled(autoModeSwitch.isChecked());
-                        button.setIconFileName(iconFileNameString);
-
-                        if (shouldUnpair()) {
-                            beaconProvider.delete(button.getBeacon());
-                            button.setBeacon(null);
-                        }
-
-                        buttonProvider.createOrUpdateButton(button);
                     }
                 });
 
@@ -124,62 +106,63 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
         BusProvider.getInstance().register(this);
     }
 
-    private void setupViews() {
-        populateViewsWithExistingData();
-    }
-
     protected Button getButton() {
         return buttonProvider.getButton(getButtonId());
     }
 
-    protected void populateViewsWithExistingData() {
+    protected void setupViews() {
 
         final Button existingButton = getButton();
 
         nameEditText.setHint(existingButton.getName());
+
         autoModeSwitch.setChecked(existingButton.isAutoModeEnabled());
 
-        iconFileNameString = existingButton.getIconFileName();
-        // NJD TODO - Need to retrieve image from file name and populate the overlayImageButton view
+        nameEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                Button button = getButton();
+                button.setName(nameEditText.getText().toString());
+                buttonProvider.createOrUpdateButton(button);
+            }
+        });
+
+        autoModeSwitch.setChecked(existingButton.isAutoModeEnabled());
+        autoModeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Button button = getButton();
+                button.setAutoModeEnabled(autoModeSwitch.isChecked());
+                buttonProvider.createOrUpdateButton(button);
+            }
+        });
 
         if (existingButton.getBeacon() != null) {
 
             // We need to give user the ability to unpair, since a pairing exists...
 
-            setPairButtonState(true);
-
-            pairButton.setEnabled(true);
-            pairButton.setOnClickListener(new View.OnClickListener() {
+            unpairButton.setVisibility(View.VISIBLE);
+            unpairButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // We're essentially implementing a 'toggle' here
-                    togglePairButtonState();
+                    Button button = getButton();
+
+                    beaconProvider.delete(button.getBeacon());
+                    button.setBeacon(null);
+                    buttonProvider.createOrUpdateButton(button);
+                    unpairButton.setVisibility(View.GONE);
                 }
             });
         } else {
-            setPairButtonState(false);
-            pairButton.setEnabled(false);
-        }
-    }
-
-    protected boolean shouldUnpair() {
-        return getButton().getBeacon() != null &&
-               pairButton.getText().equals(getString(R.string.not_paired_with_beacon));
-    }
-
-    protected void togglePairButtonState() {
-        if (shouldUnpair()) {
-            setPairButtonState(true);
-        } else {
-            setPairButtonState(false);
-        }
-    }
-
-    protected void setPairButtonState(final boolean paired) {
-        if (paired) {
-            pairButton.setText(getString(R.string.unpair_from_beacon));
-        } else {
-            pairButton.setText(getString(R.string.not_paired_with_beacon));
+            unpairButton.setVisibility(View.GONE);
         }
     }
 
