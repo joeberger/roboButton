@@ -16,7 +16,7 @@ public interface BluetoothProvider {
 
     public Region getMonitoredRegion();
 
-    public Set<Button> getAllBondedButtons();
+    public Set<Button> getAllNearbyButtons();
 
     public Button getBondedButton(String buttinId);
 
