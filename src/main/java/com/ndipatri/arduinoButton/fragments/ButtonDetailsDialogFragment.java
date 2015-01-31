@@ -115,6 +115,9 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
         final Button existingButton = getButton();
 
         nameEditText.setHint(existingButton.getName());
+
+        autoModeSwitch.setChecked(existingButton.isAutoModeEnabled());
+
         nameEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
