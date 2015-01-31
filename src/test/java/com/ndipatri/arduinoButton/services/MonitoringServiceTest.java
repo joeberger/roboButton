@@ -80,7 +80,7 @@ public class MonitoringServiceTest {
         Handler messageHandler = monitoringService.getMonitorHandler();
 
         assertThat("MessageHandler thread should have been started and waiting for message.", messageHandler.getLooper().getThread().getState() == Thread.State.WAITING);
-        assertThat("Button discovery interval should be 4 seconds.", monitoringService.getButtonDiscoveryIntervalMillis() == 4000);
+        assertThat("Button discovery interval should be 4 seconds.", monitoringService.getMonitorIntervalPollIntervalMillis() == 4000);
 
         shadowOf(monitoringService.getMonitorHandler())
 

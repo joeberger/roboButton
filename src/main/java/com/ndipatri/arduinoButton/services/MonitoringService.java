@@ -62,7 +62,9 @@ public class MonitoringService extends Service {
 
     @Inject protected BluetoothProvider bluetoothProvider;
 
-    protected long buttonDiscoveryIntervalMillis = -1;
+    protected long monitorIntervalPollIntervalMillis = -1;
+
+    protected long buttonDiscoveryDurationMillis = -1;
 
     protected int timeMultiplier = 1;
 
@@ -92,6 +94,8 @@ public class MonitoringService extends Service {
         monitorRegisteredBeacons(bluetoothProvider);
 
         beaconDetectionThresholdMeters = getResources().getInteger(R.integer.beacon_detection_threshold_meters);
+        monitorIntervalPollIntervalMillis = getResources().getInteger(R.integer.monitor_service_poll_interval_millis);
+        buttonDiscoveryDurationMillis = getResources().getInteger(R.integer.button_discovery_interval_millis);
 
         BusProvider.getInstance().register(this);
     }
@@ -152,8 +156,6 @@ public class MonitoringService extends Service {
             // Connect up our background thread's looper with our message processing handler.
             monitorHandler = new Handler(messageProcessingThread.getLooper());
 
-            buttonDiscoveryIntervalMillis = getResources().getInteger(R.integer.button_discovery_interval_millis);
-
             scheduleImmediateButtonDiscoveryMessage();
 
             running = true;
@@ -167,7 +169,7 @@ public class MonitoringService extends Service {
     }
 
     private void scheduleButtonDiscoveryMessage() {
-        monitorHandler.postDelayed(buttonMonitorDiscoveryRunnable, buttonDiscoveryIntervalMillis);
+        monitorHandler.postDelayed(buttonMonitorDiscoveryRunnable, monitorIntervalPollIntervalMillis);
     }
 
     // Our goal here is to decide which bonded buttons require a ButtonMonitor.  ButtonMonitors are either created, destroyed,
@@ -178,7 +180,7 @@ public class MonitoringService extends Service {
             // If there are no connections, but beacons are present, we should
             // be actively searching for buttons
             if (!nearbyBeacons.isEmpty() && buttonMonitorMap.isEmpty()) {
-                bluetoothProvider.startButtonDiscovery();
+                startButtonDiscovery();
             } else {
                 bluetoothProvider.stopButtonDiscovery();
 
@@ -242,7 +244,7 @@ public class MonitoringService extends Service {
                             buttonProvider.createOrUpdateButton(pairedButton);
                         }
 
-                        long timeOfLastCheck = SystemClock.uptimeMillis() - buttonDiscoveryIntervalMillis;
+                        long timeOfLastCheck = SystemClock.uptimeMillis() - monitorIntervalPollIntervalMillis;
                         boolean hasStateChangedSinceLastCheck = timeOfLastCheck > 0 &&
                                                                 buttonMonitor.getLastButtonStateChangeTimeMillis() > timeOfLastCheck;
                         if (runInBackground && hasStateChangedSinceLastCheck) {
@@ -279,6 +281,17 @@ public class MonitoringService extends Service {
             scheduleButtonDiscoveryMessage();
         }
     };
+    
+    private void startButtonDiscovery() {
+        bluetoothProvider.startButtonDiscovery();
+        
+        monitorHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                bluetoothProvider.startButtonDiscovery();
+            }
+        }, buttonDiscoveryDurationMillis);
+    }
 
     private Set<Button> getAllNearbyBeaconPairedButtons() {
 
@@ -442,8 +455,8 @@ public class MonitoringService extends Service {
         return monitorHandler;
     }
 
-    public long getButtonDiscoveryIntervalMillis() {
-        return buttonDiscoveryIntervalMillis;
+    public long getMonitorIntervalPollIntervalMillis() {
+        return monitorIntervalPollIntervalMillis;
     }
 
     public boolean isRunning() {
