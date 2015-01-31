@@ -16,15 +16,17 @@ public interface BluetoothProvider {
 
     public Region getMonitoredRegion();
 
-    public Set<Button> getAllNearbyButtons();
+    public Set<Button> getAllDiscoveredButtons();
 
-    public Button getBondedButton(String buttinId);
+    public Button getDiscoveredButton(String buttinId);
+
+    public void startButtonDiscovery();
+
+    public void stopButtonDiscovery();
 
     public boolean isBluetoothSupported();
 
     public boolean isBluetoothEnabled();
-
-    public void cancelDiscovery();
 
     // Low Power Bluetooth (BTLE) interface...
     public void startBTMonitoring(BeaconDistanceListener listener);

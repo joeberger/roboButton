@@ -44,7 +44,7 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
     }
 
     @Override
-    public Button getBondedButton(String buttonId) {
+    public Button getDiscoveredButton(String buttonId) {
         final Set<Button> pairedButtons = getAllBondedButtons();
         for (Button pairedDevice : pairedButtons) {
             if (pairedDevice.getId().equals(buttonId)) {

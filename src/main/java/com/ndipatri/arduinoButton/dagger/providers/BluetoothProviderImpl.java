@@ -47,7 +47,9 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
 
     private BeaconDistanceListener beaconDistanceListener;
 
-    private Set<BluetoothDevice> nearbyDevices = new HashSet<BluetoothDevice>();
+    private Set<BluetoothDevice> nearbyButtons = new HashSet<BluetoothDevice>();
+
+    String discoverableButtonPatternString;
 
     public BluetoothProviderImpl(Context context) {
         this.context = context;
@@ -56,48 +58,56 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
 
         ABApplication.getInstance().registerForDependencyInjection(this);
 
+        discoverableButtonPatternString = context.getString(R.string.button_discovery_pattern);
+
         // Register the BroadcastReceiver
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         ABApplication.getInstance().registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
-
-        see notes below...
-        BluetoothAdapter.getDefaultAdapter().startDiscovery();
-    }
-
-    public Set<Button> getAllNearbyButtons() {
-
-        final Set<Button> pairedButtons = new HashSet<Button>();
-
-        // we monitor all paired devices...
-        String discoverableButtonPatternString = context.getString(R.string.button_discovery_pattern);
-        Set<BluetoothDevice> nearbyDevices = BluetoothAdapter.getDefaultAdapter().getBondedDevices();
-        if (pairedDevices != null) {
-            for (BluetoothDevice device : pairedDevices) {
-                Log.d(TAG, "Checking BT device: + '" + device.getName() + ":" + device.getAddress() + "'.");
-                if (device.getName().matches(discoverableButtonPatternString)) {
-                    Log.d(TAG, "We have a paired ArduinoButton device! + '" + device + "'.");
-
-                    Button pairedButton = null;
-
-                    Button persistedButton = buttonProvider.getButton(device.getAddress());
-                    if (persistedButton != null) {
-                        pairedButton = persistedButton;
-                    } else {
-                        pairedButton = new Button(device.getAddress(), device.getAddress(), true);
-                    }
-                    pairedButton.setBluetoothDevice(device);
-
-                    pairedButtons.add(pairedButton);
-                }
-            }
-        }
-
-        return pairedButtons;
     }
 
     @Override
-    public Button getBondedButton(String buttonId) {
-        final Set<Button> pairedButtons = getAllBondedButtons();
+    public void startButtonDiscovery() {
+        nearbyButtons.clear();
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter != null) {
+            bluetoothAdapter.startDiscovery();
+        }
+    }
+
+    @Override
+    public void stopButtonDiscovery() {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter != null) {
+            bluetoothAdapter.cancelDiscovery();
+        }
+    }
+
+    public Set<Button> getAllDiscoveredButtons() {
+        final Set<Button> discoveredButtons = new HashSet<Button>();
+
+        if (!nearbyButtons.isEmpty()) {
+            for (BluetoothDevice device : nearbyButtons) {
+
+                Button pairedButton;
+
+                Button persistedButton = buttonProvider.getButton(device.getAddress());
+                if (persistedButton != null) {
+                    pairedButton = persistedButton;
+                } else {
+                    pairedButton = new Button(device.getAddress(), device.getAddress(), true);
+                }
+                pairedButton.setBluetoothDevice(device);
+
+                discoveredButtons.add(pairedButton);
+            }
+        }
+
+        return discoveredButtons;
+    }
+
+    @Override
+    public Button getDiscoveredButton(String buttonId) {
+        final Set<Button> pairedButtons = getAllDiscoveredButtons();
         for (Button pairedDevice : pairedButtons) {
             if (pairedDevice.getId().equals(buttonId)) {
                 return pairedDevice;
@@ -122,14 +132,6 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
         }
 
         return isEnabled;
-    }
-
-    @Override
-    public void cancelDiscovery() {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter != null) {
-            bluetoothAdapter.cancelDiscovery();
-        }
     }
 
     @Override
@@ -234,16 +236,14 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            // When discovery finds a device
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                // Add the name and address to an array adapter to show in a ListView
-                nearbyDevices.add(device);
+
+                if (device.getName().matches(discoverableButtonPatternString)) {
+                    Log.d(TAG, "We have a nearby ArduinoButton device! + '" + device + "'.");
+                    nearbyButtons.add(device);
+                }
             }
         }
     };
-
-    things we need here: we need to know when to 'starDiscvovery()': this is when we detect a paired beacon.
-    we need to 'stopDiscovery()': when we've made a connection to a button OR we lose the paired beacon.
 }

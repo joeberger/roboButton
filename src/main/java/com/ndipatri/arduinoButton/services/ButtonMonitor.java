@@ -432,7 +432,7 @@ public class ButtonMonitor {
             bluetoothSocket = button.getBluetoothDevice().createInsecureRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
 
             // Cancel discovery because it will slow down the connection
-            bluetoothProvider.cancelDiscovery();
+            bluetoothProvider.stopButtonDiscovery();
 
             // Connect the device through the socket. This will block
             // until it succeeds or throws an exception

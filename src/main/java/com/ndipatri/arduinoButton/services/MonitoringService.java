@@ -175,11 +175,24 @@ public class MonitoringService extends Service {
     protected Runnable buttonMonitorDiscoveryRunnable = new Runnable() {
         public void run() {
 
-            // We want to try and connect to all discovered buttons that are unpaired with a beacon, but we only want to connect
-            // to paired buttons if their beacon is nearby...
+            // If there are no connections, but beacons are present, we should
+            // be actively searching for buttons
+            if (!nearbyBeacons.isEmpty() && buttonMonitorMap.isEmpty()) {
+                bluetoothProvider.startButtonDiscovery();
+            } else {
+                bluetoothProvider.stopButtonDiscovery();
+
+                // nothing else to do until we see some beacons...
+                return;
+            }
+
+            // We want to try and connect to all discovered buttons that are unpaired with a beacon,
+            // but we only want to connect to paired buttons if their beacon is nearby...
+            // We do this for efficienty; once we have a pairing, we'd like to ignore a button until
+            // we detect its beacon
 
             // Start with all nearby buttons
-            Set<Button> buttons = bluetoothProvider.getAllNearbyButtons();
+            Set<Button> buttons = bluetoothProvider.getAllDiscoveredButtons();
 
             // Remove all buttons that are paired with a beacon
             buttons.removeAll(buttonProvider.getBeaconPairedButtons());
@@ -282,7 +295,7 @@ public class MonitoringService extends Service {
 
                 // Now that we know this Button is relevant, we need to get the actual
                 // nearby Button
-                Button nearbyButton = bluetoothProvider.getBondedButton(button.getId());
+                Button nearbyButton = bluetoothProvider.getDiscoveredButton(button.getId());
                 nearbyPairedButtons.add(nearbyButton);
             }
         }
