@@ -59,7 +59,7 @@ public class MainControllerActivityTest {
 
         Set<Button> availableButtons = new HashSet<Button>();
         availableButtons.add(singleButton);
-        bluetoothProviderTestImpl.setAvailableButtons(availableButtons);
+        bluetoothProviderTestImpl.setDiscoveredButtons(availableButtons);
 
         controller.resume().visible().get();
 

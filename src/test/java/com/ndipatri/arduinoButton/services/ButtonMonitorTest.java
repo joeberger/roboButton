@@ -71,18 +71,14 @@ public class ButtonMonitorTest {
 
         Set<Button> availableButtons = new HashSet<Button>();
         availableButtons.add(availableButton);
-        ((BluetoothProviderTestImpl) bluetoothProvider).setAvailableButtons(availableButtons);
+        ((BluetoothProviderTestImpl) bluetoothProvider).setDiscoveredButtons(availableButtons);
 
         OttoBusListener busListener = new OttoBusListener<ABStateChangeReport>();
 
         // NJD TODO - need to figure otu how to run this.... it's now the 'buttonMonitorDiscoveryRunnable' we have to call
         //monitoringService.discoverButtonDevices();
 
-        HashMap<String, ButtonMonitor> currentButtonMap = monitoringService.getButtonMonitorMap();
-
-        assertThat("Should be one ButtonMonitor.", currentButtonMap.size() == 1);
-
-        ButtonMonitor buttonMonitor = currentButtonMap.get(availableButton.getId());
+        ButtonMonitor buttonMonitor = monitoringService.getButtonMonitor();
 
         assertThat("ButtonMonitor should be configured for given Button.", buttonMonitor.getButton().equals(availableButton));
         assertThat("ButtonMonitor should be running.", buttonMonitor.isRunning());

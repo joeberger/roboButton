@@ -15,6 +15,7 @@ import com.estimote.sdk.Region;
 import com.estimote.sdk.Utils;
 import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.BeaconDistanceListener;
+import com.ndipatri.arduinoButton.ButtonDiscoveryListener;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.models.Button;
 
@@ -46,8 +47,7 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
     private BeaconManager beaconManager;
 
     private BeaconDistanceListener beaconDistanceListener;
-
-    private Set<BluetoothDevice> nearbyButtons = new HashSet<BluetoothDevice>();
+    private ButtonDiscoveryListener buttonDiscoveryListener;
 
     String discoverableButtonPatternString;
 
@@ -66,10 +66,10 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
     }
 
     @Override
-    public void startButtonDiscovery() {
-        nearbyButtons.clear();
+    public void startButtonDiscovery(ButtonDiscoveryListener buttonDiscoveryListener) {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter != null) {
+        if (bluetoothAdapter != null && !bluetoothAdapter.isDiscovering()) {
+            this.buttonDiscoveryListener = buttonDiscoveryListener;
             bluetoothAdapter.startDiscovery();
         }
     }
@@ -77,44 +77,10 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
     @Override
     public void stopButtonDiscovery() {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter != null) {
+        if (bluetoothAdapter != null && bluetoothAdapter.isDiscovering()) {
             bluetoothAdapter.cancelDiscovery();
+            buttonDiscoveryListener = null;
         }
-    }
-
-    public Set<Button> getAllDiscoveredButtons() {
-        final Set<Button> discoveredButtons = new HashSet<Button>();
-
-        if (!nearbyButtons.isEmpty()) {
-            for (BluetoothDevice device : nearbyButtons) {
-
-                Button pairedButton;
-
-                Button persistedButton = buttonProvider.getButton(device.getAddress());
-                if (persistedButton != null) {
-                    pairedButton = persistedButton;
-                } else {
-                    pairedButton = new Button(device.getAddress(), device.getAddress(), true);
-                }
-                pairedButton.setBluetoothDevice(device);
-
-                discoveredButtons.add(pairedButton);
-            }
-        }
-
-        return discoveredButtons;
-    }
-
-    @Override
-    public Button getDiscoveredButton(String buttonId) {
-        final Set<Button> pairedButtons = getAllDiscoveredButtons();
-        for (Button pairedDevice : pairedButtons) {
-            if (pairedDevice.getId().equals(buttonId)) {
-                return pairedDevice;
-            }
-        }
-
-        return null;
     }
 
     @Override
@@ -241,7 +207,18 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
 
                 if (device.getName().matches(discoverableButtonPatternString)) {
                     Log.d(TAG, "We have a nearby ArduinoButton device! + '" + device + "'.");
-                    nearbyButtons.add(device);
+
+                    Button discoveredButton = null;
+
+                    Button persistedButton = buttonProvider.getButton(device.getAddress());
+                    if (persistedButton != null) {
+                        discoveredButton = persistedButton;
+                    } else {
+                        discoveredButton = new Button(device.getAddress(), device.getAddress(), true);
+                    }
+                    discoveredButton.setBluetoothDevice(device);
+
+                    buttonDiscoveryListener.buttonDiscovered(discoveredButton);
                 }
             }
         }

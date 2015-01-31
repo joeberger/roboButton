@@ -4,7 +4,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -20,6 +19,7 @@ import com.estimote.sdk.Beacon;
 import com.estimote.sdk.Region;
 import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.BeaconDistanceListener;
+import com.ndipatri.arduinoButton.ButtonDiscoveryListener;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.activities.MainControllerActivity;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
@@ -35,10 +35,7 @@ import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Produce;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -74,8 +71,11 @@ public class MonitoringService extends Service {
 
     private boolean running = false;
 
-    // Keeping track of all currently monitored buttons.
-    HashMap<String, ButtonMonitor> buttonMonitorMap = new HashMap<String, ButtonMonitor>();
+    // This is a nearby button
+    Button nearbyButton = null;
+
+    // This is the monitor associated with the nearby button
+    ButtonMonitor buttonMonitor = null;
 
     Set<com.ndipatri.arduinoButton.models.Beacon> nearbyBeacons = new HashSet<com.ndipatri.arduinoButton.models.Beacon>();
 
@@ -95,7 +95,7 @@ public class MonitoringService extends Service {
 
         beaconDetectionThresholdMeters = getResources().getInteger(R.integer.beacon_detection_threshold_meters);
         monitorIntervalPollIntervalMillis = getResources().getInteger(R.integer.monitor_service_poll_interval_millis);
-        buttonDiscoveryDurationMillis = getResources().getInteger(R.integer.button_discovery_interval_millis);
+        buttonDiscoveryDurationMillis = getResources().getInteger(R.integer.button_discovery_duration_millis);
 
         BusProvider.getInstance().register(this);
     }
@@ -106,15 +106,16 @@ public class MonitoringService extends Service {
 
         try {
             bluetoothProvider.stopBTMonitoring();
+            bluetoothProvider.stopButtonDiscovery();
         } catch (RemoteException e) {
-            Log.d(TAG, "Error while stopping ranging", e);
+            Log.d(TAG, "Error while stopping ranging and discovery", e);
         }
 
         BusProvider.getInstance().unregister(this);
         running = false;
 
-        for (final ButtonMonitor thisMonitor : buttonMonitorMap.values()) {
-            thisMonitor.stop();
+        if (buttonMonitor != null) {
+            buttonMonitor.stop();
         }
     }
 
@@ -130,8 +131,8 @@ public class MonitoringService extends Service {
 
         boolean newRunInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
 
-        if (!runInBackground && newRunInBackground) {
-            sendABNotificationForAllButtons();
+        if (!runInBackground && newRunInBackground && buttonMonitor != null) {
+            sendABNotification(buttonMonitor.getButton().getId(), buttonMonitor.getButtonState());
         }
 
         runInBackground = newRunInBackground;
@@ -142,7 +143,7 @@ public class MonitoringService extends Service {
 
         if (newTimeMultiplier != timeMultiplier) {
             timeMultiplier = newTimeMultiplier;
-            for (final ButtonMonitor buttonMonitor : buttonMonitorMap.values()) {
+            if (buttonMonitor != null) {
                 buttonMonitor.setTimeMultiplier(timeMultiplier);
             }
         }
@@ -172,118 +173,105 @@ public class MonitoringService extends Service {
         monitorHandler.postDelayed(buttonMonitorDiscoveryRunnable, monitorIntervalPollIntervalMillis);
     }
 
-    // Our goal here is to decide which bonded buttons require a ButtonMonitor.  ButtonMonitors are either created, destroyed,
-    // or left alone here...
     protected Runnable buttonMonitorDiscoveryRunnable = new Runnable() {
         public void run() {
 
-            // If there are no connections, but beacons are present, we should
-            // be actively searching for buttons
-            if (!nearbyBeacons.isEmpty() && buttonMonitorMap.isEmpty()) {
-                startButtonDiscovery();
-            } else {
-                bluetoothProvider.stopButtonDiscovery();
+            Log.d(TAG, "Monitor awake...");
 
-                // nothing else to do until we see some beacons...
+            if (nearbyButton == null) {
+                if (nearbyBeacons.size() > 0) {
+                    // we have nearby beacons.. start looking for a button
+                    Log.d(TAG, "Nearby beacons detected.. Trying to discover buttons...");
+                    startButtonDiscovery();
+                }
+
+                Log.d(TAG, "No nearby button found. Going back to sleep.");
+                scheduleButtonDiscoveryMessage();
                 return;
+            } else {
+                Log.d(TAG, "Nearby button found.  Stopping discovery.");
+                stopButtonDiscovery();
             }
 
-            // We want to try and connect to all discovered buttons that are unpaired with a beacon,
-            // but we only want to connect to paired buttons if their beacon is nearby...
-            // We do this for efficienty; once we have a pairing, we'd like to ignore a button until
-            // we detect its beacon
+            String buttonId = nearbyButton.getId();
 
-            // Start with all nearby buttons
-            Set<Button> buttons = bluetoothProvider.getAllDiscoveredButtons();
+            if (buttonMonitor == null) {
+                // This is a button with no monitor.. So start monitoring.
+                buttonMonitor = new ButtonMonitor(getApplicationContext(), nearbyButton);
+            } else {
 
-            // Remove all buttons that are paired with a beacon
-            buttons.removeAll(buttonProvider.getBeaconPairedButtons());
+                if (buttonMonitor.isCommunicating()) {
 
-            buttons.addAll(getAllNearbyBeaconPairedButtons());
+                    // Level Trigger state notification, not edge triggered (e.g. we will send this active
+                    // notification every poll interval that this button is communicating)..
+                    new Handler(getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            BusProvider.getInstance().post(new ABFoundEvent(nearbyButton));
+                        }
+                    });
 
-            Log.d(TAG, "Looking for '" + buttons.size() + "' buttons.");
+                    Button persistedButton = buttonProvider.getButton(buttonId);
+                    if (persistedButton == null) {
+                        // This is the first time we've communicated with this button..  persist it!
+                        buttonProvider.createOrUpdateButton(nearbyButton);
+                    }
 
-            // To keep track of buttons that have gone incommunicado.
-
-            // This starts by containing all candidate buttons.. and then as we decide we can communicate
-            // with each button, we remove them.. What is left are all buttons not talking.
-            final Set<String> lostButtonSet = new HashSet<String>(buttonMonitorMap.keySet());
-
-            // These are all buttons with which we are still communicating.
-            final HashMap<String, ButtonMonitor> newAndExistingButtonMap = new HashMap<String, ButtonMonitor>();
-
-            for (final Button pairedButton : buttons) {
-
-                String buttonId = pairedButton.getId();
-
-                ButtonMonitor buttonMonitor = buttonMonitorMap.get(pairedButton.getId());
-
-                if (buttonMonitor == null) {
-                    // This is a paired button with no monitor.. So start monitoring.
-                    newAndExistingButtonMap.put(buttonId, new ButtonMonitor(getApplicationContext(), pairedButton));
+                    long timeOfLastCheck = SystemClock.uptimeMillis() - monitorIntervalPollIntervalMillis;
+                    boolean hasStateChangedSinceLastCheck = timeOfLastCheck > 0 &&
+                            buttonMonitor.getLastButtonStateChangeTimeMillis() > timeOfLastCheck;
+                    if (runInBackground && hasStateChangedSinceLastCheck) {
+                        sendABNotification(buttonId, buttonMonitor.getButtonState());
+                    }
                 } else {
 
-                    if (buttonMonitor.isCommunicating()) {
+                    Log.d(TAG, "Forgetting lost button '" + buttonId + "'.");
 
-                        // This button is actively communicating
-                        lostButtonSet.remove(buttonId);
-                        newAndExistingButtonMap.put(buttonId, buttonMonitor);
+                    buttonMonitor.shutdown();
+                    nearbyButton = null;
+                    buttonMonitor = null;
 
-                        // Level Trigger state notification, not edge triggered (e.g. we will send this active
-                        // notification every poll interval that this button is communicating)..
-                        new Handler(getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                BusProvider.getInstance().post(new ABFoundEvent(pairedButton));
-                            }
-                        });
-
-                        Button persistedButton = buttonProvider.getButton(buttonId);
-                        if (persistedButton == null) {
-                            // This is the first time we've communicated with this button..  persist it!
-                            buttonProvider.createOrUpdateButton(pairedButton);
+                    new Handler(getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            BusProvider.getInstance().post(new ABLostEvent(nearbyButton));
                         }
+                    });
 
-                        long timeOfLastCheck = SystemClock.uptimeMillis() - monitorIntervalPollIntervalMillis;
-                        boolean hasStateChangedSinceLastCheck = timeOfLastCheck > 0 &&
-                                                                buttonMonitor.getLastButtonStateChangeTimeMillis() > timeOfLastCheck;
-                        if (runInBackground && hasStateChangedSinceLastCheck) {
-                            sendABNotification(buttonId, buttonMonitor.getButtonState());
-                        }
+                    if (runInBackground) {
+                        sendABNotification(buttonId, ButtonState.DISCONNECTED);
                     }
                 }
             }
-
-            // All buttons left in 'lostButtonSet' represent buttons that are no longer communicating
-            for (final String lostButtonId : lostButtonSet) {
-                Log.d(TAG, "Forgetting lost button '" + lostButtonId + "'.");
-
-                final ButtonMonitor lostButtonMonitor = buttonMonitorMap.get(lostButtonId);
-
-                lostButtonMonitor.shutdown();
-
-                buttonMonitorMap.remove(lostButtonId);
-
-                new Handler(getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        BusProvider.getInstance().post(new ABLostEvent(lostButtonMonitor.getButton()));
-                    }
-                });
-
-                if (runInBackground) {
-                    sendABNotification(lostButtonId, ButtonState.DISCONNECTED);
-                }
-            }
-
-            buttonMonitorMap = newAndExistingButtonMap;
 
             scheduleButtonDiscoveryMessage();
         }
     };
-    
-    private void startButtonDiscovery() {
-        bluetoothProvider.startButtonDiscovery();
+
+    protected void startButtonDiscovery() {
+
+        bluetoothProvider.startButtonDiscovery(new ButtonDiscoveryListener() {
+            @Override
+            public void buttonDiscovered(Button nearbyCandidateButton) {
+
+                // We only care about new nearby button notifications if we aren't already
+                // processing a nearby button
+                if (nearbyButton == null) {
+
+                    // We only care about a nearby button if either it's not associated with a beacon
+                    // or its associated beacon is nearby...
+                    com.ndipatri.arduinoButton.models.Beacon associatedBeacon = nearbyCandidateButton.getBeacon();
+                    if (associatedBeacon == null) {
+                        nearbyButton = nearbyCandidateButton;
+                    } else
+                    if (nearbyBeacons.contains(associatedBeacon)) {
+                        nearbyButton = nearbyCandidateButton;
+                    }
+                }
+            }
+        });
+
+        /** NJD need to implement a timeout for discovery even if it isn't stopped elsewhere??
         
         monitorHandler.postDelayed(new Runnable() {
             @Override
@@ -291,39 +279,11 @@ public class MonitoringService extends Service {
                 bluetoothProvider.startButtonDiscovery();
             }
         }, buttonDiscoveryDurationMillis);
+         **/
     }
 
-    private Set<Button> getAllNearbyBeaconPairedButtons() {
-
-        Set<Button> nearbyPairedButtons = new HashSet<Button>();
-
-        // All buttons that have been paired with a beacon
-        List<Button> pairedButtons = buttonProvider.getBeaconPairedButtons();
-
-        // Now see which are in range...
-        for (Button button : pairedButtons) {
-            com.ndipatri.arduinoButton.models.Beacon nearbyBeacon = button.getBeacon();
-
-            if (nearbyBeacons.contains(nearbyBeacon)) {
-
-                // Now that we know this Button is relevant, we need to get the actual
-                // nearby Button
-                Button nearbyButton = bluetoothProvider.getDiscoveredButton(button.getId());
-                nearbyPairedButtons.add(nearbyButton);
-            }
-        }
-
-        return nearbyPairedButtons;
-    }
-
-    protected String getButtonId(final BluetoothDevice bluetoothDevice) {
-        return bluetoothDevice.getAddress();
-    }
-
-    protected void sendABNotificationForAllButtons() {
-        for (Map.Entry<String, ButtonMonitor> entry : buttonMonitorMap.entrySet()) {
-            sendABNotification(entry.getKey(), entry.getValue().getButtonState());
-        }
+    private void stopButtonDiscovery() {
+        bluetoothProvider.stopButtonDiscovery();
     }
 
     protected void sendABNotification(String buttonId, ButtonState buttonState) {
@@ -373,7 +333,7 @@ public class MonitoringService extends Service {
         notificationManager.notify(notifId, notification);
     }
 
-    private void monitorRegisteredBeacons(final BluetoothProvider bluetoothProvider) {
+    protected void monitorRegisteredBeacons(final BluetoothProvider bluetoothProvider) {
         bluetoothProvider.startBTMonitoring(new BeaconDistanceListener() {
 
             @Override
@@ -397,7 +357,7 @@ public class MonitoringService extends Service {
                     if (!nearbyBeacons.contains(pairedBeacon)) {
                         nearbyBeacons.add(pairedBeacon);
                         String msg = "Beacon detected.";
-                        Log.d(TAG, msg + " ('" + pairedBeacon + "'.)");
+                        Log.d(TAG, msg + " ('" + (pairedBeacon == null ? "unpaired)":"paired(" + pairedBeacon.getButton().getName() + ")" + "'.)"));
                     }
                 } else {
                     // not in range!
@@ -438,10 +398,8 @@ public class MonitoringService extends Service {
     @Produce
     public ABStateChangeReport produceStateChangeReport() {
         Set<ABStateChangeReport.ABStateChangeReportValue> values = new HashSet<ABStateChangeReport.ABStateChangeReportValue>();
-        for (ButtonMonitor buttonMonitor : buttonMonitorMap.values()) {
-            if (buttonMonitor.isCommunicating()) {
-                values.add(new ABStateChangeReport.ABStateChangeReportValue(buttonMonitor.getButtonState(), buttonMonitor.getButton().getId()));
-            }
+        if (buttonMonitor != null && buttonMonitor.isCommunicating()) {
+            values.add(new ABStateChangeReport.ABStateChangeReportValue(buttonMonitor.getButtonState(), buttonMonitor.getButton().getId()));
         }
 
         return new ABStateChangeReport(values);
@@ -463,7 +421,7 @@ public class MonitoringService extends Service {
         return running;
     }
 
-    public HashMap<String, ButtonMonitor> getButtonMonitorMap() {
-        return buttonMonitorMap;
+    public ButtonMonitor getButtonMonitor() {
+        return buttonMonitor;
     }
 }

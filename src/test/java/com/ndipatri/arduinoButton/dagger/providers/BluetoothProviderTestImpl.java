@@ -6,6 +6,7 @@ import android.os.RemoteException;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.ndipatri.arduinoButton.BeaconDistanceListener;
+import com.ndipatri.arduinoButton.ButtonDiscoveryListener;
 import com.ndipatri.arduinoButton.models.Button;
 
 import java.util.HashSet;
@@ -21,7 +22,7 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
 
     private BeaconDistanceListener beaconDistanceListener;
 
-    private Set<Button> availableButtons = new HashSet<Button>();
+    private Set<Button> discoveredButtons = new HashSet<Button>();
 
     private boolean isBluetoothSupported = false;
     private boolean isBluetoothEnabled = false;
@@ -39,20 +40,13 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
     }
 
     @Override
-    public Set<Button> getAllBondedButtons() {
-        return availableButtons;
+    public void startButtonDiscovery(ButtonDiscoveryListener listener) {
+
     }
 
     @Override
-    public Button getDiscoveredButton(String buttonId) {
-        final Set<Button> pairedButtons = getAllBondedButtons();
-        for (Button pairedDevice : pairedButtons) {
-            if (pairedDevice.getId().equals(buttonId)) {
-                return pairedDevice;
-            }
-        }
-
-        return null;
+    public void stopButtonDiscovery() {
+        this.isDiscoveryCancelled = true;
     }
 
     @Override
@@ -67,11 +61,6 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
     @Override
     public boolean isBluetoothEnabled() {
         return isBluetoothEnabled;
-    }
-
-    @Override
-    public void cancelDiscovery() {
-        this.isDiscoveryCancelled = true;
     }
 
     @Override
@@ -96,7 +85,7 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
         this.isBluetoothEnabled = isBluetoothEnabled;
     }
 
-    public void setAvailableButtons(Set<Button> availableButtons) {
-        this.availableButtons = availableButtons;
+    public void setDiscoveredButtons(Set<Button> discoveredButtons) {
+        this.discoveredButtons = discoveredButtons;
     }
 }

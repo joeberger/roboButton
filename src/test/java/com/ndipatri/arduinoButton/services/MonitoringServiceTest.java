@@ -99,7 +99,7 @@ public class MonitoringServiceTest {
 
         Set<Button> availableButtons = new HashSet<Button>();
         availableButtons.add(availableButton);
-        ((BluetoothProviderTestImpl) bluetoothProvider).setAvailableButtons(availableButtons);
+        ((BluetoothProviderTestImpl) bluetoothProvider).setDiscoveredButtons(availableButtons);
 
         monitoringService.discoverButtonDevices();
 
@@ -124,7 +124,7 @@ public class MonitoringServiceTest {
 
         Set<Button> availableButtons = new HashSet<Button>();
         availableButtons.add(availableButton);
-        ((BluetoothProviderTestImpl) bluetoothProvider).setAvailableButtons(availableButtons);
+        ((BluetoothProviderTestImpl) bluetoothProvider).setDiscoveredButtons(availableButtons);
 
         monitoringService.discoverButtonDevices();
 
@@ -166,7 +166,7 @@ public class MonitoringServiceTest {
 
         Set<Button> availableButtons = new HashSet<Button>();
         availableButtons.add(availableButton);
-        ((BluetoothProviderTestImpl) bluetoothProvider).setAvailableButtons(availableButtons);
+        ((BluetoothProviderTestImpl) bluetoothProvider).setDiscoveredButtons(availableButtons);
 
         monitoringService.discoverButtonDevices();
 

@@ -142,24 +142,27 @@ long debounce = 50;                // the debounce time in milliseconds.. This i
 void setup()
 {
      Serial.begin(9600);  // Begin the serial monitor at 9600bps
-
+     
      bluetooth.begin(115200);  // The Bluetooth Mate defaults to 115200bps
      bluetooth.print("$");  // Print three times individually
      bluetooth.print("$");
      bluetooth.print("$");  // Enter command mode
-     delay(100);  // Short delay, wait for the Mate to send back CMD
-     
-     bluetooth.println("Q"); // disable BT connections
-     bluetooth.println("ST,253"); // stay in command mode until reset.
-     
+     delay(200);  // Short delay, wait for the Mate to send back CMD
      bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity  
      // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
      bluetooth.begin(9600);  // Start bluetooth serial at 9600
-     
-     bluetooth.println("SA,2"); // turn off authentication.... So device doesn't have to be 'bonded' to communicate.
+
+     delay(200);  // Short delay, wait for the Mate to send back CMD
+     bluetooth.println("SP,1111"); 
+     delay(200);  // Short delay, wait for the Mate to send back CMD
      bluetooth.println("SN,arduinoButton");
-     bluetooth.println("W"); // re-enable BT connections
-     bluetooth.println("---");
+     delay(200);  // Short delay, wait for the Mate to send back CMD
+     bluetooth.println("SA,2"); // turn off authentication.... So device doesn't have to be 'bonded' to communicate.
+     
+     delay(200);  // Short delay, wait for the Mate to send back CMD
+     bluetooth.print("-");  // Print three times individually
+     bluetooth.print("-");
+     bluetooth.print("-");  // Enter command mode
      
      // Switch Setup
      pinMode(switchPinIn, INPUT_PULLUP); // This means there's an internal pull-up resistor which sets the input high.  The physical
