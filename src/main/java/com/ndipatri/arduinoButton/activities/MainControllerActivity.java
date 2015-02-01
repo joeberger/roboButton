@@ -158,12 +158,6 @@ public class MainControllerActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle presses on the action bar items
         switch (item.getItemId()) {
-            case R.id.forget_all_pairing:
-
-                forgetAllPairing();
-
-                return true;
-
             case R.id.view_nearby_beacons:
 
                 viewNearbyBeacons();
@@ -173,10 +167,6 @@ public class MainControllerActivity extends Activity {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    private void forgetAllPairing() {
-        buttonProvider.unpairAllButtons();
     }
 
     // region OTTO Subscriptions

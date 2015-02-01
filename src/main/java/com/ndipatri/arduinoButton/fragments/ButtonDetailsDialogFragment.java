@@ -37,7 +37,6 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     // ButterKnife Injected Views
     protected @InjectView(R.id.nameEditText) EditText nameEditText;
     protected @InjectView(R.id.autoModeSwitch) Switch autoModeSwitch;
-    protected @InjectView(R.id.unpairButton) android.widget.Button unpairButton;
 
     @Inject
     protected ButtonProvider buttonProvider;
@@ -144,26 +143,6 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
                 buttonProvider.createOrUpdateButton(button);
             }
         });
-
-        if (existingButton.getBeacon() != null) {
-
-            // We need to give user the ability to unpair, since a pairing exists...
-
-            unpairButton.setVisibility(View.VISIBLE);
-            unpairButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Button button = getButton();
-
-                    beaconProvider.delete(button.getBeacon());
-                    button.setBeacon(null);
-                    buttonProvider.createOrUpdateButton(button);
-                    unpairButton.setVisibility(View.GONE);
-                }
-            });
-        } else {
-            unpairButton.setVisibility(View.GONE);
-        }
     }
 
     private synchronized String getButtonId() {

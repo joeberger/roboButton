@@ -29,13 +29,4 @@
         android:checked="false"
         android:text="Auto Mode" />
 
-    <Button
-        android:id="@+id/unpairButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="20dp"
-        android:layout_marginTop="10dp"
-        android:text="@string/unpair_from_beacon" />
-
 </LinearLayout>

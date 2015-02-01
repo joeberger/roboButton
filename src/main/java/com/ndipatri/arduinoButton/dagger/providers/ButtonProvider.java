@@ -39,59 +39,6 @@ public class ButtonProvider {
         ABApplication.getInstance().registerForDependencyInjection(this);
     }
 
-    public List<Button> getUnpairedButtons() {
-        List<Button> unpairedButtons = new ArrayList<Button>();
-
-        OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
-        RuntimeExceptionDao<Button, Long> buttonDao = helper.getButtonDao();
-        QueryBuilder<Button, Long> queryBuilder = buttonDao.queryBuilder();
-        try {
-            Where<Button, Long> where = queryBuilder.where();
-            where.isNull(Button.BEACON_ID);
-
-            PreparedQuery<Button> preparedQuery = queryBuilder.prepare();
-            unpairedButtons = buttonDao.query(preparedQuery);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        OpenHelperManager.releaseHelper();
-
-        return unpairedButtons;
-    }
-
-    public void unpairAllButtons() {
-        List<Button> pairedButtons = getBeaconPairedButtons();
-        for (Button pairedButton : pairedButtons) {
-            Beacon beacon = pairedButton.getBeacon();
-            beaconProvider.delete(beacon);
-
-            pairedButton.setBeacon(null);
-            createOrUpdateButton(pairedButton);
-        }
-    }
-
-    public List<Button> getBeaconPairedButtons() {
-        List<Button> pairedButtons = new ArrayList<Button>();
-
-        OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
-        RuntimeExceptionDao<Button, Long> buttonDao = helper.getButtonDao();
-        QueryBuilder<Button, Long> queryBuilder = buttonDao.queryBuilder();
-        try {
-            Where<Button, Long> where = queryBuilder.where();
-            where.isNotNull(Button.BEACON_ID);
-
-            PreparedQuery<Button> preparedQuery = queryBuilder.prepare();
-            pairedButtons = buttonDao.query(preparedQuery);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        OpenHelperManager.releaseHelper();
-
-        return pairedButtons;
-    }
-
     public void createOrUpdateButton(final Button dirtyButton) {
 
         OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
