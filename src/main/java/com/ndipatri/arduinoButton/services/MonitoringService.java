@@ -166,14 +166,14 @@ public class MonitoringService extends Service {
     }
 
     private void scheduleImmediatePoll() {
-        monitorHandler.post(buttonMonitorDiscoveryRunnable);
+        monitorHandler.post(servicePollRunnable);
     }
 
     private void scheduleDelayedPoll() {
-        monitorHandler.postDelayed(buttonMonitorDiscoveryRunnable, monitorIntervalPollIntervalMillis);
+        monitorHandler.postDelayed(servicePollRunnable, monitorIntervalPollIntervalMillis);
     }
 
-    protected Runnable buttonMonitorDiscoveryRunnable = new Runnable() {
+    protected Runnable servicePollRunnable = new Runnable() {
         public void run() {
 
             Log.d(TAG, "Monitor awake...");
@@ -296,18 +296,26 @@ public class MonitoringService extends Service {
                     // we immediately pair this discovered button with our nearby beacon.. overwriting any
                     // existing pairing.
 
-                    Button button = buttonProvider.getButton(nearbyCandidateButton.getId());
-                    com.ndipatri.arduinoButton.models.Beacon beacon = beaconProvider.getBeacon(nearbyBeacon.getMacAddress());
-                    beacon.setName("Beacon for " + nearbyCandidateButton.getName());
-                    beaconProvider.createOrUpdateBeacon(beacon);
+                    // it's possible nearbyBeacon will become null by some other thread while we are in here..
+                    // (indicating that it has gone away)...
+                    // If it does, no matter... the following association will get cleaned up subsequent to this action...
+                    com.ndipatri.arduinoButton.models.Beacon currentBeacon = nearbyBeacon;
+                    if (currentBeacon != null) {
+                        Button button = buttonProvider.getButton(nearbyCandidateButton.getId());
+                        com.ndipatri.arduinoButton.models.Beacon beacon = beaconProvider.getBeacon(currentBeacon.getMacAddress());
+                        if (beacon != null) {
+                            beacon.setName("Beacon for " + nearbyCandidateButton.getName());
+                            beaconProvider.createOrUpdateBeacon(beacon);
 
-                    button.setBeacon(beacon);
-                    beacon.setButton(button);
+                            button.setBeacon(beacon);
+                            beacon.setButton(button);
 
-                    buttonProvider.createOrUpdateButton(button);
-                    beaconProvider.createOrUpdateBeacon(beacon); // transitive persistence sucks in ormLite
+                            buttonProvider.createOrUpdateButton(button);
+                            beaconProvider.createOrUpdateBeacon(beacon); // transitive persistence sucks in ormLite
 
-                    nearbyButton = nearbyCandidateButton;
+                            nearbyButton = nearbyCandidateButton;
+                        }
+                    }
                 }
             }
         });

@@ -75,7 +75,7 @@ public class ButtonMonitorTest {
 
         OttoBusListener busListener = new OttoBusListener<ABStateChangeReport>();
 
-        // NJD TODO - need to figure otu how to run this.... it's now the 'buttonMonitorDiscoveryRunnable' we have to call
+        // NJD TODO - need to figure otu how to run this.... it's now the 'servicePollRunnable' we have to call
         //monitoringService.discoverButtonDevices();
 
         ButtonMonitor buttonMonitor = monitoringService.getButtonMonitor();
