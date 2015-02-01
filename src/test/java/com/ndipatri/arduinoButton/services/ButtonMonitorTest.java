@@ -89,7 +89,7 @@ public class ButtonMonitorTest {
 
         assertThat("Query state discovery interval should be 1 second.", buttonMonitor.getQueryStateIntervalMillis() == 1000);
 
-        ABStateChangeReport expectedEvent = new ABStateChangeReport(new ABStateChangeReport.ABStateChangeReportValue(ButtonState.NEVER_CONNECTED, availableButton.getId()));
+        ABStateChangeReport expectedEvent = new ABStateChangeReport(availableButton.getId(), ButtonState.NEVER_CONNECTED);
         ABStateChangeReport receivedReport = ((ABStateChangeReport)busListener.getReceivedEvent());
         assertThat("Button State Change event should have been published.", receivedReport != null && receivedReport.equals(expectedEvent));
     }

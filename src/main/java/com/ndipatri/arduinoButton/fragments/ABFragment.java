@@ -140,11 +140,8 @@ public class ABFragment extends Fragment {
 
     @Subscribe
     public void onArduinoButtonStateChangeReportEvent(final ABStateChangeReport event) {
-        for (ABStateChangeReport.ABStateChangeReportValue buttonStateChange : event.getChanges()) {
-            if (buttonStateChange.getButtonId().equals(getButtonId())) {
-                setButtonState(buttonStateChange.getButtonState());
-                break;
-            }
+        if (event.getButtonId().equals(getButtonId())) {
+            setButtonState(event.getButtonState());
         }
     }
 }
