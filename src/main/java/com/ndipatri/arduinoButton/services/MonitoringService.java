@@ -179,7 +179,7 @@ public class MonitoringService extends Service {
             Log.d(TAG, "Monitor awake...");
 
             if (nearbyButton == null) {
-                if (nearbyBeacon != null) {
+                if (getNearbyBeacon() != null) {
                     // we have a nearby beacon.. start looking for a button
                     Log.d(TAG, "Nearby beacon detected.. Trying to discover buttons...");
                     startButtonDiscovery();
@@ -201,7 +201,7 @@ public class MonitoringService extends Service {
             } else {
 
                 // We communicate with a button until that fails or until its associated beacon is gone..
-                if (buttonMonitor.isCommunicating() && nearbyBeacon != null) {
+                if (buttonMonitor.isCommunicating() && getNearbyBeacon() != null) {
 
                     // Level Trigger state notification, not edge triggered (e.g. we will send this active
                     // notification every poll interval that this button is communicating)..
@@ -257,15 +257,16 @@ public class MonitoringService extends Service {
                 Toast.makeText(MonitoringService.this, "BeaconDistance: '" + distanceInMeters + "m'", Toast.LENGTH_SHORT).show();
 
                 com.ndipatri.arduinoButton.models.Beacon beacon = new com.ndipatri.arduinoButton.models.Beacon(estimoteBeacon.getMacAddress(), estimoteBeacon.getName());
+                beaconProvider.createOrUpdateBeacon(beacon);
 
                 if (distanceInMeters < (double) beaconDetectionThresholdMeters) {
-                    nearbyBeacon = beacon;
+                    setNearbyBeacon(beacon);
                     String msg = "Beacon detected.";
                 } else {
                     // not in range!
                     String msg = "Beacon lost.";
                     Log.d(TAG, msg + " ('" + beacon + "'.)");
-                    nearbyBeacon = null;
+                    setNearbyBeacon(null);
                 }
             }
 
@@ -275,7 +276,7 @@ public class MonitoringService extends Service {
                 if (region == bluetoothProvider.getMonitoredRegion()) {
                     // I'm guessing, we get this callback when there are NO more detected beacons in the given region
                     Log.d(TAG, "Left beacon region.");
-                    nearbyBeacon = null;
+                    setNearbyBeacon(null);
                 }
             }
         });
@@ -295,26 +296,20 @@ public class MonitoringService extends Service {
 
                     // we immediately pair this discovered button with our nearby beacon.. overwriting any
                     // existing pairing.
+                    com.ndipatri.arduinoButton.models.Beacon nearbyBeaconThreadSafe = getNearbyBeacon();
+                    if (nearbyBeaconThreadSafe != null) {
 
-                    // it's possible nearbyBeacon will become null by some other thread while we are in here..
-                    // (indicating that it has gone away)...
-                    // If it does, no matter... the following association will get cleaned up subsequent to this action...
-                    com.ndipatri.arduinoButton.models.Beacon currentBeacon = nearbyBeacon;
-                    if (currentBeacon != null) {
+                        nearbyBeaconThreadSafe.setName("Beacon for " + nearbyCandidateButton.getName());
+                        beaconProvider.createOrUpdateBeacon(nearbyBeaconThreadSafe);
+
                         Button button = buttonProvider.getButton(nearbyCandidateButton.getId());
-                        com.ndipatri.arduinoButton.models.Beacon beacon = beaconProvider.getBeacon(currentBeacon.getMacAddress());
-                        if (beacon != null) {
-                            beacon.setName("Beacon for " + nearbyCandidateButton.getName());
-                            beaconProvider.createOrUpdateBeacon(beacon);
+                        button.setBeacon(nearbyBeaconThreadSafe);
+                        nearbyBeaconThreadSafe.setButton(button);
 
-                            button.setBeacon(beacon);
-                            beacon.setButton(button);
+                        buttonProvider.createOrUpdateButton(button);
+                        beaconProvider.createOrUpdateBeacon(nearbyBeaconThreadSafe); // transitive persistence sucks in ormLite
 
-                            buttonProvider.createOrUpdateButton(button);
-                            beaconProvider.createOrUpdateBeacon(beacon); // transitive persistence sucks in ormLite
-
-                            nearbyButton = nearbyCandidateButton;
-                        }
+                        nearbyButton = nearbyCandidateButton;
                     }
                 }
             }
@@ -374,5 +369,14 @@ public class MonitoringService extends Service {
         notification.contentView = contentView;
 
         notificationManager.notify(notifId, notification);
+    }
+
+    protected void setNearbyBeacon(com.ndipatri.arduinoButton.models.Beacon nearbyBeacon) {
+        // reference assignments are atomic
+        this.nearbyBeacon = nearbyBeacon;
+    }
+
+    protected com.ndipatri.arduinoButton.models.Beacon getNearbyBeacon() {
+        return this.nearbyBeacon;
     }
 }
