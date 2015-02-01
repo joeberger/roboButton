@@ -28,20 +28,21 @@ import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ABFoundEvent;
 import com.ndipatri.arduinoButton.events.ABLostEvent;
-import com.ndipatri.arduinoButton.events.ABStateChangeReport;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
-import com.squareup.otto.Produce;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.inject.Inject;
 
 /**
- * Constantly monitors all discovered Buttons and launches a ButtonMonitor for each... sends
- * Otto events when a button is discovered or becomes unresponsive... so this service only
- * discovers buttons, it doesn't control them...
+ *  This service constantly monitors for nearby Beacons.  If it finds one, it then try to discover a nearby
+ *  Button.  If it finds one, it then spawns a ButtonMonitor object.  Once the ButtonMonitor exists, this service
+ *  does not search for any more Buttons.
+ *
+ *  This service then periodically checks to make sure this ButtonMonitor is lively - connecting properly to the Button.
+ *  If not, it will destroy the ButtonMonitor.
+ *
+ *  This service is also responsible for posting Otto events when a ButtonMonitor successfully communicates with
+ *  a Button (ABFound) and when it loses this communication (ABLost).
  */
 public class MonitoringService extends Service {
 
@@ -69,13 +70,14 @@ public class MonitoringService extends Service {
 
     private boolean running = false;
 
+    // Until we see a nearby beacon, this service does nothing...
+    com.ndipatri.arduinoButton.models.Beacon nearbyBeacon = null;
+
     // This is a nearby button
     Button nearbyButton = null;
 
     // This is the monitor associated with the nearby button
     ButtonMonitor buttonMonitor = null;
-
-    com.ndipatri.arduinoButton.models.Beacon nearbyBeacon = null;
 
     private int beaconDetectionThresholdMeters = -1;
 
@@ -90,6 +92,13 @@ public class MonitoringService extends Service {
         ((ABApplication)getApplication()).registerForDependencyInjection(this);
 
         monitorRegisteredBeacons(bluetoothProvider);
+
+        // Thread for communicating with BT services.  A different thread is used to actually communicate with buttons themsevles.
+        HandlerThread messageProcessingThread = new HandlerThread("Discovery_BluetoothCommunicationThread", android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        messageProcessingThread.start();
+
+        // Connect up our background thread's looper with our message processing handler.
+        monitorHandler = new Handler(messageProcessingThread.getLooper());
 
         beaconDetectionThresholdMeters = getResources().getInteger(R.integer.beacon_detection_threshold_meters);
         monitorIntervalPollIntervalMillis = getResources().getInteger(R.integer.monitor_service_poll_interval_millis);
@@ -137,8 +146,8 @@ public class MonitoringService extends Service {
 
         Log.d(TAG, "onStartCommand() (runInBackground='" + runInBackground + "').");
 
+        // When in the background, this service wakes up less often to do its thing...
         int newTimeMultiplier = runInBackground ? getResources().getInteger(R.integer.background_time_multiplier) : 1;
-
         if (newTimeMultiplier != timeMultiplier) {
             timeMultiplier = newTimeMultiplier;
             if (buttonMonitor != null) {
@@ -148,14 +157,7 @@ public class MonitoringService extends Service {
 
         if (!running) {
 
-            // Thread for communicating with BT services.  A different thread is used to actually communicate with buttons themsevles.
-            HandlerThread messageProcessingThread = new HandlerThread("Discovery_BluetoothCommunicationThread", android.os.Process.THREAD_PRIORITY_BACKGROUND);
-            messageProcessingThread.start();
-
-            // Connect up our background thread's looper with our message processing handler.
-            monitorHandler = new Handler(messageProcessingThread.getLooper());
-
-            scheduleImmediateButtonDiscoveryMessage();
+            scheduleImmediatePoll();
 
             running = true;
         }
@@ -163,11 +165,11 @@ public class MonitoringService extends Service {
         return Service.START_FLAG_REDELIVERY; // this ensure the service is restarted
     }
 
-    private void scheduleImmediateButtonDiscoveryMessage() {
+    private void scheduleImmediatePoll() {
         monitorHandler.post(buttonMonitorDiscoveryRunnable);
     }
 
-    private void scheduleButtonDiscoveryMessage() {
+    private void scheduleDelayedPoll() {
         monitorHandler.postDelayed(buttonMonitorDiscoveryRunnable, monitorIntervalPollIntervalMillis);
     }
 
@@ -184,7 +186,7 @@ public class MonitoringService extends Service {
                 }
 
                 Log.d(TAG, "No nearby beacon or button found. Going back to sleep.");
-                scheduleButtonDiscoveryMessage();
+                scheduleDelayedPoll();
                 return;
             } else {
                 Log.d(TAG, "Nearby button found.  Stopping discovery.");
@@ -240,10 +242,47 @@ public class MonitoringService extends Service {
                 }
             }
 
-            scheduleButtonDiscoveryMessage();
+            scheduleDelayedPoll();
         }
     };
 
+    // Before this service can do anything, it will wait for the close proximity of a Beacon to be confirmed.
+    // This is a low cost BTLE operation and can run in perpetuity.
+    protected void monitorRegisteredBeacons(final BluetoothProvider bluetoothProvider) {
+        bluetoothProvider.startBeaconDiscovery(new BeaconDistanceListener() {
+
+            @Override
+            public void beaconDistanceUpdate(final Beacon estimoteBeacon, double distanceInMeters) {
+
+                Toast.makeText(MonitoringService.this, "BeaconDistance: '" + distanceInMeters + "m'", Toast.LENGTH_SHORT).show();
+
+                com.ndipatri.arduinoButton.models.Beacon beacon = new com.ndipatri.arduinoButton.models.Beacon(estimoteBeacon.getMacAddress(), estimoteBeacon.getName());
+
+                if (distanceInMeters < (double) beaconDetectionThresholdMeters) {
+                    nearbyBeacon = beacon;
+                    String msg = "Beacon detected.";
+                } else {
+                    // not in range!
+                    String msg = "Beacon lost.";
+                    Log.d(TAG, msg + " ('" + beacon + "'.)");
+                    nearbyBeacon = null;
+                }
+            }
+
+            @Override
+            public void leftRegion(Region region) {
+
+                if (region == bluetoothProvider.getMonitoredRegion()) {
+                    // I'm guessing, we get this callback when there are NO more detected beacons in the given region
+                    Log.d(TAG, "Left beacon region.");
+                    nearbyBeacon = null;
+                }
+            }
+        });
+    }
+
+    // This is a costly operation and should only be done when we have confidence button will
+    // be found... (e.g. we've already detected a beacon)
     protected void startButtonDiscovery() {
 
         bluetoothProvider.startButtonDiscovery(new ButtonDiscoveryListener() {
@@ -266,27 +305,20 @@ public class MonitoringService extends Service {
                     beacon.setButton(button);
 
                     buttonProvider.createOrUpdateButton(button);
-                    beaconProvider.createOrUpdateBeacon(beacon); // transitive persistence sucks in
+                    beaconProvider.createOrUpdateBeacon(beacon); // transitive persistence sucks in ormLite
 
                     nearbyButton = nearbyCandidateButton;
-                    // ormLite so we need to be explicit here...
                 }
             }
         });
-
-        /** NJD need to implement a timeout for discovery even if it isn't stopped elsewhere??
-        
-        monitorHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                bluetoothProvider.startButtonDiscovery();
-            }
-        }, buttonDiscoveryDurationMillis);
-         **/
     }
 
     private void stopButtonDiscovery() {
         bluetoothProvider.stopButtonDiscovery();
+    }
+
+    public ButtonMonitor getButtonMonitor() {
+        return buttonMonitor;
     }
 
     protected void sendABNotification(String buttonId, ButtonState buttonState) {
@@ -334,70 +366,5 @@ public class MonitoringService extends Service {
         notification.contentView = contentView;
 
         notificationManager.notify(notifId, notification);
-    }
-
-    protected void monitorRegisteredBeacons(final BluetoothProvider bluetoothProvider) {
-        bluetoothProvider.startBTMonitoring(new BeaconDistanceListener() {
-
-            @Override
-            public void beaconDistanceUpdate(final Beacon estimoteBeacon, double distanceInMeters) {
-
-                Toast.makeText(MonitoringService.this, "BeaconDistance: '" + distanceInMeters + "m'", Toast.LENGTH_SHORT).show();
-
-                com.ndipatri.arduinoButton.models.Beacon beacon = new com.ndipatri.arduinoButton.models.Beacon(estimoteBeacon.getMacAddress(), estimoteBeacon.getName());
-
-                if (distanceInMeters < (double) beaconDetectionThresholdMeters) {
-                    // in range!
-
-                    nearbyBeacon = beacon;
-                    String msg = "Beacon detected.";
-                } else {
-                    // not in range!
-                    String msg = "Beacon lost.";
-                    Log.d(TAG, msg + " ('" + beacon + "'.)");
-                    nearbyBeacon = null;
-                }
-            }
-
-            @Override
-            public void leftRegion(Region region) {
-
-                if (region == bluetoothProvider.getMonitoredRegion()) {
-                    // I'm guessing, we get this callback when there are NO more detected beacons in the given region
-                    Log.d(TAG, "Left beacon region.");
-                    nearbyBeacon = null;
-                }
-            }
-        });
-    }
-
-    @Produce
-    public ABStateChangeReport produceStateChangeReport() {
-        Set<ABStateChangeReport.ABStateChangeReportValue> values = new HashSet<ABStateChangeReport.ABStateChangeReportValue>();
-        if (buttonMonitor != null && buttonMonitor.isCommunicating()) {
-            values.add(new ABStateChangeReport.ABStateChangeReportValue(buttonMonitor.getButtonState(), buttonMonitor.getButton().getId()));
-        }
-
-        return new ABStateChangeReport(values);
-    }
-
-    public boolean isRunInBackground() {
-        return runInBackground;
-    }
-
-    public Handler getMonitorHandler() {
-        return monitorHandler;
-    }
-
-    public long getMonitorIntervalPollIntervalMillis() {
-        return monitorIntervalPollIntervalMillis;
-    }
-
-    public boolean isRunning() {
-        return running;
-    }
-
-    public ButtonMonitor getButtonMonitor() {
-        return buttonMonitor;
     }
 }

@@ -64,7 +64,7 @@ public class BluetoothProviderTestImpl implements BluetoothProvider {
     }
 
     @Override
-    public void startBTMonitoring(BeaconDistanceListener beaconDistanceListener) {
+    public void startBeaconDiscovery(BeaconDistanceListener beaconDistanceListener) {
         this.beaconDistanceListener = beaconDistanceListener;
     }
 

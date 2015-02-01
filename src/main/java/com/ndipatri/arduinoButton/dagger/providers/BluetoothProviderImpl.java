@@ -101,7 +101,7 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
     }
 
     @Override
-    public void startBTMonitoring(BeaconDistanceListener beaconDistanceListener) {
+    public void startBeaconDiscovery(BeaconDistanceListener beaconDistanceListener) {
 
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
 

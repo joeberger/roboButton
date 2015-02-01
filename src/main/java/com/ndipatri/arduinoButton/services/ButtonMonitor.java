@@ -18,6 +18,7 @@ import com.ndipatri.arduinoButton.events.ABStateChangeRequest;
 import com.ndipatri.arduinoButton.events.BluetoothDisabledEvent;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
+import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
 
 import java.io.IOException;
@@ -156,10 +157,15 @@ public class ButtonMonitor {
                 public void run() {
                     Log.d(TAG, "State is '" + buttonState + "'");
 
-                    BusProvider.getInstance().post(new ABStateChangeReport(new ABStateChangeReport.ABStateChangeReportValue(buttonState, button.getId())));
+                    BusProvider.getInstance().post(new ABStateChangeReport(getButton().getId(), buttonState));
                 }
             });
         }
+    }
+
+    @Produce
+    public ABStateChangeReport produceStateChangeReport() {
+        return new ABStateChangeReport(getButton().getId(), buttonState);
     }
 
     private void scheduleQueryStateMessage() {

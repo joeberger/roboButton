@@ -26,7 +26,7 @@ public interface BluetoothProvider {
     public boolean isBluetoothEnabled();
 
     // Low Power Bluetooth (BTLE) interface...
-    public void startBTMonitoring(BeaconDistanceListener listener);
+    public void startBeaconDiscovery(BeaconDistanceListener listener);
 
     public void stopBTMonitoring() throws RemoteException;
 }
