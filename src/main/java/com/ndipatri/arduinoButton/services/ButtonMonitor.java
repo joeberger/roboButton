@@ -97,6 +97,8 @@ public class ButtonMonitor {
     public void start() {
         shouldRun = true;
 
+        lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
+
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {

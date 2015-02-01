@@ -14,8 +14,6 @@ import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
 import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ABStateChangeReport;
 import com.ndipatri.arduinoButton.events.ABStateChangeRequest;
-import com.ndipatri.arduinoButton.events.UnpairedBeaconInRangeEvent;
-import com.ndipatri.arduinoButton.events.UnpairedBeaconOutOfRangeEvent;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -49,10 +47,6 @@ public class ABFragment extends Fragment {
     protected ButtonState buttonState = null;
 
     ButtonDetailsDialogFragment dialog = null;
-
-    // This indicates that since an unpaired beacon has come in range, we've already asked
-    // the user once if they would like to pair...
-    boolean alreadyAutoPairChallenged = false;
 
     public ABFragment() {
         ABApplication.getInstance().registerForDependencyInjection(this);
@@ -151,24 +145,6 @@ public class ABFragment extends Fragment {
                 setButtonState(buttonStateChange.getButtonState());
                 break;
             }
-        }
-    }
-
-
-    //need to move this into ABFragment so we can prevent handling this if the ButtonDetailsFragment is being shown....
-
-    @Subscribe
-    public synchronized void onUnpairedBeaconOutOfRangeEvent(final UnpairedBeaconOutOfRangeEvent unpairedBeaconOutOfRangeEvent) {
-        alreadyAutoPairChallenged = false;
-    }
-
-    @Subscribe
-    public synchronized void onUnpairedBeaconInRangeEvent(final UnpairedBeaconInRangeEvent unpairedBeaconInRangeEvent) {
-        if (getButton().getBeacon() == null && alreadyAutoPairChallenged == false) {
-
-            alreadyAutoPairChallenged = true;
-            AutoPairDialogFragment dialog = AutoPairDialogFragment.newInstance(unpairedBeaconInRangeEvent.beacon, getButtonId());
-            dialog.show(getFragmentManager().beginTransaction(), "auto-pair dialog");
         }
     }
 }

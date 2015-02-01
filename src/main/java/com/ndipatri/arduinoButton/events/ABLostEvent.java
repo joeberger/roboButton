@@ -7,10 +7,14 @@ import com.ndipatri.arduinoButton.models.Button;
  */
 public class ABLostEvent {
 
-    public Button button;
+    public String buttonId;
 
-    public ABLostEvent(final Button button) {
-        this.button = button;
+    public ABLostEvent(final String buttonId) {
+        this.buttonId = buttonId;
+    }
+
+    public String getButtonId() {
+        return buttonId;
     }
 
     @Override
@@ -20,13 +24,14 @@ public class ABLostEvent {
 
         ABLostEvent that = (ABLostEvent) o;
 
-        if (button != null ? !button.equals(that.button) : that.button != null) return false;
+        if (buttonId != null ? !buttonId.equals(that.buttonId) : that.buttonId != null)
+            return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return button != null ? button.hashCode() : 0;
+        return buttonId != null ? buttonId.hashCode() : 0;
     }
 }

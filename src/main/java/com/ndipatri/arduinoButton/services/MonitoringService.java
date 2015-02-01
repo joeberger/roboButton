@@ -29,8 +29,6 @@ import com.ndipatri.arduinoButton.enums.ButtonState;
 import com.ndipatri.arduinoButton.events.ABFoundEvent;
 import com.ndipatri.arduinoButton.events.ABLostEvent;
 import com.ndipatri.arduinoButton.events.ABStateChangeReport;
-import com.ndipatri.arduinoButton.events.UnpairedBeaconInRangeEvent;
-import com.ndipatri.arduinoButton.events.UnpairedBeaconOutOfRangeEvent;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 import com.squareup.otto.Produce;
@@ -77,7 +75,7 @@ public class MonitoringService extends Service {
     // This is the monitor associated with the nearby button
     ButtonMonitor buttonMonitor = null;
 
-    Set<com.ndipatri.arduinoButton.models.Beacon> nearbyBeacons = new HashSet<com.ndipatri.arduinoButton.models.Beacon>();
+    com.ndipatri.arduinoButton.models.Beacon nearbyBeacon = null;
 
     private int beaconDetectionThresholdMeters = -1;
 
@@ -179,13 +177,13 @@ public class MonitoringService extends Service {
             Log.d(TAG, "Monitor awake...");
 
             if (nearbyButton == null) {
-                if (nearbyBeacons.size() > 0) {
-                    // we have nearby beacons.. start looking for a button
-                    Log.d(TAG, "Nearby beacons detected.. Trying to discover buttons...");
+                if (nearbyBeacon != null) {
+                    // we have a nearby beacon.. start looking for a button
+                    Log.d(TAG, "Nearby beacon detected.. Trying to discover buttons...");
                     startButtonDiscovery();
                 }
 
-                Log.d(TAG, "No nearby button found. Going back to sleep.");
+                Log.d(TAG, "No nearby beacon or button found. Going back to sleep.");
                 scheduleButtonDiscoveryMessage();
                 return;
             } else {
@@ -200,7 +198,8 @@ public class MonitoringService extends Service {
                 buttonMonitor = new ButtonMonitor(getApplicationContext(), nearbyButton);
             } else {
 
-                if (buttonMonitor.isCommunicating()) {
+                // We communicate with a button until that fails or until its associated beacon is gone..
+                if (buttonMonitor.isCommunicating() && nearbyBeacon != null) {
 
                     // Level Trigger state notification, not edge triggered (e.g. we will send this active
                     // notification every poll interval that this button is communicating)..
@@ -210,12 +209,6 @@ public class MonitoringService extends Service {
                             BusProvider.getInstance().post(new ABFoundEvent(nearbyButton));
                         }
                     });
-
-                    Button persistedButton = buttonProvider.getButton(buttonId);
-                    if (persistedButton == null) {
-                        // This is the first time we've communicated with this button..  persist it!
-                        buttonProvider.createOrUpdateButton(nearbyButton);
-                    }
 
                     long timeOfLastCheck = SystemClock.uptimeMillis() - monitorIntervalPollIntervalMillis;
                     boolean hasStateChangedSinceLastCheck = timeOfLastCheck > 0 &&
@@ -228,15 +221,18 @@ public class MonitoringService extends Service {
                     Log.d(TAG, "Forgetting lost button '" + buttonId + "'.");
 
                     buttonMonitor.shutdown();
-                    nearbyButton = null;
-                    buttonMonitor = null;
+
+                    final String forgottonButtonId = nearbyButton.getId();
 
                     new Handler(getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            BusProvider.getInstance().post(new ABLostEvent(nearbyButton));
+                            BusProvider.getInstance().post(new ABLostEvent(forgottonButtonId));
                         }
                     });
+
+                    nearbyButton = null;
+                    buttonMonitor = null;
 
                     if (runInBackground) {
                         sendABNotification(buttonId, ButtonState.DISCONNECTED);
@@ -258,15 +254,22 @@ public class MonitoringService extends Service {
                 // processing a nearby button
                 if (nearbyButton == null) {
 
-                    // We only care about a nearby button if either it's not associated with a beacon
-                    // or its associated beacon is nearby...
-                    com.ndipatri.arduinoButton.models.Beacon associatedBeacon = nearbyCandidateButton.getBeacon();
-                    if (associatedBeacon == null) {
-                        nearbyButton = nearbyCandidateButton;
-                    } else
-                    if (nearbyBeacons.contains(associatedBeacon)) {
-                        nearbyButton = nearbyCandidateButton;
-                    }
+                    // we immediately pair this discovered button with our nearby beacon.. overwriting any
+                    // existing pairing.
+
+                    Button button = buttonProvider.getButton(nearbyCandidateButton.getId());
+                    com.ndipatri.arduinoButton.models.Beacon beacon = beaconProvider.getBeacon(nearbyBeacon.getMacAddress());
+                    beacon.setName("Beacon for " + nearbyCandidateButton.getName());
+                    beaconProvider.createOrUpdateBeacon(beacon);
+
+                    button.setBeacon(beacon);
+                    beacon.setButton(button);
+
+                    buttonProvider.createOrUpdateButton(button);
+                    beaconProvider.createOrUpdateBeacon(beacon); // transitive persistence sucks in
+
+                    nearbyButton = nearbyCandidateButton;
+                    // ormLite so we need to be explicit here...
                 }
             }
         });
@@ -340,33 +343,19 @@ public class MonitoringService extends Service {
             public void beaconDistanceUpdate(final Beacon estimoteBeacon, double distanceInMeters) {
 
                 Toast.makeText(MonitoringService.this, "BeaconDistance: '" + distanceInMeters + "m'", Toast.LENGTH_SHORT).show();
-                com.ndipatri.arduinoButton.models.Beacon pairedBeacon = beaconProvider.getBeacon(estimoteBeacon.getMacAddress(), true);
+
+                com.ndipatri.arduinoButton.models.Beacon beacon = new com.ndipatri.arduinoButton.models.Beacon(estimoteBeacon.getMacAddress(), estimoteBeacon.getName());
 
                 if (distanceInMeters < (double) beaconDetectionThresholdMeters) {
                     // in range!
-                    if (pairedBeacon == null || pairedBeacon.getButton() == null) {
-                        // advertise this beacon as available for association with a button...
-                        new Handler(getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                BusProvider.getInstance().post(new UnpairedBeaconInRangeEvent(estimoteBeacon));
-                            }
-                        });
-                    }
 
-                    if (!nearbyBeacons.contains(pairedBeacon)) {
-                        nearbyBeacons.add(pairedBeacon);
-                        String msg = "Beacon detected.";
-                        Log.d(TAG, msg + " ('" + (pairedBeacon == null ? "unpaired)":"paired(" + pairedBeacon.getButton().getName() + ")" + "'.)"));
-                    }
+                    nearbyBeacon = beacon;
+                    String msg = "Beacon detected.";
                 } else {
                     // not in range!
                     String msg = "Beacon lost.";
-                    Log.d(TAG, msg + " ('" + pairedBeacon + "'.)");
-                    nearbyBeacons.remove(pairedBeacon);
-
-                    // advertise this beacon as no longer for association ...
-                    emitUnpairedBeaconOutOfRangeEvent(estimoteBeacon);
+                    Log.d(TAG, msg + " ('" + beacon + "'.)");
+                    nearbyBeacon = null;
                 }
             }
 
@@ -376,21 +365,8 @@ public class MonitoringService extends Service {
                 if (region == bluetoothProvider.getMonitoredRegion()) {
                     // I'm guessing, we get this callback when there are NO more detected beacons in the given region
                     Log.d(TAG, "Left beacon region.");
-                    nearbyBeacons.clear();
-
-                    // advertise this beacon as no longer for association ...
-                    emitUnpairedBeaconOutOfRangeEvent(null);
+                    nearbyBeacon = null;
                 }
-            }
-        });
-    }
-
-    protected void emitUnpairedBeaconOutOfRangeEvent(final Beacon estimoteBeacon) {
-        // advertise this beacon as no longer for association ...
-        new Handler(getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                BusProvider.getInstance().post(new UnpairedBeaconOutOfRangeEvent(estimoteBeacon));
             }
         });
     }

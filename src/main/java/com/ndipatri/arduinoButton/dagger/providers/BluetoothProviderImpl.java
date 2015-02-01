@@ -218,6 +218,8 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
                     }
                     discoveredButton.setBluetoothDevice(device);
 
+                    buttonProvider.createOrUpdateButton(discoveredButton);
+
                     buttonDiscoveryListener.buttonDiscovered(discoveredButton);
                 }
             }

@@ -220,7 +220,7 @@ public class MainControllerActivity extends Activity {
 
     @Subscribe
     public void onButtonLostEvent(ABLostEvent ABLostEvent) {
-        String lostButtonId = ABLostEvent.button.getId();
+        String lostButtonId = ABLostEvent.getButtonId();
 
         forgetArduinoButton(lostButtonId);
     }
