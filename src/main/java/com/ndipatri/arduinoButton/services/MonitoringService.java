@@ -183,9 +183,10 @@ public class MonitoringService extends Service {
                     // we have a nearby beacon.. start looking for a button
                     Log.d(TAG, "Nearby beacon detected.. Trying to discover buttons...");
                     startButtonDiscovery();
+                } else {
+                    Log.d(TAG, "No nearby beacon or button found. Going back to sleep.");
                 }
 
-                Log.d(TAG, "No nearby beacon or button found. Going back to sleep.");
                 scheduleDelayedPoll();
                 return;
             } else {

@@ -205,7 +205,7 @@ public class BluetoothProviderImpl implements BluetoothProvider, BeaconManager.M
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-                if (device.getName().matches(discoverableButtonPatternString)) {
+                if (device.getName() != null && device.getName().matches(discoverableButtonPatternString)) {
                     Log.d(TAG, "We have a nearby ArduinoButton device! + '" + device + "'.");
 
                     Button discoveredButton = null;

@@ -157,7 +157,7 @@ void setup()
      delay(200);  // Short delay, wait for the Mate to send back CMD
      bluetooth.println("SN,arduinoButton");
      delay(200);  // Short delay, wait for the Mate to send back CMD
-     bluetooth.println("SA,2"); // turn off authentication.... So device doesn't have to be 'bonded' to communicate.
+     bluetooth.println("SA,0"); // turn off authentication.... So device doesn't have to be 'bonded' to communicate.
      
      delay(200);  // Short delay, wait for the Mate to send back CMD
      bluetooth.print("-");  // Print three times individually
