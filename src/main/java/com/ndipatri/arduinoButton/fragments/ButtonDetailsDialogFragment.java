@@ -21,7 +21,6 @@ import com.ndipatri.arduinoButton.ABApplication;
 import com.ndipatri.arduinoButton.R;
 import com.ndipatri.arduinoButton.dagger.providers.BeaconProvider;
 import com.ndipatri.arduinoButton.dagger.providers.ButtonProvider;
-import com.ndipatri.arduinoButton.events.ButtonImageRequestEvent;
 import com.ndipatri.arduinoButton.models.Button;
 import com.ndipatri.arduinoButton.utils.BusProvider;
 
@@ -151,10 +150,6 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
     private synchronized void setButtonId(String buttonId) {
         getArguments().putString("buttonId", buttonId);
-    }
-
-    protected void requestImageFromUser() {
-        BusProvider.getInstance().post(new ButtonImageRequestEvent(getButtonId()));
     }
 
     @Override
