@@ -1,54 +1,28 @@
-# Deckard
+# ArduinoButton
 
-[![Build Status](https://secure.travis-ci.org/robolectric/deckard.png?branch=master)](http://travis-ci.org/robolectric/deckard)
+### This project is a ‘case study’ implementation of Bluetooth geo-fencing.  It’s open-source and freely available.  The project consists of Android and [Arduino](http://en.wikipedia.org/wiki/Arduino) code and some hardware readily available online.  The major hardware components include a set of [Estimote](http://estimote.com/) Bluetooth LE beacons, an [Arduino Inventor’s Kit](https://www.sparkfun.com/products/12060) , a [Bluetooth Classic IC](https://www.sparkfun.com/products/12576), and a [Solid State Relay](https://www.sparkfun.com/products/10684), and an Android phone (4.3 API Level 18 or above) capable of operating as a Bluetooth LE client or ‘central device’.
 
-Deckard is the simplest possible Android project that uses Robolectric for testing and Maven to build. It has one Activity (with an empty layout), and a Robolectric test that creates that Activity. 
+### It's a work-in-progress.  At present, it's a simple demonstration:  An Android phone running the ArduinoButton application in the background will consume very little power as it monitors for nearby beacons (provided by Estimote).
+### Once it detects a beacon, it then scans for any nearby 'buttons' (which you have to build with the aforementioned parts).  If a button is found, the application then initiates a more costly 'Bluetooth Classic' serial connection.  
+### While connected, the application presents the user with a simple UI button.  Toggling this button on the phone will toggle the state of the relay on the remote button using the Bluetooth Classic serial connection.  This switch on the button can handle line-current; so you can power on and off an electric lamp, as an example.
+### The application includes an 'auto' mode:  when a button is found, it is immediately turned on.  When a beacon is 'lost', it immediately turns off the button.  This auto-mode works because the range of the Beacon Classic is much greater than the configured range of the beacon.
 
-Deckard also imports seamlessly into IntelliJ, due to IntelliJ's support for Maven. Just import the pom.xml.
+### With all this, you can have a light turn on and off automatically as you enter and leave a room.
+
+
 
 ## Setup
 
-*Note: These instructions assume you have a Java 1.6 [JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html) installed.*
+*Note: You'll need a little skill with a soldering iron for this project (but even that you can make up as you going along)*
 
-To start a new Android project:
+1. Purchase a pack of Estimote Beacons
 
-1. Install the [Android SDK](http://developer.android.com/sdk/index.html). On Mac OS X with [Homebrew](http://brew.sh/) just run:
-    ```bash
-    brew install android-sdk
-    ```
 
-2. Set your `ANDROID_HOME` environment variable to `/usr/local/Cellar/android-sdk/<version>`.
 
-3. Run the Android SDK GUI and install API 18 and any other APIs you might need. You can start the GUI like so:
-    ```bash
-    android
-    ```
-4. Install Maven if you haven't already (run `mvn` to check). On OS X (as before) this is easiest with [Homebrew](http://brew.sh/) (unfortunately we have to install Maven 3.0.x as Maven 3.1.x is currently buggy on OS X):
-	```bash
-	brew install homebrew/versions/maven30
-	```
 
-5. Use [Maven Android SDK Deployer](https://github.com/mosabua/maven-android-sdk-deployer) to maven-ize the Android SDK:
-    ```bash
-    git clone https://github.com/mosabua/maven-android-sdk-deployer.git
-    (cd maven-android-sdk-deployer && mvn install -P 4.3)
-    ```
 
-6. Download Deckard from GitHub:
-    ```bash
-    wget https://github.com/robolectric/deckard/archive/master.zip
-    unzip master.zip
-    mv deckard-master my-new-project
-    ```
+```
+cd my-new-project
+mvn clean test
+```
 
-7. In the project directory you should be able to run the tests:
-    ```bash
-    cd my-new-project
-    mvn clean test
-    ```
-        
-8. Optionally, import the project into IntelliJ (or Eclipse) by selecting 'Import Project' in IntelliJ and selecting the project's `pom.xml`. When prompted to pick an SDK you just need to select the Android SDK home and your JDK.
-
-9. Change the names of things from 'Deckard' to whatever is appropriate for your project. Package name, classes, and the AndroidManifest are good places to start.
-
-10. Build an app. Win.
