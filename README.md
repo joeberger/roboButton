@@ -18,7 +18,7 @@ With all this, you can have a light turn on and off automatically as you enter a
 ### Configure Estimote Beacon
 
 1. Purchase a pack of [Estimote](http://estimote.com/) Bluetooth LE Beacons.  They're not cheap - $99.  Download the [Esimote App](https://play.google.com/store/apps/details?id=com.estimote.apps.main&hl=en) from the Google Play Store.  Launch the app and select the 'Beacons' item from the [opening screen](./media/estimoteApp.png).
-2. You should [see your beacon in range](./media/beaconsInRange).  It will be the little 'estimote' shaped icon (duh).  Click on the beacon to edit.
+2. You should [see your beacon in range](./media/beaconsInRange.png).  It will be the little 'estimote' shaped icon (duh).  Click on the beacon to edit.
 3. Once in the [beacon edit screen](./media/editBeacon.png), wait for the text below the beacon near the top to say 'Connected'.  Then edit the 'Major' value to 2112.
 4. By assigning the Major value to this beacon, you've created a specific 'region'.  Whenver the app detects this region, it will begin to look for a button.
 
