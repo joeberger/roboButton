@@ -1,6 +1,6 @@
 # ArduinoButton
 
-This project is a ‘case study’ implementation of Bluetooth geo-fencing.  It’s open-source and freely available.  The project consists of Android and [Arduino](http://en.wikipedia.org/wiki/Arduino) code and some hardware readily available online.  The major hardware components include a set of [Estimote](http://estimote.com/) Bluetooth LE beacons, an [Arduino Inventor’s Kit](https://www.sparkfun.com/products/12060) , a [Bluetooth Classic IC](https://www.sparkfun.com/products/12576), and a [Solid State Relay](https://www.sparkfun.com/products/10684), and an Android phone (4.3 API Level 18 or above) capable of operating as a Bluetooth LE client or ‘central device’.
+This project is a ‘case study’ implementation of Bluetooth geo-fencing.  It’s open-source and freely available.  The project consists of Android and [Arduino](http://en.wikipedia.org/wiki/Arduino) code and some hardware readily available online.  The major hardware components include a set of [Estimote](http://estimote.com/) Bluetooth LE beacons, an [Arduino RedBoard](https://www.sparkfun.com/products/12757) , a [Bluetooth Classic IC](https://www.sparkfun.com/products/12576), and a [Solid State Relay](https://www.sparkfun.com/products/10684), and an Android phone (4.3 API Level 18 or above) capable of operating as a Bluetooth LE client or ‘central device’.
 
 It's a work-in-progress.  At present, it's a simple demonstration:  An Android phone running the ArduinoButton application in the background will consume very little power as it monitors for nearby beacons (provided by Estimote and configure as described below).
 Once it detects a beacon, it then scans for any nearby 'buttons' (which you have to build with the aforementioned parts).  If a button is found, the application then initiates a more costly 'Bluetooth Classic' serial connection.
@@ -28,7 +28,7 @@ With all this, you can have a light turn on and off automatically as you enter a
 
 ### World Domination 
 
-Now turn everyting on!  You don't need to pair these bluetooth devices with your device; the application will take care of this for you.  
+Now turn everyting on!  You don't need to pair these bluetooth devices with your device; the application will take care of this for you.
 
 This application uses very few features of the Arduino processor.  You can provide all sorts of additional functionality! Woot!
 
