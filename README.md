@@ -26,7 +26,9 @@ With all this, you can have a light turn on and off automatically as you enter a
 
 1.  <details coming soon>
 
-## Now turn everyting on!  You will not need to pair these bluetooth devices wit your device; the application will take care of this for you.
+## World Domination 
+
+Now turn everyting on!  You don't need to pair these bluetooth devices with your device; the application will take care of this for you.  This application uses very few features of the Arduino processor.  You can provide all sorts of additional functionality! Woot!
 
 ## Software Design
 
