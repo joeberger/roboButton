@@ -17,6 +17,7 @@
     <application
             android:name=".ABApplicationImpl"
             android:debuggable="true"
+            android:icon="@drawable/green_button"
             android:label="Arduino Button">
 
         <activity
