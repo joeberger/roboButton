@@ -26,9 +26,9 @@ With all this, you can have a light turn on and off automatically as you enter a
 
 1. Here are the major parts you will need: [Arduino RedBoard](https://www.sparkfun.com/products/12757) , a [Bluetooth Classic IC](https://www.sparkfun.com/products/12576), and a [Solid State Relay](https://www.sparkfun.com/products/10684)
 2.  Here is [Schematic Diagram](./media/ArduinoButtonSchematic.pdf) of the Arduino Button.
-3. <I'll include some cool pictures soon.>
+3. I'll include some cool pictures soon.
 
-### World Domination 
+## World Domination 
 
 Now turn everyting on!  You don't need to pair these bluetooth devices with your device; the application will take care of this for you.
 
@@ -40,7 +40,10 @@ The [MonitoringService](./media/MonitoringServiceDiagram.pdf) runs in the backgr
 
 The [MainCongrollerActivity](./media/MainControllerActivityDiagram.pdf) is a very light weight activity which observes incoming Otto Events (e.g. 'Button Found', 'Button Lost') and adds or removes instances of ArduinoButtonFragment when appropriate.
 
-* Notes:  Although most of the application has been designed to handle the possibility of controller multiple buttons at once, I don't support this behavior at this time as it makes the code more cumbersome and this is meant to be a case study (and it would really be silly to control more than on button at a time, really).
+* Notes:  Although most of the application has been designed to handle the possibility of controlling multiple buttons at once, I don't support this behavior at this time as it makes the code more cumbersome and this is meant to be a case study (and it would really be silly to control more than on button at a time, really).
 * Notes:  In the real world, the 'costly connection' wouldn't be to a Bluetooth Classic device, but more likely would be a connection (such as a WebSocket) to a enterprise resource.  Again, this is meant to be a case study that can be easily thrown together with some solder and duct tape.
+* Notes:  Th
 
+## Testing
 
+I run all unit tests on a local VM (Robolectric) and employ Dependency Injection (Dagger) and Mock collaborators (Mockito).
