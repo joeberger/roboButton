@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Robo Button : A &#39;case study&#39; implementation of Bluetooth Classic/Smart geo-fencing.">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Robo Button</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/ndipatri/roboButton">View on GitHub</a>
+
+          <h1 id="project_title">Robo Button</h1>
+          <h2 id="project_tagline">A &#39;case study&#39; implementation of Bluetooth Classic/Smart geo-fencing.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/ndipatri/roboButton/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/ndipatri/roboButton/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>This project is a ‘case study’ implementation of Bluetooth geo-fencing.  It’s open-source and freely available.  The project consists of Android and <a href="http://en.wikipedia.org/wiki/Arduino">Arduino</a> code and some hardware readily available online.  The major hardware components include a set of <a href="http://estimote.com/">Estimote</a> Bluetooth LE beacons, an <a href="https://www.sparkfun.com/products/12757">Arduino RedBoard</a> , a <a href="https://www.sparkfun.com/products/12576">Bluetooth Classic IC</a>, and a <a href="https://www.sparkfun.com/products/10684">Solid State Relay</a>, and an Android phone (4.3 API Level 18 or above) capable of operating as a Bluetooth LE client or ‘central device’.</p>
+
+<p>It's a work-in-progress.  At present, it's a simple demonstration:  An Android phone running the ArduinoButton application in the background will consume very little power as it monitors for nearby beacons (provided by Estimote and configure as described below).
+Once it detects a beacon, it then scans for any nearby 'buttons' (which you have to build with the aforementioned parts).  If a button is found, the application then initiates a more costly 'Bluetooth Classic' serial connection.
+While connected, the application presents the user with a simple UI button.  Toggling this button on the phone will toggle the state of the relay on the remote button using the Bluetooth Classic serial connection.  This switch on the button can handle line-current; so you can power on and off an electric lamp, as an example.
+The application includes an 'auto' mode:  when a button is found, it is immediately turned on.  When a beacon is 'lost', it immediately turns off the button.  This auto-mode works because the range of the Beacon Classic is much greater than the configured range of the beacon.  Also, the application considers itself 'out of range' of the beacon well before actual communications with the beacon is lost.</p>
+
+<p>With all this, you can have a light turn on and off automatically as you enter and leave a room - all the while having your phone asleep in your pocket.</p>
+
+<h2>
+<a id="setup" class="anchor" href="#setup" aria-hidden="true"><span class="octicon octicon-link"></span></a>Setup</h2>
+
+<p><em>Note: You'll need a little skill with a soldering iron for this project (but even that you can make up as you going along)</em></p>
+
+<h3>
+<a id="configure-estimote-beacon" class="anchor" href="#configure-estimote-beacon" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configure Estimote Beacon</h3>
+
+<ol>
+<li>Purchase a pack of <a href="http://estimote.com/">Estimote</a> Bluetooth LE Beacons.  They're not cheap - $99.  Download the <a href="https://play.google.com/store/apps/details?id=com.estimote.apps.main&amp;hl=en">Esimote App</a> from the Google Play Store.  Launch the app and select the 'Beacons' item from the <a href="./media/estimoteApp.png">opening screen</a>.</li>
+<li>You should <a href="./media/beaconsInRange.png">see your beacon in range</a>.  It will be the little 'estimote' shaped icon (duh).  Click on the beacon to edit.</li>
+<li>Once in the <a href="./media/editBeacon.png">beacon edit screen</a>, wait for the text below the beacon near the top to say 'Connected'.  Then edit the 'Major' value to 2112.</li>
+<li>By assigning the Major value to this beacon, you've created a specific 'region'.  Whenver the app detects this region, it will begin to look for a button.</li>
+</ol>
+
+<h3>
+<a id="build-the-arduino-button" class="anchor" href="#build-the-arduino-button" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build the Arduino Button</h3>
+
+<ol>
+<li>Here are the major parts you will need: <a href="https://www.sparkfun.com/products/12757">Arduino RedBoard</a> , a <a href="https://www.sparkfun.com/products/12576">Bluetooth Classic IC</a>, and a <a href="https://www.sparkfun.com/products/10684">Solid State Relay</a>
+</li>
+<li>Here is <a href="./media/ArduinoButtonSchematic.pdf">Schematic Diagram</a> of the Arduino Button.</li>
+<li>Here is my first <a href="./media/arduinoButtonSample.png">Arduino Button Sample</a>.  On the left is where you can plug in an appliance to be controlled by the button.  The blue object in the foreground is the Estimote beacon.  This particular beacon was cut open so I could replace the CR2477N battery.  It only lasted about 8 months.</li>
+</ol>
+
+<h2>
+<a id="world-domination" class="anchor" href="#world-domination" aria-hidden="true"><span class="octicon octicon-link"></span></a>World Domination</h2>
+
+<p>Now turn everyting on!  You don't need to pair these bluetooth devices with your device; the application will take care of this for you.</p>
+
+<p>This application uses very few features of the Arduino processor.  You can provide all sorts of additional functionality! Woot!</p>
+
+<h2>
+<a id="software-design" class="anchor" href="#software-design" aria-hidden="true"><span class="octicon octicon-link"></span></a>Software Design</h2>
+
+<p>The <a href="./media/MonitoringServiceDiagram.pdf">MonitoringService</a> runs in the background and consumes very little power as it listen for BT LE devices.  When it detects a beacon with the appropriately defined 'Region', it then begins to search for instances of the Arduino Button.  Communications with the ArduinoButton is established and maintained by the <a href="./media/ButtonMonitorDiagram.pdf">ButtonMonitor</a>.  Although the MonitoringService and the ButtonMonitor(s) are tightly coupled, they communicate relevant state changes (e.g. 'Button Found', 'Button State Change Detected', etc.) to the rest of the application's components using the Otto Message Button (an example of an Observer pattern).</p>
+
+<p>The <a href="./media/MainControllerActivityDiagram.pdf">MainCongrollerActivity</a> is a very light weight activity which observes incoming Otto Events (e.g. 'Button Found', 'Button Lost') and adds or removes instances of ArduinoButtonFragment when appropriate.</p>
+
+<ul>
+<li>Notes:  Although most of the application has been designed to handle the possibility of controlling multiple buttons at once, I don't support this behavior at this time as it makes the code more cumbersome and this is meant to be a case study (and it would really be silly to control more than on button at a time, really).</li>
+<li>Notes:  In the real world, the 'costly connection' wouldn't be to a Bluetooth Classic device, but more likely would be a connection (such as a WebSocket) to a enterprise resource.  Again, this is meant to be a case study that can be easily thrown together with some solder and duct tape.</li>
+<li>Notes:  Th</li>
+</ul>
+
+<h2>
+<a id="testing" class="anchor" href="#testing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Testing</h2>
+
+<p>I run all unit tests on a local VM (Robolectric) and employ Dependency Injection (Dagger) and Mock collaborators (Mockito).</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Robo Button maintained by <a href="https://github.com/ndipatri">ndipatri</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
