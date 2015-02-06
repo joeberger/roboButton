@@ -255,7 +255,9 @@ public class MonitoringService extends Service {
             @Override
             public void beaconDistanceUpdate(final Beacon estimoteBeacon, double distanceInMeters) {
 
-                Toast.makeText(MonitoringService.this, "BeaconDistance: '" + distanceInMeters + "m'", Toast.LENGTH_SHORT).show();
+                if (!runInBackground) {
+                    Toast.makeText(MonitoringService.this, "BeaconDistance: '" + distanceInMeters + "m'", Toast.LENGTH_SHORT).show();
+                }
 
                 com.ndipatri.roboButton.models.Beacon beacon = new com.ndipatri.roboButton.models.Beacon(estimoteBeacon.getMacAddress(), estimoteBeacon.getName());
                 beaconProvider.createOrUpdateBeacon(beacon);
