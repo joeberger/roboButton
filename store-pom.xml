@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <parent>
+        <groupId>com.ndipatri</groupId>
+        <artifactId>arduinoButton</artifactId>
+        <version>1.0.0</version>
+        <relativePath>./parent-pom.xml</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>arduinoButton-store</artifactId>
+    <version>1.0.0</version>
+
+    <packaging>apk</packaging>
+    <name>ArduinoButton App for Android (Prod App Store)</name>
+
+    <profiles>
+        <profile>
+            <id>prod-store-arduinoButton</id>
+
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+
+            <properties>
+                <env>store</env>
+
+                <debuggable>false</debuggable>
+
+                <signing.keystore.location>${signing.keystore.location}</signing.keystore.location>
+                <signing.keystore.alias>${signing.keystore.alias}</signing.keystore.alias>
+                <signing.keystore.password>${signing.keystore.password}</signing.keystore.password>
+                <signing.key.password>${signing.key.password}</signing.key.password>
+            </properties>
+        </profile>
+    </profiles>
+
+    <build>
+        <plugins>
+            <!-- the android build lifecycle -->
+            <plugin>
+                <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+                <artifactId>android-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- echoing configuration -->
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+            </plugin>
+
+			 <!-- activate parent's enforcement of maven version -->
+             <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+				<configuration>
+					<!-- additional, pom-specific rules -->
+                    <rules>
+						<!-- add requirement that this pom be run with the correct profile -->
+                        <requireProperty>
+                            <property>env</property>
+							<regex>store</regex>
+							<regexMessage>store-pom.xml must be invoked with the 'prod-store-arduinoButton' profile</regexMessage> 
+                        </requireProperty>
+						<requireReleaseVersion>
+							<message>No Snapshots Allowed!</message>
+						</requireReleaseVersion>
+                    </rules>
+                </configuration>
+            </plugin>
+
+
+            <!-- sign the apk -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jarsigner-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <id>signing</id>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <inherited>true</inherited>
+
+                        <configuration>
+                            <removeExistingSignatures>true</removeExistingSignatures>
+                            <archiveDirectory />
+                            <archive>${project.build.directory}/${project.build.finalName}.${project.packaging}</archive>
+
+                            <!-- this is privileged information, which should only be in the possession of the authorized release manager -->
+                            <keystore>${signing.keystore.location}</keystore>
+                            <alias>${signing.keystore.alias}</alias>
+                            <storepass>${signing.keystore.password}</storepass>
+                            <keypass>${signing.key.password}</keypass>
+                            <verbose>true</verbose>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.1.1</version>
+                <executions>
+                    <execution>
+                        <id>zipalign</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>install</phase>
+                        <configuration>
+                            <executable>${ANDROID_HOME}/tools/zipalign</executable>
+                            <arguments>
+                                <argument>-f</argument>
+                                <argument>4</argument>
+                                <argument>target/${project.build.finalName}.apk</argument>
+                                <argument>target/${project.build.finalName}-zipped.apk</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+</project>
+

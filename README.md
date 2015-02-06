@@ -25,8 +25,8 @@ With all this, you can have a light turn on and off automatically as you enter a
 ### Build the Arduino Button
 
 1. Here are the major parts you will need: [Arduino RedBoard](https://www.sparkfun.com/products/12757) , a [Bluetooth Classic IC](https://www.sparkfun.com/products/12576), and a [Solid State Relay](https://www.sparkfun.com/products/10684)
-2.  Here is [Schematic Diagram](./media/ArduinoButtonSchematic.pdf) of the Arduino Button.
-3. I'll include some cool pictures soon.
+2. Here is [Schematic Diagram](./media/ArduinoButtonSchematic.pdf) of the Arduino Button.
+3. Here is my first [Arduino Button Sample](./media/arduinoButtonSample.png).  On the left is where you can plug in an appliance to be controlled by the button.  The blue object in the foreground is the Estimote beacon.  This particular beacon was cut open so I could replace the CR2477N battery.  It only lasted about 8 months.
 
 ## World Domination 
 
