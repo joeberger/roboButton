@@ -3,21 +3,21 @@
 
     <parent>
         <groupId>com.ndipatri</groupId>
-        <artifactId>arduinoButton</artifactId>
+        <artifactId>roboButton</artifactId>
         <version>1.0.0</version>
         <relativePath>./parent-pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>arduinoButton-store</artifactId>
+    <artifactId>roboButton-store</artifactId>
     <version>1.0.0</version>
 
     <packaging>apk</packaging>
-    <name>ArduinoButton App for Android (Prod App Store)</name>
+    <name>RoboButton App for Android (Play Store)</name>
 
     <profiles>
         <profile>
-            <id>prod-store-arduinoButton</id>
+            <id>prod-store-roboButton</id>
 
             <activation>
                 <property>
@@ -62,7 +62,7 @@
                         <requireProperty>
                             <property>env</property>
 							<regex>store</regex>
-							<regexMessage>store-pom.xml must be invoked with the 'prod-store-arduinoButton' profile</regexMessage> 
+							<regexMessage>store-pom.xml must be invoked with the 'prod-store-roboButton' profile</regexMessage> 
                         </requireProperty>
 						<requireReleaseVersion>
 							<message>No Snapshots Allowed!</message>

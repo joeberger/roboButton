@@ -3,17 +3,17 @@
 
     <parent>
         <groupId>com.ndipatri</groupId>
-        <artifactId>arduinoButton</artifactId>
+        <artifactId>roboButton</artifactId>
         <version>1.0.0</version>
         <relativePath>./parent-pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>arduinoButton-dev</artifactId>
+    <artifactId>roboButton-dev</artifactId>
     <version>1.0.1-SNAPSHOT</version>
  
     <packaging>apk</packaging>
-    <name>ArduinoButton App for Android (DEV)</name>
+    <name>RoboButton App for Android (DEV)</name>
     <profiles>
         <profile>
             <id>dev</id>

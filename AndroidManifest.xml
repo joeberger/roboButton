@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           android:versionCode="2"
           android:versionName="1.0.0-SNAPSHOT"
-          package="com.ndipatri.arduinoButton">
+          package="com.ndipatri.roboButton">
 
     <uses-sdk
             android:minSdkVersion="17"
@@ -29,12 +29,12 @@
     </compatible-screens>
 
     <application
-            android:name=".ABApplicationImpl"
+            android:name="com.ndipatri.roboButton.RBApplicationImpl"
             android:icon="@drawable/green_button"
-            android:label="RobotButton">
+            android:label="RoboButton">
 
         <activity
-                android:name=".activities.MainControllerActivity"
+                android:name="com.ndipatri.roboButton.activities.MainControllerActivity"
                 android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -43,11 +43,11 @@
         </activity>
 
         <activity
-            android:name=".activities.ViewNearbyBeaconsActivity"
+            android:name="com.ndipatri.roboButton.activities.ViewNearbyBeaconsActivity"
             android:label="Select Beacon"
             android:screenOrientation="portrait"/>
 
-        <service android:name=".services.MonitoringService" android:exported="false"/>
+        <service android:name="com.ndipatri.roboButton.services.MonitoringService" android:exported="false"/>
         <service android:name="com.estimote.sdk.service.BeaconService" android:exported="false"/>
     </application>
 </manifest>

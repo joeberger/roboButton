@@ -155,7 +155,7 @@ void setup()
      delay(200);  // Short delay, wait for the Mate to send back CMD
      bluetooth.println("SP,1111"); 
      delay(200);  // Short delay, wait for the Mate to send back CMD
-     bluetooth.println("SN,arduinoButton");
+     bluetooth.println("SN,roboButton");
      delay(200);  // Short delay, wait for the Mate to send back CMD
      bluetooth.println("SA,0"); // turn off authentication.... So device doesn't have to be 'bonded' to communicate.
      

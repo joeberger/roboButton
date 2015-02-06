@@ -4,10 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.ndipatri</groupId>
-    <artifactId>arduinoButton</artifactId>
+    <artifactId>roboButton</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
-    <name>arduinoButton</name>
+    <name>roboButton</name>
 
     <dependencies>
 
