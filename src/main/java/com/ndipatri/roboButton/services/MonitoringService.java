@@ -147,7 +147,7 @@ public class MonitoringService extends Service {
         Log.d(TAG, "onStartCommand() (runInBackground='" + runInBackground + "').");
 
         // When in the background, this service wakes up less often to do its thing...
-        int newTimeMultiplier = runInBackground ? getResources().getInteger(R.integer.background_time_multiplier) : 1;
+        int newTimeMultiplier = getTimeMultiplier();
         if (newTimeMultiplier != timeMultiplier) {
             timeMultiplier = newTimeMultiplier;
             if (buttonMonitor != null) {
@@ -165,12 +165,16 @@ public class MonitoringService extends Service {
         return Service.START_FLAG_REDELIVERY; // this ensure the service is restarted
     }
 
+    protected int getTimeMultiplier() {
+        return runInBackground ? getResources().getInteger(R.integer.background_time_multiplier) : 1;
+    }
+
     private void scheduleImmediatePoll() {
         monitorHandler.post(servicePollRunnable);
     }
 
     private void scheduleDelayedPoll() {
-        monitorHandler.postDelayed(servicePollRunnable, monitorIntervalPollIntervalMillis);
+        monitorHandler.postDelayed(servicePollRunnable, monitorIntervalPollIntervalMillis*getTimeMultiplier());
     }
 
     protected Runnable servicePollRunnable = new Runnable() {
