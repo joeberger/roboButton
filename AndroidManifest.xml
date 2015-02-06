@@ -14,10 +14,24 @@
     <!-- Declaration that this app is usable on phones with Bluetooth Low Energy. -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
 
+    <!-- for now, only for phones -->
+    <compatible-screens>
+        <!-- all small size screens -->
+        <screen android:screenSize="small" android:screenDensity="ldpi" />
+        <screen android:screenSize="small" android:screenDensity="mdpi" />
+        <screen android:screenSize="small" android:screenDensity="hdpi" />
+        <screen android:screenSize="small" android:screenDensity="xhdpi" />
+        <!-- all normal size screens -->
+        <screen android:screenSize="normal" android:screenDensity="ldpi" />
+        <screen android:screenSize="normal" android:screenDensity="mdpi" />
+        <screen android:screenSize="normal" android:screenDensity="hdpi" />
+        <screen android:screenSize="normal" android:screenDensity="xhdpi" />
+    </compatible-screens>
+
     <application
             android:name=".ABApplicationImpl"
             android:icon="@drawable/green_button"
-            android:label="Arduino Button">
+            android:label="RobotButton">
 
         <activity
                 android:name=".activities.MainControllerActivity"
