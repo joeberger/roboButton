@@ -32,6 +32,7 @@
     <application
             android:name="com.ndipatri.roboButton.RBApplicationImpl"
             android:icon="@drawable/green_button"
+            android:debuggable="true"
             android:label="RoboButton">
 
         <activity

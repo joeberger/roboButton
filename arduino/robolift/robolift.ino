@@ -157,12 +157,26 @@ void setup()
      delay(200);  // Short delay, wait for the Mate to send back CMD
      bluetooth.println("SN,roboButton");
      delay(200);  // Short delay, wait for the Mate to send back CMD
-     bluetooth.println("SA,0"); // turn off authentication.... So device doesn't have to be 'bonded' to communicate.
-     
+     bluetooth.println("SA,2"); // turn off authentication.... So device doesn't have to be 'bonded' to communicate.
      delay(200);  // Short delay, wait for the Mate to send back CMD
+     bluetooth.println("R,1"); 
+
+     delay(500);  // Short delay, wait for the Mate to send back CMD
+
+     bluetooth.begin(115200);  // The Bluetooth Mate defaults to 115200bps
+     bluetooth.print("$");  // Print three times individually
+     bluetooth.print("$");
+     bluetooth.print("$");  // Enter command mode
+     delay(200);  // Short delay, wait for the Mate to send back CMD
+     bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity  
+     // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
+     bluetooth.begin(9600);  // Start bluetooth serial at 9600
+
+     delay(200);  // Short delay, wait for the Mate to send back CMD
+
      bluetooth.print("-");  // Print three times individually
      bluetooth.print("-");
-     bluetooth.print("-");  // Enter command mode
+     bluetooth.print("-");  // leave command mode
      
      // Switch Setup
      pinMode(switchPinIn, INPUT_PULLUP); // This means there's an internal pull-up resistor which sets the input high.  The physical
