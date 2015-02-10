@@ -91,14 +91,19 @@ public class MonitoringService extends Service {
 
         ((RBApplication)getApplication()).registerForDependencyInjection(this);
 
-        monitorRegisteredBeacons(bluetoothProvider);
-
         // Thread for communicating with BT services.  A different thread is used to actually communicate with buttons themsevles.
         HandlerThread messageProcessingThread = new HandlerThread("Discovery_BluetoothCommunicationThread", android.os.Process.THREAD_PRIORITY_BACKGROUND);
         messageProcessingThread.start();
 
         // Connect up our background thread's looper with our message processing handler.
         monitorHandler = new Handler(messageProcessingThread.getLooper());
+        
+        monitorHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                monitorRegisteredBeacons(bluetoothProvider);
+            }
+        });
 
         beaconDetectionThresholdMeters = getResources().getInteger(R.integer.beacon_detection_threshold_meters);
         monitorIntervalPollIntervalMillis = getResources().getInteger(R.integer.monitor_service_poll_interval_millis);
