@@ -222,7 +222,6 @@ public class MonitoringService extends Service {
 
                     ButtonState currentButtonState = buttonMonitor.getButtonState();
                     if (runInBackground && lastNotifiedState != currentButtonState) {
-                        lastNotifiedState = currentButtonState;
                         sendABNotification(buttonId, currentButtonState);
                     }
                 } else {
@@ -335,6 +334,7 @@ public class MonitoringService extends Service {
 
     protected void sendABNotification(String buttonId, ButtonState buttonState) {
 
+        lastNotifiedState = buttonState;
         String tickerText = this.getString(R.string.new_robo_button);
         Button button = buttonProvider.getButton(buttonId);
         if (button != null) {
