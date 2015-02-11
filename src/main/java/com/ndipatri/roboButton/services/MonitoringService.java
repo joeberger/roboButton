@@ -84,6 +84,9 @@ public class MonitoringService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+    
+    // The last button state for which we sent a notification.
+    ButtonState lastNotifiedState = null;
 
     @Override
     public void onCreate() {
@@ -98,12 +101,7 @@ public class MonitoringService extends Service {
         // Connect up our background thread's looper with our message processing handler.
         monitorHandler = new Handler(messageProcessingThread.getLooper());
         
-        monitorHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                monitorRegisteredBeacons(bluetoothProvider);
-            }
-        });
+        monitorRegisteredBeacons(bluetoothProvider);
 
         beaconDetectionThresholdMeters = getResources().getInteger(R.integer.beacon_detection_threshold_meters);
         monitorIntervalPollIntervalMillis = getResources().getInteger(R.integer.monitor_service_poll_interval_millis);
@@ -222,11 +220,10 @@ public class MonitoringService extends Service {
                         }
                     });
 
-                    long timeOfLastCheck = SystemClock.uptimeMillis() - monitorIntervalPollIntervalMillis;
-                    boolean hasStateChangedSinceLastCheck = timeOfLastCheck > 0 &&
-                            buttonMonitor.getLastButtonStateChangeTimeMillis() > timeOfLastCheck;
-                    if (runInBackground && hasStateChangedSinceLastCheck) {
-                        sendABNotification(buttonId, buttonMonitor.getButtonState());
+                    ButtonState currentButtonState = buttonMonitor.getButtonState();
+                    if (runInBackground && lastNotifiedState != currentButtonState) {
+                        lastNotifiedState = currentButtonState;
+                        sendABNotification(buttonId, currentButtonState);
                     }
                 } else {
 

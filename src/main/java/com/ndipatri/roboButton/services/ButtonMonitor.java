@@ -66,7 +66,6 @@ public class ButtonMonitor {
 
     // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
     private long lastButtonStateUpdateTimeMillis = 0;
-    private long lastButtonStateChangeTimeMillis = 0;
 
     // endregion
 
@@ -145,11 +144,10 @@ public class ButtonMonitor {
     protected void setLocalButtonState(final ButtonState buttonState) {
 
         this.lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
-        Log.d(TAG, "Button state updated @'" + lastButtonStateChangeTimeMillis + ".'");
+        Log.d(TAG, "Button state updated @'" + lastButtonStateUpdateTimeMillis + ".'");
 
         if (this.buttonState != buttonState) {
-            this.lastButtonStateChangeTimeMillis = lastButtonStateUpdateTimeMillis;
-            Log.d(TAG, "Button state changed @'" + lastButtonStateChangeTimeMillis + ".'");
+            Log.d(TAG, "Button state changed @'" + lastButtonStateUpdateTimeMillis + ".'");
             this.buttonState = buttonState;
 
             new Handler(context.getMainLooper()).post(new Runnable() {
@@ -501,10 +499,6 @@ public class ButtonMonitor {
 
     public boolean isRunning() {
         return shouldRun;
-    }
-
-    public long getLastButtonStateChangeTimeMillis() {
-        return lastButtonStateChangeTimeMillis;
     }
 
     public boolean isCommunicating() {
