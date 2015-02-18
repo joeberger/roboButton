@@ -256,6 +256,8 @@ public class MonitoringService extends Service {
     // This is a low cost BTLE operation and can run in perpetuity.
     protected void monitorRegisteredBeacons(final BluetoothProvider bluetoothProvider) {
         bluetoothProvider.startBeaconDiscovery(new BeaconDistanceListener() {
+            
+            int lostCount = 0;
 
             @Override
             public void beaconDistanceUpdate(final Beacon estimoteBeacon, double distanceInMeters) {
@@ -268,13 +270,17 @@ public class MonitoringService extends Service {
                 beaconProvider.createOrUpdateBeacon(beacon);
 
                 if (distanceInMeters < (double) beaconDetectionThresholdMeters) {
+                    lostCount = 0;
                     setNearbyBeacon(beacon);
                     String msg = "Beacon detected.";
                 } else {
                     // not in range!
-                    String msg = "Beacon lost.";
-                    Log.d(TAG, msg + " ('" + beacon + "'.)");
-                    setNearbyBeacon(null);
+                    if (++lostCount > 1) {
+                        lostCount = 0;
+                        String msg = "Beacon lost.";
+                        Log.d(TAG, msg + " ('" + beacon + "'.)");
+                        setNearbyBeacon(null);
+                    }
                 }
             }
 
@@ -333,6 +339,8 @@ public class MonitoringService extends Service {
     }
 
     protected void sendABNotification(String buttonId, ButtonState buttonState) {
+        
+        Log.d(TAG, "Sending notification for state '" + buttonState + "'.");
 
         lastNotifiedState = buttonState;
         String tickerText = this.getString(R.string.new_robo_button);

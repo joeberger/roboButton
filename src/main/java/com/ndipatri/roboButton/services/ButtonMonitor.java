@@ -387,7 +387,12 @@ public class ButtonMonitor {
                 newButtonState = Integer.valueOf(responseChar) > 0 ? ButtonState.ON : ButtonState.OFF;
             } catch (NumberFormatException nex) {
                 Log.d(TAG, "Invalid response from bluetooth device: '" + this + "'.");
-                disconnect();
+                // NJD TODO - one theory is to reconnect and see if that helps...
+                // disconnect();
+                
+                // another is to just continue to listen until we are declare no longer communicating and are killed
+                // by the monitoring service.
+                newButtonState = null;
             }
         }
 
