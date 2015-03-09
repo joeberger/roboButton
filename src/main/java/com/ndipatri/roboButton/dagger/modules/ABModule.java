@@ -3,9 +3,14 @@ package com.ndipatri.roboButton.dagger.modules;
 import android.content.Context;
 
 import com.ndipatri.roboButton.activities.MainControllerActivity;
+import com.ndipatri.roboButton.dagger.annotations.Named;
+import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.EstimoteBeaconDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.BeaconProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.fragments.ABFragment;
 import com.ndipatri.roboButton.fragments.ButtonDetailsDialogFragment;
@@ -32,6 +37,8 @@ import dagger.Provides;
 )
 public class ABModule {
 
+    public static final String ESTIMOTE_BEACONS = "ESTIMOTE_BEACONS";
+    public static final String GELO_BEACONS = "GELO_BEACONS";
     private Context context = null;
 
     public ABModule(Context context) {
@@ -46,13 +53,35 @@ public class ABModule {
 
     @Provides
     @Singleton
+    BeaconProvider provideBeaconProvider() {
+        return new BeaconProvider(context);
+    }
+
+    @Provides
+    @Singleton
     BluetoothProvider provideBluetoothProvider() {
         return new BluetoothProviderImpl(context);
     }
 
     @Provides
     @Singleton
-    BeaconProvider provideBeaconProvider() {
-        return new BeaconProvider(context);
+    @Named(ESTIMOTE_BEACONS)
+    BeaconDiscoveryProvider provideEstimoteBeaconDiscoveryProvider() {
+        return new EstimoteBeaconDiscoveryProviderImpl(context);
     }
+
+    @Provides
+    @Singleton
+    @Named(GELO_BEACONS)
+    BeaconDiscoveryProvider provideGeloBeaconDiscoveryProvider() {
+        // NJD TODO - Need to implement Gelo Discovery Impl
+        return new EstimoteBeaconDiscoveryProviderImpl(context);
+    }
+
+    @Provides
+    @Singleton
+    ButtonDiscoveryProvider provideButtonDiscoveryProvider() {
+        return new ButtonDiscoveryProviderImpl(context);
+    }
+
 }

@@ -2,9 +2,14 @@ package com.ndipatri.roboButton.dagger.modules;
 
 import android.content.Context;
 
+import com.ndipatri.roboButton.activities.MainControllerActivityTest;
+import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProviderTestImpl;
 import com.ndipatri.roboButton.dagger.providers.BeaconProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderTestImpl;
+import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderTestImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.services.MonitoringServiceTest;
 import com.ndipatri.roboButton.services.ButtonMonitorTest;
@@ -18,6 +23,7 @@ import dagger.Provides;
         includes  = {ABModule.class
         },
         injects = {
+                MainControllerActivityTest.class,
                 MonitoringServiceTest.class,
                 ButtonMonitorTest.class,
         },
@@ -39,13 +45,25 @@ public class TestABModule {
 
     @Provides
     @Singleton
+    BeaconProvider provideBeaconProvider() {
+        return new BeaconProvider(context);
+    }
+
+    @Provides
+    @Singleton
     BluetoothProvider provideBluetoothProvider() {
         return new BluetoothProviderTestImpl(context);
     }
 
     @Provides
     @Singleton
-    BeaconProvider provideBeaconProvider() {
-        return new BeaconProvider(context);
+    BeaconDiscoveryProvider provideBeaconDiscoveryProvider() {
+        return new BeaconDiscoveryProviderTestImpl(context);
+    }
+
+    @Provides
+    @Singleton
+    ButtonDiscoveryProvider provideButtonDiscoveryProvider() {
+        return new ButtonDiscoveryProviderTestImpl(context);
     }
 }

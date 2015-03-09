@@ -10,20 +10,23 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.os.SystemClock;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.Region;
+import com.ndipatri.roboButton.BeaconDiscoveryListener;
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.BeaconDistanceListener;
 import com.ndipatri.roboButton.ButtonDiscoveryListener;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
+import com.ndipatri.roboButton.dagger.annotations.Named;
+import com.ndipatri.roboButton.dagger.modules.ABModule;
+import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.BeaconProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
+import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonFoundEvent;
@@ -53,8 +56,11 @@ public class MonitoringService extends Service {
     protected boolean runInBackground = false;
 
     @Inject protected BeaconProvider beaconProvider;
+    @Inject @Named(ABModule.ESTIMOTE_BEACONS) protected BeaconDiscoveryProvider estimoteBeaconDiscoveryProvider;
+    @Inject @Named(ABModule.GELO_BEACONS) protected BeaconDiscoveryProvider geloBeaconDiscoveryProvider;
 
     @Inject protected ButtonProvider buttonProvider;
+    @Inject protected ButtonDiscoveryProvider buttonDiscoveryProvider;
 
     @Inject protected BluetoothProvider bluetoothProvider;
 
@@ -71,7 +77,9 @@ public class MonitoringService extends Service {
     private boolean running = false;
 
     // Until we see a nearby beacon, this service does nothing...
-    com.ndipatri.roboButton.models.Beacon nearbyBeacon = null;
+    protected com.ndipatri.roboButton.models.Beacon nearbyBeacon = null;
+    protected final double UNKNOWN_DISTANCE = -999.99;
+    protected double nearbyBeaconDistanceInMeters = UNKNOWN_DISTANCE;
 
     // This is a nearby button
     Button nearbyButton = null;
@@ -100,8 +108,8 @@ public class MonitoringService extends Service {
 
         // Connect up our background thread's looper with our message processing handler.
         monitorHandler = new Handler(messageProcessingThread.getLooper());
-        
-        monitorRegisteredBeacons(bluetoothProvider);
+
+        registerForBeaconDiscovery();
 
         beaconDetectionThresholdMeters = getResources().getInteger(R.integer.beacon_detection_threshold_meters);
         monitorIntervalPollIntervalMillis = getResources().getInteger(R.integer.monitor_service_poll_interval_millis);
@@ -115,8 +123,7 @@ public class MonitoringService extends Service {
         super.onDestroy();
 
         try {
-            bluetoothProvider.stopBTMonitoring();
-            bluetoothProvider.stopButtonDiscovery();
+            unregisterForBeaconDiscovery();
         } catch (RemoteException e) {
             Log.d(TAG, "Error while stopping ranging and discovery", e);
         }
@@ -254,9 +261,20 @@ public class MonitoringService extends Service {
 
     // Before this service can do anything, it will wait for the close proximity of a Beacon to be confirmed.
     // This is a low cost BTLE operation and can run in perpetuity.
-    protected void monitorRegisteredBeacons(final BluetoothProvider bluetoothProvider) {
-        bluetoothProvider.startBeaconDiscovery(new BeaconDistanceListener() {
-            
+
+    protected void registerForBeaconDiscovery() {
+        estimoteBeaconDiscoveryProvider.startBeaconDiscovery(createBeaconDiscoveryListener(estimoteBeaconDiscoveryProvider));
+        geloBeaconDiscoveryProvider.startBeaconDiscovery(createBeaconDiscoveryListener(geloBeaconDiscoveryProvider));
+    }
+
+    protected void unregisterForBeaconDiscovery() throws RemoteException {
+        estimoteBeaconDiscoveryProvider.stopBeaconDiscovery();
+        geloBeaconDiscoveryProvider.stopBeaconDiscovery();
+    }
+
+    protected BeaconDiscoveryListener createBeaconDiscoveryListener(final BeaconDiscoveryProvider bluetoothProvider) {
+        return new BeaconDiscoveryListener() {
+
             int lostCount = 0;
 
             @Override
@@ -271,7 +289,7 @@ public class MonitoringService extends Service {
 
                 if (distanceInMeters < (double) beaconDetectionThresholdMeters) {
                     lostCount = 0;
-                    setNearbyBeacon(beacon);
+                    setNearbyBeacon(beacon, distanceInMeters);
                     String msg = "Beacon detected.";
                 } else {
                     // not in range!
@@ -279,7 +297,7 @@ public class MonitoringService extends Service {
                         lostCount = 0;
                         String msg = "Beacon lost.";
                         Log.d(TAG, msg + " ('" + beacon + "'.)");
-                        setNearbyBeacon(null);
+                        clearNearbyBeacon();
                     }
                 }
             }
@@ -290,17 +308,17 @@ public class MonitoringService extends Service {
                 if (region == bluetoothProvider.getMonitoredRegion()) {
                     // I'm guessing, we get this callback when there are NO more detected beacons in the given region
                     Log.d(TAG, "Left beacon region.");
-                    setNearbyBeacon(null);
+                    clearNearbyBeacon();
                 }
             }
-        });
+        };
     }
 
     // This is a costly operation and should only be done when we have confidence button will
     // be found... (e.g. we've already detected a beacon)
     protected void startButtonDiscovery() {
 
-        bluetoothProvider.startButtonDiscovery(new ButtonDiscoveryListener() {
+        buttonDiscoveryProvider.startButtonDiscovery(new ButtonDiscoveryListener() {
             @Override
             public void buttonDiscovered(Button nearbyCandidateButton) {
 
@@ -331,7 +349,7 @@ public class MonitoringService extends Service {
     }
 
     private void stopButtonDiscovery() {
-        bluetoothProvider.stopButtonDiscovery();
+        buttonDiscoveryProvider.stopButtonDiscovery();
     }
 
     public ButtonMonitor getButtonMonitor() {
@@ -388,9 +406,17 @@ public class MonitoringService extends Service {
         notificationManager.notify(notifId, notification);
     }
 
-    protected void setNearbyBeacon(com.ndipatri.roboButton.models.Beacon nearbyBeacon) {
+    protected synchronized void setNearbyBeacon(com.ndipatri.roboButton.models.Beacon nearbyBeacon, double nearbyBeaconDistanceInMeters) {
         // reference assignments are atomic
-        this.nearbyBeacon = nearbyBeacon;
+        if (this.nearbyBeacon == null || this.nearbyBeaconDistanceInMeters > nearbyBeaconDistanceInMeters) {
+            this.nearbyBeacon = nearbyBeacon;
+            this.nearbyBeaconDistanceInMeters = nearbyBeaconDistanceInMeters;
+        }
+    }
+
+    protected synchronized void clearNearbyBeacon() {
+        this.nearbyBeacon = null;
+        this.nearbyBeaconDistanceInMeters = UNKNOWN_DISTANCE;
     }
 
     protected com.ndipatri.roboButton.models.Beacon getNearbyBeacon() {

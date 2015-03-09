@@ -11,7 +11,8 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
-import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
+import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
@@ -35,7 +36,7 @@ public class ButtonMonitor {
 
     private static final String TAG = ButtonMonitor.class.getCanonicalName();
 
-    @Inject protected BluetoothProvider bluetoothProvider;
+    @Inject protected ButtonDiscoveryProvider buttonDiscoveryProvider;
 
     protected long communicationsGracePeriodMillis = -1;
 
@@ -443,7 +444,7 @@ public class ButtonMonitor {
             bluetoothSocket = button.getBluetoothDevice().createInsecureRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
 
             // Cancel discovery because it will slow down the connection
-            bluetoothProvider.stopButtonDiscovery();
+            buttonDiscoveryProvider.stopButtonDiscovery();
 
             // Connect the device through the socket. This will block
             // until it succeeds or throws an exception

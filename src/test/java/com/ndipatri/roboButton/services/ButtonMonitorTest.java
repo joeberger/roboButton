@@ -7,8 +7,10 @@ import android.content.Intent;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.TestUtils;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
-import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
+import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderTestImpl;
+import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderTestImpl;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.models.Button;
@@ -36,7 +38,7 @@ public class ButtonMonitorTest {
     MainControllerActivity activity;
 
     @Inject
-    BluetoothProvider bluetoothProvider;
+    ButtonDiscoveryProvider buttonDiscoveryProvider;
 
     MonitoringService monitoringService;
 
@@ -70,7 +72,7 @@ public class ButtonMonitorTest {
 
         Set<Button> availableButtons = new HashSet<Button>();
         availableButtons.add(availableButton);
-        ((BluetoothProviderTestImpl) bluetoothProvider).setDiscoveredButtons(availableButtons);
+        ((ButtonDiscoveryProviderTestImpl) buttonDiscoveryProvider).setDiscoveredButtons(availableButtons);
 
         OttoBusListener busListener = new OttoBusListener<ButtonStateChangeReport>();
 

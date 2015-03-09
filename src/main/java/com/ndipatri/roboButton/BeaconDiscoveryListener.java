@@ -6,7 +6,7 @@ import com.estimote.sdk.Region;
 /**
  * Created by ndipatri on 1/19/15.
  */
-public interface BeaconDistanceListener {
+public interface BeaconDiscoveryListener {
     public void beaconDistanceUpdate(Beacon beacon, double distanceInMeters);
     public void leftRegion(Region region);
 }

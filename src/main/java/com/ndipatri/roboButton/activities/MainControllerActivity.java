@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
+import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.events.ButtonFoundEvent;
@@ -37,8 +38,6 @@ public class MainControllerActivity extends Activity {
 
     // region localVariables
     @Inject protected BluetoothProvider bluetoothProvider;
-
-    @Inject protected ButtonProvider buttonProvider;
 
     private AtomicInteger imageRequestIdGenerator = new AtomicInteger();
 
