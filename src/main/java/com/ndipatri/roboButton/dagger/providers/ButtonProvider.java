@@ -25,7 +25,7 @@ public class ButtonProvider {
     private static final String TAG = ButtonProvider.class.getCanonicalName();
 
     protected @Inject
-    BeaconProvider beaconProvider;
+    RegionProvider regionProvider;
 
     private Context context;
 

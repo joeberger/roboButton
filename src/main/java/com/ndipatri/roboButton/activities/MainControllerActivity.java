@@ -14,9 +14,7 @@ import android.widget.Toast;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
-import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
-import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.events.ButtonFoundEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;

@@ -5,9 +5,9 @@ import android.os.RemoteException;
 
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
-import com.ndipatri.roboButton.BeaconDiscoveryListener;
+import com.ndipatri.roboButton.RegionDiscoveryListener;
 
-public class BeaconDiscoveryProviderTestImpl implements BeaconDiscoveryProvider {
+public class RegionDiscoveryProviderTestImpl implements RegionDiscoveryProvider {
 
     private static final String TAG = BluetoothProviderImpl.class.getCanonicalName();
 
@@ -15,11 +15,11 @@ public class BeaconDiscoveryProviderTestImpl implements BeaconDiscoveryProvider 
 
     private BeaconManager beaconManager;
 
-    private BeaconDiscoveryListener beaconDiscoveryListener;
+    private RegionDiscoveryListener regionDiscoveryListener;
 
     private boolean isDiscoveryCancelled = false;
 
-    public BeaconDiscoveryProviderTestImpl(Context context) {
+    public RegionDiscoveryProviderTestImpl(Context context) {
         this.context = context;
 
         beaconManager = new BeaconManager(context);
@@ -31,17 +31,17 @@ public class BeaconDiscoveryProviderTestImpl implements BeaconDiscoveryProvider 
     }
 
     @Override
-    public void startBeaconDiscovery(BeaconDiscoveryListener beaconDiscoveryListener) {
-        this.beaconDiscoveryListener = beaconDiscoveryListener;
+    public void startRegionDiscovery(RegionDiscoveryListener regionDiscoveryListener) {
+        this.regionDiscoveryListener = regionDiscoveryListener;
     }
 
     @Override
-    public void stopBeaconDiscovery() throws RemoteException {
+    public void stopRegionDiscovery() throws RemoteException {
         // NJD TODO - noop for now.. eventually, should track which regions are being ranged...
     }
 
-    public BeaconDiscoveryListener getBeaconDiscoveryListener() {
-        return beaconDiscoveryListener;
+    public RegionDiscoveryListener getRegionDiscoveryListener() {
+        return regionDiscoveryListener;
     }
 
     public boolean isDiscoveryCancelled() {

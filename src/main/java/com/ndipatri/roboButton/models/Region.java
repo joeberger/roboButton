@@ -6,22 +6,19 @@ import com.j256.ormlite.table.DatabaseTable;
 /**
  * Created by ndipatri on 5/28/14.
  */
-@DatabaseTable(tableName = "beacons")
-public class Beacon {
+@DatabaseTable(tableName = "regions")
+public class Region {
 
-    public Beacon() {}
-
-    // NJD TODO - Need to add UUID to this (which by default is the same for all estimotes, but can be made unique)
-    public Beacon(final String macAddress, final String name) {
-        this.macAddress = macAddress;
-        this.name = name;
+    public Region() {
     }
 
-    private static final String TAG = Beacon.class.getCanonicalName();
+    public Region(final Integer major) {
+        this.major = major;
+    }
 
-    public static final String MAC_ADDRESS_COLUMN_NAME = "mac_address";
-    @DatabaseField(id = true, columnName = MAC_ADDRESS_COLUMN_NAME)
-    private String macAddress;
+    public static final String MAJOR_COLUMN_NAME = "major";
+    @DatabaseField(id = true, columnName = MAJOR_COLUMN_NAME)
+    private Integer major;
 
     public static final String NAME_COLUMN_NAME = "name";
     @DatabaseField(columnName = NAME_COLUMN_NAME)
@@ -39,12 +36,12 @@ public class Beacon {
         return button;
     }
 
-    public String getMacAddress() {
-        return macAddress;
+    public Integer getMajor() {
+        return major;
     }
 
-    public void setMacAddress(String macAddress) {
-        this.macAddress = macAddress;
+    public void setMajor(Integer major) {
+        this.major = major;
     }
 
     public String getName() {
@@ -60,19 +57,29 @@ public class Beacon {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Beacon beacon = (Beacon) o;
+        Region region = (Region) o;
 
-        if (macAddress != null ? !macAddress.equals(beacon.macAddress) : beacon.macAddress != null)
-            return false;
-        if (name != null ? !name.equals(beacon.name) : beacon.name != null) return false;
+        if (button != null ? !button.equals(region.button) : region.button != null) return false;
+        if (major != null ? !major.equals(region.major) : region.major != null) return false;
+        if (name != null ? !name.equals(region.name) : region.name != null) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = macAddress != null ? macAddress.hashCode() : 0;
+        int result = major != null ? major.hashCode() : 0;
         result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (button != null ? button.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Region{" +
+                "major=" + major +
+                ", name='" + name + '\'' +
+                ", button=" + button +
+                '}';
     }
 }

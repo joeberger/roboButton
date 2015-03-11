@@ -34,18 +34,18 @@ public class Button {
     @DatabaseField(columnName = AUTOMODEENABLED_COLUMN_NAME)
     private boolean autoModeEnabled;
 
-    public static final String BEACON_ID = "beacon_id";
-    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = BEACON_ID)
-    private Beacon beacon;
+    public static final String REGION_ID = "region_id";
+    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = REGION_ID)
+    private Region region;
 
     private BluetoothDevice bluetoothDevice;
 
-    public Beacon getBeacon() {
-        return beacon;
+    public Region getRegion() {
+        return region;
     }
 
-    public void setBeacon(Beacon beacon) {
-        this.beacon = beacon;
+    public void setRegion(Region region) {
+        this.region = region;
     }
 
     public String getId() {
@@ -108,7 +108,7 @@ public class Button {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", autoModeEnabled=" + autoModeEnabled +
-                ", beacon=" + beacon +
+                ", beacon=" + region +
                 ", bluetoothDevice=" + bluetoothDevice +
                 '}';
     }

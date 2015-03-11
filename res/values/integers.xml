@@ -5,5 +5,7 @@
     <integer name="button_discovery_duration_millis">15000</integer>
     <integer name="communications_grace_period_millis">20000</integer>
     <integer name="background_time_multiplier">10</integer>
-    <integer name="beacon_detection_threshold_meters">8</integer>
+
+    <!-- this is intentionally without units as this is an implementation detail -->
+    <integer name="estimote_beacon_detection_threshold">8</integer>
 </resources>

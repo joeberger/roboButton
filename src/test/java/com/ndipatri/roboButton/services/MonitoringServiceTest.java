@@ -7,7 +7,7 @@ import android.content.Intent;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.TestUtils;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
-import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.utils.ActivityWatcher;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -31,7 +31,7 @@ public class MonitoringServiceTest {
     MainControllerActivity activity;
 
     @Inject
-    BeaconDiscoveryProvider bluetoothProvider;
+    RegionDiscoveryProvider bluetoothProvider;
 
     MonitoringService monitoringService;
 

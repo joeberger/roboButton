@@ -3,9 +3,12 @@ package com.ndipatri.roboButton.dagger.modules;
 import android.content.Context;
 
 import com.ndipatri.roboButton.activities.MainControllerActivityTest;
-import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProviderTestImpl;
-import com.ndipatri.roboButton.dagger.providers.BeaconProvider;
+import com.ndipatri.roboButton.dagger.annotations.Named;
+import com.ndipatri.roboButton.dagger.providers.EstimoteRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.GeloRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProviderTestImpl;
+import com.ndipatri.roboButton.dagger.providers.RegionProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderTestImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
@@ -45,8 +48,8 @@ public class TestABModule {
 
     @Provides
     @Singleton
-    BeaconProvider provideBeaconProvider() {
-        return new BeaconProvider(context);
+    RegionProvider provideRegionProvider() {
+        return new RegionProvider(context);
     }
 
     @Provides
@@ -57,8 +60,16 @@ public class TestABModule {
 
     @Provides
     @Singleton
-    BeaconDiscoveryProvider provideBeaconDiscoveryProvider() {
-        return new BeaconDiscoveryProviderTestImpl(context);
+    @Named(ABModule.ESTIMOTE_BEACONS)
+    RegionDiscoveryProvider provideEstimoteBeaconDiscoveryProvider() {
+        return new RegionDiscoveryProviderTestImpl(context);
+    }
+
+    @Provides
+    @Singleton
+    @Named(ABModule.GELO_BEACONS)
+    RegionDiscoveryProvider provideGeloBeaconDiscoveryProvider() {
+        return new RegionDiscoveryProviderTestImpl(context);
     }
 
     @Provides

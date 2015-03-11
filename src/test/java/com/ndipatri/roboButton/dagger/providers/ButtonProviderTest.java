@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.TestUtils;
-import com.ndipatri.roboButton.models.Beacon;
+import com.ndipatri.roboButton.models.Region;
 import com.ndipatri.roboButton.models.Button;
 
 import org.hamcrest.MatcherAssert;
@@ -17,7 +17,7 @@ import org.robolectric.RobolectricTestRunner;
 public class ButtonProviderTest {
 
     ButtonProvider buttonProvider;
-    BeaconProvider beaconProvider;
+    RegionProvider regionProvider;
 
     @Before
     public void setup() {
@@ -25,7 +25,7 @@ public class ButtonProviderTest {
         Context context = RBApplication.getInstance().getApplicationContext();
 
         buttonProvider = new ButtonProvider(context);
-        beaconProvider = new BeaconProvider(context);
+        regionProvider = new RegionProvider(context);
 
         TestUtils.registerOrmLiteProvider();
         TestUtils.resetORMTable();
@@ -77,16 +77,16 @@ public class ButtonProviderTest {
 
         buttonProvider.createOrUpdateButton(button);
 
-        Beacon beacon = new Beacon();
-        beacon.setName("aBeacon");
-        beacon.setMacAddress("aa:bb:cc:dd");
-        beacon.setButton(button);
+        Region region = new Region();
+        region.setName("aBeacon");
+        region.setMacAddress("aa:bb:cc:dd");
+        region.setButton(button);
 
-        beaconProvider.createOrUpdateBeacon(beacon);
+        regionProvider.createOrUpdateBeacon(region);
 
-        Beacon retrievedBeacon = beaconProvider.getBeacon("aa:bb:cc:dd");
+        Region retrievedRegion = regionProvider.getBeacon("aa:bb:cc:dd");
 
-        MatcherAssert.assertThat("Beacon not associated to Button properly.", retrievedBeacon.getButton().getId().equals("123"));
+        MatcherAssert.assertThat("Beacon not associated to Button properly.", retrievedRegion.getButton().getId().equals("123"));
     }
 }
 

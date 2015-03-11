@@ -11,7 +11,6 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
-import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;

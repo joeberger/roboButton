@@ -7,10 +7,8 @@ import android.view.View;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.TestUtils;
-import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderTestImpl;
-import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.events.ButtonFoundEvent;
 import com.ndipatri.roboButton.fragments.ABFragment;
 import com.ndipatri.roboButton.models.Button;
@@ -24,11 +22,6 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
 import org.robolectric.util.ActivityController;
-
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.isNull;

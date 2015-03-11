@@ -7,8 +7,6 @@ import android.content.Intent;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.TestUtils;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
-import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.providers.BluetoothProviderTestImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderTestImpl;
 import com.ndipatri.roboButton.enums.ButtonState;

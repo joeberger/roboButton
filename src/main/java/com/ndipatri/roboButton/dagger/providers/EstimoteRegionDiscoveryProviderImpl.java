@@ -8,44 +8,45 @@ import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.estimote.sdk.Utils;
-import com.ndipatri.roboButton.BeaconDiscoveryListener;
-import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.RegionDiscoveryListener;
+import com.ndipatri.roboButton.R;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
+public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvider, BeaconManager.MonitoringListener, BeaconManager.RangingListener {
 
-public class EstimoteBeaconDiscoveryProviderImpl implements BeaconDiscoveryProvider, BeaconManager.MonitoringListener, BeaconManager.RangingListener {
-
-    private static final String TAG = EstimoteBeaconDiscoveryProviderImpl.class.getCanonicalName();
-
-    @Inject
-    BeaconProvider beaconProvider;
+    private static final String TAG = EstimoteRegionDiscoveryProviderImpl.class.getCanonicalName();
 
     private static final int AB_ESTIMOTE_MAJOR_VALUE = 2112;
     private static final Region AB_ESTIMOTE_REGION = new Region("regionId", null, AB_ESTIMOTE_MAJOR_VALUE, null);
 
     private Context context;
 
+    private int beaconDetectionThresholdMeters = -1;
+
+    Set<String> foundBeacons = new HashSet<String>();
+
     private BeaconManager beaconManager;
 
-    private BeaconDiscoveryListener beaconDiscoveryListener;
+    private RegionDiscoveryListener regionDiscoveryListener;
 
-    public EstimoteBeaconDiscoveryProviderImpl(Context context) {
+    public EstimoteRegionDiscoveryProviderImpl(Context context) {
         this.context = context;
 
-        beaconManager = new BeaconManager(context);
+        beaconDetectionThresholdMeters = context.getResources().getInteger(R.integer.estimote_beacon_detection_threshold);
 
-        RBApplication.getInstance().registerForDependencyInjection(this);
+        beaconManager = new BeaconManager(context);
     }
 
     @Override
-    public void startBeaconDiscovery(BeaconDiscoveryListener beaconDiscoveryListener) {
+    public void startRegionDiscovery(RegionDiscoveryListener regionDiscoveryListener) {
 
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
 
-        this.beaconDiscoveryListener = beaconDiscoveryListener;
+        this.regionDiscoveryListener = regionDiscoveryListener;
 
         com.estimote.sdk.utils.L.enableDebugLogging(true);
 
@@ -73,13 +74,13 @@ public class EstimoteBeaconDiscoveryProviderImpl implements BeaconDiscoveryProvi
     }
 
     @Override
-    public void stopBeaconDiscovery() throws RemoteException {
+    public void stopRegionDiscovery() throws RemoteException {
         Log.d(TAG, "Stop Beacon Monitoring Process...");
 
         beaconManager.stopMonitoring(AB_ESTIMOTE_REGION);
         beaconManager.stopRanging(AB_ESTIMOTE_REGION);
 
-        this.beaconDiscoveryListener = null;
+        this.regionDiscoveryListener = null;
 
         beaconManager.disconnect();
     }
@@ -117,8 +118,6 @@ public class EstimoteBeaconDiscoveryProviderImpl implements BeaconDiscoveryProvi
         String message = "Leaving beacon region!";
         Log.d(TAG, message + "(" + region + "').");
 
-        this.beaconDiscoveryListener.leftRegion(region);
-
         try {
             beaconManager.stopRanging(getMonitoredRegion());
         } catch (RemoteException e) {
@@ -132,8 +131,13 @@ public class EstimoteBeaconDiscoveryProviderImpl implements BeaconDiscoveryProvi
             for (Beacon beacon : beacons) {
                 double distance = Math.min(Utils.computeAccuracy(beacon), 10.0);
                 Log.d(TAG, "Beacon distance update! ('" + distance + "'m)");
+                if (distance < beaconDetectionThresholdMeters) {
 
-                this.beaconDiscoveryListener.beaconDistanceUpdate(beacon, distance);
+                } else {
+
+                }
+
+                this.regionDiscoveryListener.beaconDistanceUpdate(beacon.getMacAddress(), beacon.getName(), distance);
             }
         }
     }

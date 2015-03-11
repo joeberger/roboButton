@@ -4,9 +4,10 @@ import android.content.Context;
 
 import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.providers.BeaconDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.providers.EstimoteBeaconDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.BeaconProvider;
+import com.ndipatri.roboButton.dagger.providers.EstimoteRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.GeloRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.RegionProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
@@ -53,8 +54,8 @@ public class ABModule {
 
     @Provides
     @Singleton
-    BeaconProvider provideBeaconProvider() {
-        return new BeaconProvider(context);
+    RegionProvider provideRegionProvider() {
+        return new RegionProvider(context);
     }
 
     @Provides
@@ -66,16 +67,15 @@ public class ABModule {
     @Provides
     @Singleton
     @Named(ESTIMOTE_BEACONS)
-    BeaconDiscoveryProvider provideEstimoteBeaconDiscoveryProvider() {
-        return new EstimoteBeaconDiscoveryProviderImpl(context);
+    RegionDiscoveryProvider provideEstimoteBeaconDiscoveryProvider() {
+        return new EstimoteRegionDiscoveryProviderImpl(context);
     }
 
     @Provides
     @Singleton
     @Named(GELO_BEACONS)
-    BeaconDiscoveryProvider provideGeloBeaconDiscoveryProvider() {
-        // NJD TODO - Need to implement Gelo Discovery Impl
-        return new EstimoteBeaconDiscoveryProviderImpl(context);
+    RegionDiscoveryProvider provideGeloBeaconDiscoveryProvider() {
+        return new GeloRegionDiscoveryProviderImpl(context);
     }
 
     @Provides

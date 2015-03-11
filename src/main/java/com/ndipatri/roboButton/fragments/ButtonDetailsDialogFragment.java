@@ -19,7 +19,7 @@ import android.widget.TextView;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
-import com.ndipatri.roboButton.dagger.providers.BeaconProvider;
+import com.ndipatri.roboButton.dagger.providers.RegionProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
@@ -41,7 +41,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     protected ButtonProvider buttonProvider;
 
     @Inject
-    protected BeaconProvider beaconProvider;
+    protected RegionProvider regionProvider;
 
     public static ButtonDetailsDialogFragment newInstance(String buttonId) {
 

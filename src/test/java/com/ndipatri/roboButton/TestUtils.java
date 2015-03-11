@@ -9,7 +9,7 @@ import android.content.Intent;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.table.TableUtils;
 import com.ndipatri.roboButton.database.OrmLiteDatabaseHelper;
-import com.ndipatri.roboButton.models.Beacon;
+import com.ndipatri.roboButton.models.Region;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.services.MonitoringService;
 
@@ -35,20 +35,20 @@ public class TestUtils {
                 OrmLiteDatabaseHelper.class);
         try {
             TableUtils.dropTable(helper.getConnectionSource(), Button.class, true);
-            TableUtils.dropTable(helper.getConnectionSource(), Beacon.class, true);
+            TableUtils.dropTable(helper.getConnectionSource(), Region.class, true);
             TableUtils.createTable(helper.getConnectionSource(), Button.class);
-            TableUtils.createTable(helper.getConnectionSource(), Beacon.class);
+            TableUtils.createTable(helper.getConnectionSource(), Region.class);
         } catch (SQLException e) {
             e.printStackTrace();
         }
         OpenHelperManager.releaseHelper();
     }
 
-    public static void createOrUpdateBeacon(Beacon beacon) {
+    public static void createOrUpdateBeacon(Region region) {
         OrmLiteDatabaseHelper
                 helper = OpenHelperManager.getHelper(RBApplication.getInstance().getApplicationContext(),
                 OrmLiteDatabaseHelper.class);
-        helper.getBeaconDao().createOrUpdate(beacon);
+        helper.getBeaconDao().createOrUpdate(region);
 
         OpenHelperManager.releaseHelper();
     }

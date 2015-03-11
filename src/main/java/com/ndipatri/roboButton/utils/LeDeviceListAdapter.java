@@ -11,7 +11,8 @@ import com.estimote.sdk.Beacon;
 import com.estimote.sdk.Utils;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
-import com.ndipatri.roboButton.dagger.providers.BeaconProvider;
+import com.ndipatri.roboButton.dagger.providers.RegionProvider;
+import com.ndipatri.roboButton.models.Region;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +28,7 @@ public class LeDeviceListAdapter extends BaseAdapter {
     private Context context;
 
     @Inject
-    protected BeaconProvider beaconProvider;
+    protected RegionProvider regionProvider;
 
     public LeDeviceListAdapter(Context context) {
         this.context = context;
@@ -68,9 +69,9 @@ public class LeDeviceListAdapter extends BaseAdapter {
     private void bind(Beacon beacon, View view) {
         final ViewHolder holder = (ViewHolder) view.getTag();
 
-        com.ndipatri.roboButton.models.Beacon localBeacon = beaconProvider.getBeacon(beacon.getMacAddress());
-        if (localBeacon != null) {
-            holder.nameTextView.setText(localBeacon.getName());
+        Region localRegion = regionProvider.getBeacon(beacon.getMacAddress());
+        if (localRegion != null) {
+            holder.nameTextView.setText(localRegion.getName());
         } else {
             holder.nameTextView.setText(context.getString(R.string.new_beacon));
         }
