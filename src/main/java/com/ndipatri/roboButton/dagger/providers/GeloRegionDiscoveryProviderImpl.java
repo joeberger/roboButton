@@ -8,9 +8,12 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.estimote.sdk.Region;
+import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RegionDiscoveryListener;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider {
 
@@ -21,20 +24,23 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
 
-    private Integer highestRssi = null;
-
     private static final int AB_GELO_MAJOR_VALUE = 0; // NJD TODO - once we program GELO beacons, this can change.
     private static final Region AB_GELO_REGION = new Region("regionId", null, AB_GELO_MAJOR_VALUE, null);
 
+    private int beaconDetectionThresholdDbms = -1;
+
     private RegionDiscoveryListener regionDiscoveryListener;
+
+    Set<com.ndipatri.roboButton.models.Region> nearbyRegions = new HashSet<com.ndipatri.roboButton.models.Region>();
 
     public GeloRegionDiscoveryProviderImpl(Context context) {
 
         mBluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        highestRssi = null;
         if (mBluetoothManager != null) {
             mBluetoothAdapter = mBluetoothManager.getAdapter();
         }
+
+        beaconDetectionThresholdDbms = context.getResources().getInteger(R.integer.gele_beacon_detection_threshold);
     }
 
     @Override
@@ -76,13 +82,20 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
                         | (scanRecord[28] & 0xFF);
 
                 //RSSI values increase towards zero as the source gets closer to the reciever
-                if (highestRssi == null || rssi > highestRssi) {
-                    regionDiscoveryListener.beaconDistanceUpdate(device.getAddress(), device.getName(), rssi);
-                }
 
-                    //If the beacon we found  is the current nearest, update the RSSI. You may have
-                    //gotten closer or further away and you don't want to remember an old RSSI
-                highestRssi = rssi;
+                com.ndipatri.roboButton.models.Region beaconRegion = new com.ndipatri.roboButton.models.Region(minor, major, UUIDHex);
+
+                if (rssi > beaconDetectionThresholdDbms) {
+                    if (!nearbyRegions.contains(beaconRegion)) {
+                        regionDiscoveryListener.regionFound(beaconRegion);
+                        nearbyRegions.add(beaconRegion);
+                    }
+                } else {
+                    if (nearbyRegions.contains(beaconRegion)) {
+                        regionDiscoveryListener.regionLost(beaconRegion);
+                        nearbyRegions.remove(beaconRegion);
+                    }
+                }
             }
         }
     };

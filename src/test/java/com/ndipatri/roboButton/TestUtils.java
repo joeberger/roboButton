@@ -44,11 +44,11 @@ public class TestUtils {
         OpenHelperManager.releaseHelper();
     }
 
-    public static void createOrUpdateBeacon(Region region) {
+    public static void createOrUpdateRegion(Region region) {
         OrmLiteDatabaseHelper
                 helper = OpenHelperManager.getHelper(RBApplication.getInstance().getApplicationContext(),
                 OrmLiteDatabaseHelper.class);
-        helper.getBeaconDao().createOrUpdate(region);
+        helper.getRegionDao().createOrUpdate(region);
 
         OpenHelperManager.releaseHelper();
     }

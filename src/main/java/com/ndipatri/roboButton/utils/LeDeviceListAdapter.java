@@ -69,7 +69,7 @@ public class LeDeviceListAdapter extends BaseAdapter {
     private void bind(Beacon beacon, View view) {
         final ViewHolder holder = (ViewHolder) view.getTag();
 
-        Region localRegion = regionProvider.getBeacon(beacon.getMacAddress());
+        Region localRegion = regionProvider.getRegion(beacon.getMinor(), beacon.getMajor(), beacon.getProximityUUID());
         if (localRegion != null) {
             holder.nameTextView.setText(localRegion.getName());
         } else {

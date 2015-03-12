@@ -30,8 +30,10 @@ public class MonitoringServiceTest {
     RBApplication application;
     MainControllerActivity activity;
 
+    /**
     @Inject
     RegionDiscoveryProvider bluetoothProvider;
+    **/
 
     MonitoringService monitoringService;
 

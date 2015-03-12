@@ -26,11 +26,6 @@ public class RegionDiscoveryProviderTestImpl implements RegionDiscoveryProvider 
     }
 
     @Override
-    public Region getMonitoredRegion() {
-        return new Region("regionId", null, 1234, null);
-    }
-
-    @Override
     public void startRegionDiscovery(RegionDiscoveryListener regionDiscoveryListener) {
         this.regionDiscoveryListener = regionDiscoveryListener;
     }

@@ -16,6 +16,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Estimote provides two interfaces: Monitoring and Ranging.  You're meant to first use Monitoring to detect the presence of a region occupied by beacons.  This is a very rough
+ * measure and a beacon is 'present within a region' when you detect its signal... This can be over 100 feet.  Once you are within a region of beacons, you can then start 'ranging'.
+ * Ranging gives you a much more precise understanding of how close you are to a beacon.
+ */
 public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvider, BeaconManager.MonitoringListener, BeaconManager.RangingListener {
 
     private static final String TAG = EstimoteRegionDiscoveryProviderImpl.class.getCanonicalName();
@@ -27,7 +32,7 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
 
     private int beaconDetectionThresholdMeters = -1;
 
-    Set<String> foundBeacons = new HashSet<String>();
+    Set<com.ndipatri.roboButton.models.Region> nearbyRegions = new HashSet<com.ndipatri.roboButton.models.Region>();
 
     private BeaconManager beaconManager;
 
@@ -131,13 +136,21 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
             for (Beacon beacon : beacons) {
                 double distance = Math.min(Utils.computeAccuracy(beacon), 10.0);
                 Log.d(TAG, "Beacon distance update! ('" + distance + "'m)");
+                com.ndipatri.roboButton.models.Region beaconRegion = new com.ndipatri.roboButton.models.Region(region.getMinor(), region.getMajor(), region.getProximityUUID());
+
                 if (distance < beaconDetectionThresholdMeters) {
-
+                    if (!nearbyRegions.contains(beaconRegion)) {
+                        this.regionDiscoveryListener.regionFound(beaconRegion);
+                        nearbyRegions.add(beaconRegion);
+                        Log.d(TAG, "Region Found! ('" + beaconRegion + "'.)");
+                    }
                 } else {
-
+                    if (nearbyRegions.contains(beaconRegion)) {
+                        this.regionDiscoveryListener.regionLost(beaconRegion);
+                        nearbyRegions.remove(beaconRegion);
+                        Log.d(TAG, "Region Lost! ('" + beaconRegion + "'.)");
+                    }
                 }
-
-                this.regionDiscoveryListener.beaconDistanceUpdate(beacon.getMacAddress(), beacon.getName(), distance);
             }
         }
     }

@@ -29,35 +29,37 @@ public class RegionProviderTest {
     }
 
     @Test
-    public void testBeaconSave() {
+    public void testRegionSave() {
 
         Region region = new Region();
-        region.setName("aBeacon");
-        region.setMacAddress("aa:bb:cc:dd");
+        region.setMinor(1);
+        region.setMajor(2);
+        region.setUuid("1234");
 
-        regionProvider.createOrUpdateBeacon(region);
+        regionProvider.createOrUpdateRegion(region);
 
-        Region retrievedRegion = regionProvider.getBeacon("aa:bb:cc:dd");
+        Region retrievedRegion = regionProvider.getRegion(1, 2, "1234");
 
-        MatcherAssert.assertThat("Beacon not saved properly", retrievedRegion.equals(region));
+        MatcherAssert.assertThat("Region not saved properly", retrievedRegion.equals(region));
     }
 
     @Test
-    public void testBeaconDelete() {
+    public void testRegionDelete() {
 
         Region region = new Region();
-        region.setName("aBeacon");
-        region.setMacAddress("aa:bb:cc:dd");
+        region.setMinor(1);
+        region.setMajor(2);
+        region.setUuid("1234");
 
-        regionProvider.createOrUpdateBeacon(region);
+        regionProvider.createOrUpdateRegion(region);
 
-        Region retrievedRegion = regionProvider.getBeacon("aa:bb:cc:dd");
+        Region retrievedRegion = regionProvider.getRegion(1, 2, "1234");
 
         MatcherAssert.assertThat("Beacon not saved properly", retrievedRegion.equals(region));
 
         regionProvider.delete(region);
 
-        retrievedRegion = regionProvider.getBeacon("aa:bb:cc:dd");
+        retrievedRegion = regionProvider.getRegion(1, 2, "1234");
 
         MatcherAssert.assertThat("Beacon not deleted properly", retrievedRegion == null);
     }

@@ -78,15 +78,16 @@ public class ButtonProviderTest {
         buttonProvider.createOrUpdateButton(button);
 
         Region region = new Region();
-        region.setName("aBeacon");
-        region.setMacAddress("aa:bb:cc:dd");
+        region.setMinor(1);
+        region.setMajor(2);
+        region.setUuid("1234");
         region.setButton(button);
 
-        regionProvider.createOrUpdateBeacon(region);
+        regionProvider.createOrUpdateRegion(region);
 
-        Region retrievedRegion = regionProvider.getBeacon("aa:bb:cc:dd");
+        Region retrievedRegion = regionProvider.getRegion(1,2,"1234");
 
-        MatcherAssert.assertThat("Beacon not associated to Button properly.", retrievedRegion.getButton().getId().equals("123"));
+        MatcherAssert.assertThat("Region not associated to Button properly.", retrievedRegion.getButton().getId().equals("123"));
     }
 }
 

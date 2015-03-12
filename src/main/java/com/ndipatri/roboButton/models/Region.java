@@ -9,16 +9,42 @@ import com.j256.ormlite.table.DatabaseTable;
 @DatabaseTable(tableName = "regions")
 public class Region {
 
-    public Region() {
+    public Region() {}
+
+    public Region(final Integer minor, final Integer major, final String uuid) {
+        this.minor = minor;
+        this.major = major;
+        this.uuid = uuid;
+
+        this.name = generateRegionName(minor, major, uuid);
     }
 
-    public Region(final Integer major) {
-        this.major = major;
+    protected String generateRegionName(final int minor, final int major, final String uuid) {
+        return "Region('" + getId() + "')";
+    }
+
+    @DatabaseField(id = true, useGetSet = true)
+    private String id;
+
+    public String getId() {
+        return getMinor() + "-" + getMajor() + "-" + getUuid();
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public static final String MAJOR_COLUMN_NAME = "major";
-    @DatabaseField(id = true, columnName = MAJOR_COLUMN_NAME)
+    @DatabaseField(columnName = MAJOR_COLUMN_NAME)
     private Integer major;
+
+    public static final String MINOR_COLUMN_NAME = "minor";
+    @DatabaseField(columnName = MINOR_COLUMN_NAME)
+    private Integer minor;
+
+    public static final String UUID_COLUMN_NAME = "uuid";
+    @DatabaseField(columnName = UUID_COLUMN_NAME)
+    private String uuid;
 
     public static final String NAME_COLUMN_NAME = "name";
     @DatabaseField(columnName = NAME_COLUMN_NAME)
@@ -28,12 +54,12 @@ public class Region {
     @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = BUTTON_ID)
     private Button button;
 
-    public void setButton(Button button) {
-        this.button = button;
+    public Integer getMinor() {
+        return minor;
     }
 
-    public Button getButton() {
-        return button;
+    public void setMinor(Integer minor) {
+        this.minor = minor;
     }
 
     public Integer getMajor() {
@@ -44,12 +70,28 @@ public class Region {
         this.major = major;
     }
 
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Button getButton() {
+        return button;
+    }
+
+    public void setButton(Button button) {
+        this.button = button;
     }
 
     @Override
@@ -60,15 +102,21 @@ public class Region {
         Region region = (Region) o;
 
         if (button != null ? !button.equals(region.button) : region.button != null) return false;
+        if (id != null ? !id.equals(region.id) : region.id != null) return false;
         if (major != null ? !major.equals(region.major) : region.major != null) return false;
+        if (minor != null ? !minor.equals(region.minor) : region.minor != null) return false;
         if (name != null ? !name.equals(region.name) : region.name != null) return false;
+        if (uuid != null ? !uuid.equals(region.uuid) : region.uuid != null) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = major != null ? major.hashCode() : 0;
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (major != null ? major.hashCode() : 0);
+        result = 31 * result + (minor != null ? minor.hashCode() : 0);
+        result = 31 * result + (uuid != null ? uuid.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (button != null ? button.hashCode() : 0);
         return result;
@@ -77,7 +125,10 @@ public class Region {
     @Override
     public String toString() {
         return "Region{" +
-                "major=" + major +
+                "id='" + id + '\'' +
+                ", major=" + major +
+                ", minor=" + minor +
+                ", uuid='" + uuid + '\'' +
                 ", name='" + name + '\'' +
                 ", button=" + button +
                 '}';

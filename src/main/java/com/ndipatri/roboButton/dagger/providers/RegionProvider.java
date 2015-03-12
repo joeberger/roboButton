@@ -37,11 +37,11 @@ public class RegionProvider {
         OpenHelperManager.releaseHelper();
     }
 
-    public Region getRegion(final Integer major) {
-        return getRegion(major, false);
+    public Region getRegion(final Integer minor, final Integer major, final String uuid) {
+        return getRegion(minor, major, uuid, false);
     }
 
-    public Region getRegion(final Integer major, final boolean mustBePaired) {
+    public Region getRegion(final Integer minor, final Integer major, final String uuid, final boolean mustBePaired) {
 
         Region region = null;
 
@@ -51,7 +51,9 @@ public class RegionProvider {
         QueryBuilder<Region, Long> queryBuilder = regionDao.queryBuilder();
         try {
             Where<Region, Long> where = queryBuilder.where();
+            where.eq(Region.MINOR_COLUMN_NAME, minor);
             where.eq(Region.MAJOR_COLUMN_NAME, major);
+            where.eq(Region.UUID_COLUMN_NAME, uuid);
             if (mustBePaired) {
                 where.and();
                 where.isNotNull(Region.BUTTON_ID);
