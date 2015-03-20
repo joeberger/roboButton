@@ -16,7 +16,7 @@ import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.fragments.ABFragment;
 import com.ndipatri.roboButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
-import com.ndipatri.roboButton.services.ButtonMonitor;
+import com.ndipatri.roboButton.services.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.LeDeviceListAdapter;
 
 import javax.inject.Singleton;
@@ -30,7 +30,7 @@ import dagger.Provides;
                 ButtonDetailsDialogFragment.class,
                 LeDeviceListAdapter.class,
                 MonitoringService.class,
-                ButtonMonitor.class,
+                ButtonCommunicator.class,
                 MainControllerActivity.class,
                 BluetoothProviderImpl.class,
                 ButtonProvider.class,

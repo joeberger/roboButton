@@ -125,7 +125,7 @@ public class Region {
     @Override
     public String toString() {
         return "Region{" +
-                "id='" + id + '\'' +
+                "id='" + getId() + '\'' +
                 ", major=" + major +
                 ", minor=" + minor +
                 ", uuid='" + uuid + '\'' +

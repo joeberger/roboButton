@@ -90,32 +90,41 @@ public abstract class RBApplication extends Application {
         startMonitoringService(false);
     }
 
-    public void setPreference(final String key, final int value) {
+    protected void setPreference(final String key, final int value) {
         SharedPreferences preferences = getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE);
         preferences.edit().putInt(key, value).apply();
     }
 
-    public void setPreference(final String key, final boolean value) {
+    protected void setPreference(final String key, final boolean value) {
         SharedPreferences preferences = getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE);
         preferences.edit().putBoolean(key, value).apply();
     }
 
-    public void setPreference(final String key, final String value) {
+    protected void setPreference(final String key, final String value) {
         SharedPreferences preferences = getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE);
         preferences.edit().putString(key, value).apply();
     }
 
-    public String getStringPreference(final String key, final String defaultValue) {
+    protected String getStringPreference(final String key, final String defaultValue) {
         return getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE).getString(key, defaultValue);
     }
 
-    public boolean getBooleanPreference(final String key, final boolean defaultValue) {
+    protected boolean getBooleanPreference(final String key, final boolean defaultValue) {
         return getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE).getBoolean(key, defaultValue);
     }
 
-    public int getIntegerPreference(final String key, final int defaultValue) {
+    protected int getIntegerPreference(final String key, final int defaultValue) {
         return getSharedPreferences(APPLICATION_PREFS, Context.MODE_PRIVATE).getInt(key, defaultValue);
     }
+
+    public boolean getAutoModeEnabledFlag() {
+        return getBooleanPreference("AUTO_MODE_ENABLED_FLAG", getResources().getBoolean(R.bool.auto_mode_enabled_default));
+    }
+
+    public void setAutoModeEnabledFlag(final boolean autoModeEnabledFlag) {
+        setPreference("AUTO_MODE_ENABLED_FLAG", autoModeEnabledFlag);
+    }
+
 
     protected void startMonitoringService(final boolean shouldBackground) {
 

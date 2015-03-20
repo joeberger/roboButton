@@ -30,7 +30,7 @@ import javax.inject.Inject;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(RobolectricTestRunner.class)
-public class ButtonMonitorTest {
+public class ButtonCommunicatorTest {
 
     RBApplication application;
     MainControllerActivity activity;
@@ -63,7 +63,7 @@ public class ButtonMonitorTest {
     }
 
     @Test
-    public void startButtonMonitor() {
+    public void startButtonCommunicator() {
 
         // This would be a standard BT device that is one of our 'Button' arduino boards..
         Button availableButton = new Button("aa:bb:cc:dd:ee", "workCubicle", false);
@@ -77,16 +77,16 @@ public class ButtonMonitorTest {
         // NJD TODO - need to figure otu how to run this.... it's now the 'servicePollRunnable' we have to call
         //monitoringService.discoverButtonDevices();
 
-        ButtonMonitor buttonMonitor = monitoringService.getButtonMonitor();
+        ButtonCommunicator buttonCommunicator = monitoringService.getButtonCommunicator();
 
-        assertThat("ButtonMonitor should be configured for given Button.", buttonMonitor.getButton().equals(availableButton));
-        assertThat("ButtonMonitor should be running.", buttonMonitor.isRunning());
-        assertThat("ButtonMonitor should be in 'NEVER_CONNECTED' state.", buttonMonitor.getButtonState() == ButtonState.NEVER_CONNECTED);
+        assertThat("ButtonMonitor should be configured for given Button.", buttonCommunicator.getButton().equals(availableButton));
+        assertThat("ButtonMonitor should be running.", buttonCommunicator.isRunning());
+        assertThat("ButtonMonitor should be in 'NEVER_CONNECTED' state.", buttonCommunicator.getButtonState() == ButtonState.NEVER_CONNECTED);
 
-        ButtonMonitor.MessageHandler messageHandler = buttonMonitor.getBluetoothMessageHandler();
-        assertThat("MessageHandler thread should have a 'QUERY_STATE_MESSAGE' message pending.", messageHandler.hasMessages(ButtonMonitor.QUERY_STATE_MESSAGE));
+        ButtonCommunicator.MessageHandler messageHandler = buttonCommunicator.getBluetoothMessageHandler();
+        assertThat("MessageHandler thread should have a 'QUERY_STATE_MESSAGE' message pending.", messageHandler.hasMessages(ButtonCommunicator.QUERY_STATE_MESSAGE));
 
-        assertThat("Query state discovery interval should be 1 second.", buttonMonitor.getQueryStateIntervalMillis() == 1000);
+        assertThat("Query state discovery interval should be 1 second.", buttonCommunicator.getQueryStateIntervalMillis() == 1000);
 
         ButtonStateChangeReport expectedEvent = new ButtonStateChangeReport(availableButton.getId(), ButtonState.NEVER_CONNECTED);
         ButtonStateChangeReport receivedReport = ((ButtonStateChangeReport)busListener.getReceivedEvent());

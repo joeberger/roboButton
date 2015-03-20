@@ -13,6 +13,8 @@ import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
+import com.ndipatri.roboButton.events.ButtonConnectedEvent;
+import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
@@ -31,9 +33,9 @@ import javax.inject.Inject;
 /**
  * Communicates with each individual Button
  */
-public class ButtonMonitor {
+public class ButtonCommunicator {
 
-    private static final String TAG = ButtonMonitor.class.getCanonicalName();
+    private static final String TAG = ButtonCommunicator.class.getCanonicalName();
 
     @Inject protected ButtonDiscoveryProvider buttonDiscoveryProvider;
 
@@ -45,6 +47,7 @@ public class ButtonMonitor {
     protected static final int QUERY_STATE_MESSAGE = 0;
     protected static final int SET_STATE_MESSAGE = 1;
     protected static final int AUTO_SHUTDOWN = 2;
+    protected static final int CONNECTIVITY_CHECK_MESSAGE = 3;
 
     // Handler which uses background thread to handle BT communications
     private MessageHandler bluetoothMessageHandler;
@@ -69,7 +72,7 @@ public class ButtonMonitor {
 
     // endregion
 
-    public ButtonMonitor(final Context context, final Button button) {
+    public ButtonCommunicator(final Context context, final Button button) {
 
         Log.d(TAG, "Starting new monitor for button '" + button.getId() + "'.");
 
@@ -97,20 +100,33 @@ public class ButtonMonitor {
     public void start() {
         shouldRun = true;
 
+        // We start by assuming the button is communicating (which is obviously optimistic).  The idea is the
+        // 'isCommunicating()' method will return 'true' for one 'grace period' interval.. After that, it will
+        // report false if no communications is established.
         lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
 
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                BusProvider.getInstance().register(ButtonMonitor.this);
+                BusProvider.getInstance().register(ButtonCommunicator.this);
             }
         });
 
         scheduleImmediateQueryStateMessage();
+        scheduleConnectivityCheck();
+    }
+
+    public boolean isCommunicating() {
+        long timeSinceLastUpdate = SystemClock.uptimeMillis() - lastButtonStateUpdateTimeMillis;
+        return timeSinceLastUpdate <= communicationsGracePeriodMillis;
     }
 
     private void scheduleImmediateQueryStateMessage() {
         bluetoothMessageHandler.queueQueryStateRequest(0);
+    }
+
+    private void scheduleConnectivityCheck() {
+        bluetoothMessageHandler.queueConnectivityCheck(communicationsGracePeriodMillis * 2);
     }
 
     public void shutdown() {
@@ -129,7 +145,7 @@ public class ButtonMonitor {
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                BusProvider.getInstance().unregister(ButtonMonitor.this);
+                BusProvider.getInstance().unregister(ButtonCommunicator.this);
             }
         });
 
@@ -188,11 +204,25 @@ public class ButtonMonitor {
             super(looper);
         }
 
+        public void queueConnectivityCheck(final long offsetMillis) {
+
+            if (hasMessages(CONNECTIVITY_CHECK_MESSAGE)) {
+                removeMessages(CONNECTIVITY_CHECK_MESSAGE);
+            }
+            
+            // Queue a ConnectivityCheck Message
+            Message rawMessage = obtainMessage();
+            rawMessage.what = CONNECTIVITY_CHECK_MESSAGE;
+
+            // To be handled by separate thread.
+            sendMessageDelayed(rawMessage, offsetMillis);
+        }
+
         public void queueQueryStateRequest(final long offsetMillis) {
 
             // query has lowest priority
             if (!hasMessages(SET_STATE_MESSAGE) &&
-                    !hasMessages(QUERY_STATE_MESSAGE)) {
+                !hasMessages(QUERY_STATE_MESSAGE)) {
 
                 // Queue a QueryState Message
                 Message rawMessage = obtainMessage();
@@ -248,15 +278,19 @@ public class ButtonMonitor {
 
                         if (newRemoteState != null) {
 
-                            if (buttonState == ButtonState.NEVER_CONNECTED &&
-                                button.isAutoModeEnabled() &&
-                                newRemoteState != ButtonState.ON) {
+                            if (buttonState == ButtonState.NEVER_CONNECTED) {
+                                
+                                if (button.isAutoModeEnabled() && newRemoteState != ButtonState.ON) {
 
-                                // Now that we've established we can communicate with newly discovered
-                                // button, let's set its auto-state....
-                                setRemoteState(ButtonState.ON);
-                            } else {
-                                setLocalButtonState(newRemoteState);
+                                    // Now that we've established we can communicate with newly discovered
+                                    // button, let's set its auto-state....
+                                    setRemoteState(ButtonState.ON);
+                                } else {
+                                    setLocalButtonState(newRemoteState);
+                                }
+                                
+                                // This first time, we want to emit an update right away
+                                postButtonConnectedEvent(button);
                             }
                         }
 
@@ -293,8 +327,41 @@ public class ButtonMonitor {
                     }
 
                     break;
+
+                case CONNECTIVITY_CHECK_MESSAGE:
+
+                    if (shouldRun) {
+
+                        final Object buttonEvent;
+                        if (isCommunicating()) {
+                            postButtonConnectedEvent(button);
+                            scheduleConnectivityCheck();
+                        } else {
+                            postButtonLostEvent(button.getId());
+                        }
+                    }
+
+                    break;
             }
         }
+    }
+    
+    public void postButtonLostEvent(final String buttonId) {
+        new Handler(context.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                BusProvider.getInstance().post(new ButtonLostEvent(buttonId));
+            }
+        });
+    }
+
+    public void postButtonConnectedEvent(final Button button) {
+        new Handler(context.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                BusProvider.getInstance().post(new ButtonConnectedEvent(button));
+            }
+        });
     }
 
     public ByteBuffer encodeCurrentButtonState(final ButtonState buttonState) {
@@ -506,10 +573,6 @@ public class ButtonMonitor {
         return shouldRun;
     }
 
-    public boolean isCommunicating() {
-        long timeSinceLastUpdate = SystemClock.uptimeMillis() - lastButtonStateUpdateTimeMillis;
-        return timeSinceLastUpdate <= communicationsGracePeriodMillis;
-    }
 }
 
 

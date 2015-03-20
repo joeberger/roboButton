@@ -4,8 +4,6 @@ import android.content.Context;
 import android.os.RemoteException;
 
 import com.estimote.sdk.BeaconManager;
-import com.estimote.sdk.Region;
-import com.ndipatri.roboButton.RegionDiscoveryListener;
 
 public class RegionDiscoveryProviderTestImpl implements RegionDiscoveryProvider {
 
@@ -14,8 +12,6 @@ public class RegionDiscoveryProviderTestImpl implements RegionDiscoveryProvider 
     private Context context;
 
     private BeaconManager beaconManager;
-
-    private RegionDiscoveryListener regionDiscoveryListener;
 
     private boolean isDiscoveryCancelled = false;
 
@@ -26,17 +22,11 @@ public class RegionDiscoveryProviderTestImpl implements RegionDiscoveryProvider 
     }
 
     @Override
-    public void startRegionDiscovery(RegionDiscoveryListener regionDiscoveryListener) {
-        this.regionDiscoveryListener = regionDiscoveryListener;
-    }
+    public void startRegionDiscovery() {}
 
     @Override
     public void stopRegionDiscovery() throws RemoteException {
         // NJD TODO - noop for now.. eventually, should track which regions are being ranged...
-    }
-
-    public RegionDiscoveryListener getRegionDiscoveryListener() {
-        return regionDiscoveryListener;
     }
 
     public boolean isDiscoveryCancelled() {

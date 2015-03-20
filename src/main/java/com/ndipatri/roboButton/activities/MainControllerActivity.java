@@ -15,7 +15,7 @@ import android.widget.Toast;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
-import com.ndipatri.roboButton.events.ButtonFoundEvent;
+import com.ndipatri.roboButton.events.ButtonConnectedEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.fragments.ABFragment;
@@ -151,6 +151,19 @@ public class MainControllerActivity extends Activity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+        MenuItem toggleAutoControlMenuItem = menu.findItem(R.id.toggle_auto_control);
+        
+        int autoControlStringResource = 
+                RBApplication.getInstance().getAutoModeEnabledFlag() ? R.string.disable_auto_control :
+                                                                       R.string.enable_auto_control;
+        toggleAutoControlMenuItem.setTitle(autoControlStringResource);
+
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle presses on the action bar items
         switch (item.getItemId()) {
@@ -219,9 +232,11 @@ public class MainControllerActivity extends Activity {
     }
 
     @Subscribe
-    public void onArduinoButtonFoundEvent(ButtonFoundEvent ButtonFoundEvent) {
+    public void onButtonConnectedEvent(ButtonConnectedEvent ButtonConnectedEvent) {
+        
+        Log.d(TAG, "onButtonConnectedEvent()");
 
-        String foundButtonId = ButtonFoundEvent.button.getId();
+        String foundButtonId = ButtonConnectedEvent.button.getId();
 
         ABFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
         if (existingButtonFragment == null) {

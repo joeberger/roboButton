@@ -6,27 +6,34 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Handler;
 import android.util.Log;
 
-import com.ndipatri.roboButton.ButtonDiscoveryListener;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.models.Button;
+import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
+import com.ndipatri.roboButton.utils.BusProvider;
 
-import javax.inject.Inject;
-
+/**
+ * This class will perform a Bluetooth Classic 'Discovery' operation.  After a defined timeout period, the scan will
+ * be stopped.  At that time a 'success' or 'failure' event will be emitted based on whether a device matching the
+ * defined 'discoveryPattern' was found.
+ */
 public class ButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
 
     private static final String TAG = ButtonDiscoveryProviderImpl.class.getCanonicalName();
 
-    @Inject
-    ButtonProvider buttonProvider;
-
     private Context context;
 
-    private ButtonDiscoveryListener buttonDiscoveryListener;
+    BluetoothAdapter bluetoothAdapter = null;
+    
+    protected int buttonDiscoveryDurationMillis;
 
     String discoverableButtonPatternString;
+    
+    protected boolean discovering = false;
+    
+    protected BluetoothDevice discoveredButton;
 
     public ButtonDiscoveryProviderImpl(Context context) {
         this.context = context;
@@ -34,6 +41,9 @@ public class ButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
         RBApplication.getInstance().registerForDependencyInjection(this);
 
         discoverableButtonPatternString = context.getString(R.string.button_discovery_pattern);
+        buttonDiscoveryDurationMillis = context.getResources().getInteger(R.integer.button_discovery_duration_millis);
+
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         // Register the BroadcastReceiver
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
@@ -41,48 +51,73 @@ public class ButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
     }
 
     @Override
-    public void startButtonDiscovery(ButtonDiscoveryListener buttonDiscoveryListener) {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter != null && !bluetoothAdapter.isDiscovering()) {
-            this.buttonDiscoveryListener = buttonDiscoveryListener;
+    public synchronized void startButtonDiscovery() {
+
+        Log.d(TAG, "Beginning Button Monitoring Process...");
+        if (discovering) {
+            // make this request idempotent
+            return;
+        }
+
+        //Check to see if the device supports Bluetooth and that it's turned on
+        if (!discovering && bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
+
+            discovering = true;
+
+            // This is an idempotent operation
             bluetoothAdapter.startDiscovery();
+
+            // We should not let scan run indefinitely as it consumes POWER!
+            new Handler().postDelayed(discoveryTimeoutRunnable, buttonDiscoveryDurationMillis);
+        } else {
+            discovering = false;
         }
     }
 
+    private Runnable discoveryTimeoutRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (discovering) {
+
+                stopButtonDiscovery();
+                
+                if (discoveredButton == null) {
+                    postButtonDiscoveredEvent(false, null);
+                }
+            }
+        }
+    };
+
     @Override
-    public void stopButtonDiscovery() {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    public synchronized void stopButtonDiscovery() {
+        Log.d(TAG, "Stopping Button Discovery...");
+
+        discovering = false;
+
         if (bluetoothAdapter != null && bluetoothAdapter.isDiscovering()) {
             bluetoothAdapter.cancelDiscovery();
-            buttonDiscoveryListener = null;
         }
     }
 
     // Create a BroadcastReceiver for ACTION_FOUND
+    // These are always sent on UI thread from BluetoothAdapter.
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-                if (buttonDiscoveryListener != null && device.getName() != null && device.getName().matches(discoverableButtonPatternString)) {
+                if (device.getName() != null && device.getName().matches(discoverableButtonPatternString)) {
                     Log.d(TAG, "We have a nearby ArduinoButton device! + '" + device + "'.");
 
-                    Button discoveredButton = null;
-
-                    Button persistedButton = buttonProvider.getButton(device.getAddress());
-                    if (persistedButton != null) {
-                        discoveredButton = persistedButton;
-                    } else {
-                        discoveredButton = new Button(device.getAddress(), device.getAddress(), true);
-                    }
-                    discoveredButton.setBluetoothDevice(device);
-
-                    buttonProvider.createOrUpdateButton(discoveredButton);
-
-                    buttonDiscoveryListener.buttonDiscovered(discoveredButton);
+                    discoveredButton = device;
+                    postButtonDiscoveredEvent(true, device);
                 }
             }
         }
     };
+
+    protected void postButtonDiscoveredEvent(final boolean success, final BluetoothDevice buttonDevice) {
+        BusProvider.getInstance().post(new ButtonDiscoveryEvent(success, buttonDevice));
+    }
 }

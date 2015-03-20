@@ -1,6 +1,7 @@
 package com.ndipatri.roboButton.dagger.providers;
 
 import android.content.Context;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -8,8 +9,10 @@ import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.estimote.sdk.Utils;
-import com.ndipatri.roboButton.RegionDiscoveryListener;
 import com.ndipatri.roboButton.R;
+import com.ndipatri.roboButton.events.RegionFoundEvent;
+import com.ndipatri.roboButton.events.RegionLostEvent;
+import com.ndipatri.roboButton.utils.BusProvider;
 
 import java.util.HashSet;
 import java.util.List;
@@ -36,22 +39,20 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
 
     private BeaconManager beaconManager;
 
-    private RegionDiscoveryListener regionDiscoveryListener;
-
     public EstimoteRegionDiscoveryProviderImpl(Context context) {
         this.context = context;
 
         beaconDetectionThresholdMeters = context.getResources().getInteger(R.integer.estimote_beacon_detection_threshold);
 
         beaconManager = new BeaconManager(context);
+        
+        BusProvider.getInstance().register(this);
     }
 
     @Override
-    public void startRegionDiscovery(RegionDiscoveryListener regionDiscoveryListener) {
+    public void startRegionDiscovery() {
 
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
-
-        this.regionDiscoveryListener = regionDiscoveryListener;
 
         com.estimote.sdk.utils.L.enableDebugLogging(true);
 
@@ -84,8 +85,6 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
 
         beaconManager.stopMonitoring(AB_ESTIMOTE_REGION);
         beaconManager.stopRanging(AB_ESTIMOTE_REGION);
-
-        this.regionDiscoveryListener = null;
 
         beaconManager.disconnect();
     }
@@ -140,18 +139,36 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
 
                 if (distance < beaconDetectionThresholdMeters) {
                     if (!nearbyRegions.contains(beaconRegion)) {
-                        this.regionDiscoveryListener.regionFound(beaconRegion);
+                        postRegionFoundEvent(beaconRegion);
                         nearbyRegions.add(beaconRegion);
                         Log.d(TAG, "Region Found! ('" + beaconRegion + "'.)");
                     }
                 } else {
                     if (nearbyRegions.contains(beaconRegion)) {
-                        this.regionDiscoveryListener.regionLost(beaconRegion);
+                        postRegionLostEvent(beaconRegion);
                         nearbyRegions.remove(beaconRegion);
                         Log.d(TAG, "Region Lost! ('" + beaconRegion + "'.)");
                     }
                 }
             }
         }
+    }
+
+    protected void postRegionFoundEvent(final com.ndipatri.roboButton.models.Region region) {
+        new Handler(context.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                BusProvider.getInstance().post(new RegionFoundEvent(region));
+            }
+        });
+    }
+
+    protected void postRegionLostEvent(final com.ndipatri.roboButton.models.Region region) {
+        new Handler(context.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                BusProvider.getInstance().post(new RegionLostEvent(region));
+            }
+        });
     }
 }

@@ -2,7 +2,6 @@ package com.ndipatri.roboButton.dagger.providers;
 
 import android.content.Context;
 
-import com.ndipatri.roboButton.ButtonDiscoveryListener;
 import com.ndipatri.roboButton.models.Button;
 
 import java.util.HashSet;
@@ -23,7 +22,7 @@ public class ButtonDiscoveryProviderTestImpl implements ButtonDiscoveryProvider 
     }
 
     @Override
-    public void startButtonDiscovery(ButtonDiscoveryListener listener) {
+    public void startButtonDiscovery() {
 
     }
 

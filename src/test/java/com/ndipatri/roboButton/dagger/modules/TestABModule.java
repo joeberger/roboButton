@@ -4,8 +4,6 @@ import android.content.Context;
 
 import com.ndipatri.roboButton.activities.MainControllerActivityTest;
 import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.providers.EstimoteRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.GeloRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProviderTestImpl;
 import com.ndipatri.roboButton.dagger.providers.RegionProvider;
@@ -14,8 +12,8 @@ import com.ndipatri.roboButton.dagger.providers.BluetoothProviderTestImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderTestImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
+import com.ndipatri.roboButton.services.ButtonCommunicatorTest;
 import com.ndipatri.roboButton.services.MonitoringServiceTest;
-import com.ndipatri.roboButton.services.ButtonMonitorTest;
 
 import javax.inject.Singleton;
 
@@ -28,7 +26,7 @@ import dagger.Provides;
         injects = {
                 MainControllerActivityTest.class,
                 MonitoringServiceTest.class,
-                ButtonMonitorTest.class,
+                ButtonCommunicatorTest.class,
         },
         overrides = true
 )

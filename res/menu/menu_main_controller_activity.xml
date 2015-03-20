@@ -6,4 +6,9 @@
         android:id="@+id/view_nearby_beacons"
         android:icon="@drawable/beacon_gray"
         android:title="@string/view_nearby_beacons"/>
+    
+    <item
+        android:id="@+id/toggle_auto_control"
+        android:icon="@drawable/beacon_gray"
+        android:title="@string/enable_auto_control"/>
 </menu>

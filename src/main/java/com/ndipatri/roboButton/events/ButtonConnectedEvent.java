@@ -5,11 +5,11 @@ import com.ndipatri.roboButton.models.Button;
 /**
  * Created by ndipatri on 1/1/14.
  */
-public class ButtonFoundEvent {
+public class ButtonConnectedEvent {
 
     public Button button;
 
-    public ButtonFoundEvent(final Button button) {
+    public ButtonConnectedEvent(final Button button) {
         this.button = button;
     }
 
@@ -18,7 +18,7 @@ public class ButtonFoundEvent {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ButtonFoundEvent that = (ButtonFoundEvent) o;
+        ButtonConnectedEvent that = (ButtonConnectedEvent) o;
 
         if (button != null ? !button.equals(that.button) : that.button != null) return false;
 
