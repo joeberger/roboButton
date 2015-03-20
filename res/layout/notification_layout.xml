@@ -8,7 +8,7 @@
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
         android:layout_alignParentLeft="true"
-        android:layout_marginRight="10dp"
+        android:layout_marginRight="20dp"
         android:src="@drawable/green_button_small"/>
     <TextView android:id="@+id/title"
         android:layout_width="wrap_content"

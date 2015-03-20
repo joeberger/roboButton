@@ -291,14 +291,14 @@ public class MonitoringService extends Service {
         Log.d(TAG, "Sending notification for state '" + buttonState + "'.");
 
         lastNotifiedState = buttonState;
-        String tickerText = this.getString(R.string.new_robo_button);
+        
         Button button = buttonProvider.getButton(buttonId);
-        if (button != null) {
-            tickerText = " '" + button.getName() + "'";
-        }
-        tickerText += " " + this.getString(buttonState.descriptionResId);
+
+        StringBuilder sbuf = new StringBuilder("Tap here to toggle the '");
+        sbuf.append(button.getName()).append("' RoboButton.");
 
         Intent intent = new Intent(this, MainControllerActivity.class);
+        intent.putExtra(MainControllerActivity.SHOULD_TOGGLE_FLAG, true);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
         // NJD TODO - Could use 'notificationManager.cancel(NOTIFICATION_ID)' at some point for cleanup
@@ -330,7 +330,7 @@ public class MonitoringService extends Service {
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.notification_layout);
         contentView.setImageViewResource(R.id.image, buttonState.smallDrawableResourceId);
         contentView.setTextViewText(R.id.title, this.getString(R.string.robo_button));
-        contentView.setTextViewText(R.id.detail, tickerText);
+        contentView.setTextViewText(R.id.detail, sbuf.toString());
         notification.contentView = contentView;
 
         notificationManager.notify(notifId, notification);

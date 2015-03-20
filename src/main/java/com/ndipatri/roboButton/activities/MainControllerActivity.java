@@ -43,6 +43,7 @@ public class MainControllerActivity extends Activity {
     protected SparseArray<String> pendingImageRequestIdToButtonIdMap = new SparseArray<String>();
 
     private static final int REQUEST_ENABLE_BT = -101;
+    public static final String SHOULD_TOGGLE_FLAG = "should_toggle_flag";
 
     private static final String TAG = MainControllerActivity.class.getCanonicalName();
 
