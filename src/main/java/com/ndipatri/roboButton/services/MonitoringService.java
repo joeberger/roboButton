@@ -282,9 +282,11 @@ public class MonitoringService extends Service {
 
     @Subscribe
     public void onButtonConnectedEvent(ButtonConnectedEvent buttonConnectedEvent) {
-        ButtonState currentButtonState = buttonCommunicator.getButtonState();
-        if (runInBackground && lastNotifiedState != currentButtonState) {
-            sendNotification(buttonConnectedEvent.button.getId(), currentButtonState);
+        if (buttonCommunicator != null) {
+            ButtonState currentButtonState = buttonCommunicator.getButtonState();
+            if (runInBackground && lastNotifiedState != currentButtonState) {
+                sendNotification(buttonConnectedEvent.button.getId(), currentButtonState);
+            }
         }
     }
 
