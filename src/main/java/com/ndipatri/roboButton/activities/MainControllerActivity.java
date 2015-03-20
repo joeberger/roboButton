@@ -18,7 +18,7 @@ import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.events.ButtonConnectedEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
-import com.ndipatri.roboButton.fragments.ABFragment;
+import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -180,8 +180,8 @@ public class MainControllerActivity extends Activity {
 
     // region OTTO Subscriptions
 
-    private ABFragment lookupButtonFragment(String buttonId) {
-        return (ABFragment) getFragmentManager().findFragmentByTag(getButtonFragmentTag(buttonId));
+    private ButtonFragment lookupButtonFragment(String buttonId) {
+        return (ButtonFragment) getFragmentManager().findFragmentByTag(getButtonFragmentTag(buttonId));
     }
 
     private synchronized void forgetAllArduinoButtons() {
@@ -195,9 +195,9 @@ public class MainControllerActivity extends Activity {
     }
 
     private synchronized void forgetArduinoButton(final String lostButtonId) {
-        final ABFragment ABFragment = lookupButtonFragment(lostButtonId);
-        if (ABFragment != null) {
-            getFragmentManager().beginTransaction().remove(ABFragment).commitAllowingStateLoss();
+        final ButtonFragment ButtonFragment = lookupButtonFragment(lostButtonId);
+        if (ButtonFragment != null) {
+            getFragmentManager().beginTransaction().remove(ButtonFragment).commitAllowingStateLoss();
             buttonsWithFragments.remove(lostButtonId);
         }
     }
@@ -238,10 +238,10 @@ public class MainControllerActivity extends Activity {
 
         String foundButtonId = ButtonConnectedEvent.button.getId();
 
-        ABFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
+        ButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
         if (existingButtonFragment == null) {
-            final ABFragment newABFragment = ABFragment.newInstance(foundButtonId);
-            getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newABFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
+            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId);
+            getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
             buttonsWithFragments.add(foundButtonId);
         }
     }

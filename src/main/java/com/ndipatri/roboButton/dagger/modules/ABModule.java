@@ -13,7 +13,7 @@ import com.ndipatri.roboButton.dagger.providers.BluetoothProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
-import com.ndipatri.roboButton.fragments.ABFragment;
+import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.services.ButtonCommunicator;
@@ -26,7 +26,7 @@ import dagger.Provides;
 
 @Module(
         injects = {
-                ABFragment.class,
+                ButtonFragment.class,
                 ButtonDetailsDialogFragment.class,
                 LeDeviceListAdapter.class,
                 MonitoringService.class,

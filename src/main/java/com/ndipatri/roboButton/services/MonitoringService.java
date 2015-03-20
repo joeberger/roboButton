@@ -12,7 +12,6 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
@@ -31,7 +30,6 @@ import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.models.Button;
-import com.ndipatri.roboButton.models.Region;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
@@ -135,7 +133,7 @@ public class MonitoringService extends Service {
         boolean newRunInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
 
         if (!runInBackground && newRunInBackground && buttonCommunicator != null) {
-            sendABNotification(buttonCommunicator.getButton().getId(), buttonCommunicator.getButtonState());
+            sendNotification(buttonCommunicator.getButton().getId(), buttonCommunicator.getButtonState());
         }
 
         runInBackground = newRunInBackground;
@@ -189,13 +187,15 @@ public class MonitoringService extends Service {
     protected void forgetLostButton(String buttonId) {
         Log.d(TAG, "Forgetting lost button '" + buttonId + "'.");
 
-        buttonCommunicator.shutdown();
+        if (buttonCommunicator != null) {
+            buttonCommunicator.shutdown();
+        }
 
         nearbyButton = null;
         buttonCommunicator = null;
 
         if (runInBackground) {
-            sendABNotification(buttonId, ButtonState.DISCONNECTED);
+            sendNotification(buttonId, ButtonState.DISCONNECTED);
         }
     }
 
@@ -215,10 +215,6 @@ public class MonitoringService extends Service {
 
     @Subscribe
     public void onRegionLost(RegionLostEvent regionLostEvent) {
-
-        Region region = regionLostEvent.getRegion();
-
-        Log.d(TAG, "RegionLost: ('" + region + "'.)");
 
         nearbyRegion = null;
         stopButtonDiscovery();
@@ -288,7 +284,7 @@ public class MonitoringService extends Service {
     public void onButtonConnectedEvent(ButtonConnectedEvent buttonConnectedEvent) {
         ButtonState currentButtonState = buttonCommunicator.getButtonState();
         if (runInBackground && lastNotifiedState != currentButtonState) {
-            sendABNotification(buttonConnectedEvent.button.getId(), currentButtonState);
+            sendNotification(buttonConnectedEvent.button.getId(), currentButtonState);
         }
     }
 
@@ -303,7 +299,7 @@ public class MonitoringService extends Service {
         return buttonCommunicator;
     }
 
-    protected void sendABNotification(String buttonId, ButtonState buttonState) {
+    protected void sendNotification(String buttonId, ButtonState buttonState) {
 
         Log.d(TAG, "Sending notification for state '" + buttonState + "'.");
 

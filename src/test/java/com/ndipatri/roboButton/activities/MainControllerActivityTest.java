@@ -10,7 +10,7 @@ import com.ndipatri.roboButton.TestUtils;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderTestImpl;
 import com.ndipatri.roboButton.events.ButtonConnectedEvent;
-import com.ndipatri.roboButton.fragments.ABFragment;
+import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.BusProvider;
@@ -73,7 +73,7 @@ public class MainControllerActivityTest {
 
         BusProvider.getInstance().post(new ButtonConnectedEvent(singleButton));
 
-        ABFragment fragment = (ABFragment) activity.getFragmentManager().findFragmentByTag(singleButton.getId());
+        ButtonFragment fragment = (ButtonFragment) activity.getFragmentManager().findFragmentByTag(singleButton.getId());
 
 
         assertThat("Can't find expected Fragment!", fragment != null);

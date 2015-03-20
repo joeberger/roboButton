@@ -143,6 +143,8 @@ public class ButtonCommunicator {
     protected void stop() {
         shouldRun = false;
 
+        postButtonLostEvent(button.getId());
+
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
@@ -331,9 +333,9 @@ public class ButtonCommunicator {
 
                 case CONNECTIVITY_CHECK_MESSAGE:
 
+                    Log.d(TAG, "checkingConnectivity...");
                     if (shouldRun) {
 
-                        final Object buttonEvent;
                         if (isCommunicating()) {
                             postButtonConnectedEvent(button);
                             scheduleConnectivityCheck();

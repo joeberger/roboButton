@@ -32,9 +32,9 @@ import butterknife.Views;
  * <p/>
  * Periodically, this fragment overwrites the current button state with the remote arduino button state.
  */
-public class ABFragment extends Fragment {
+public class ButtonFragment extends Fragment {
 
-    private static final String TAG = ABFragment.class.getCanonicalName();
+    private static final String TAG = ButtonFragment.class.getCanonicalName();
 
     @Inject
     protected ButtonProvider buttonProvider;
@@ -48,19 +48,19 @@ public class ABFragment extends Fragment {
 
     ButtonDetailsDialogFragment dialog = null;
 
-    public ABFragment() {
+    public ButtonFragment() {
         RBApplication.getInstance().registerForDependencyInjection(this);
     }
 
-    public static ABFragment newInstance(String buttonId) {
+    public static ButtonFragment newInstance(String buttonId) {
 
-        ABFragment ABFragment = new ABFragment();
+        ButtonFragment ButtonFragment = new ButtonFragment();
         Bundle args = new Bundle();
-        ABFragment.setArguments(args);
+        ButtonFragment.setArguments(args);
 
-        ABFragment.setButtonId(buttonId);
+        ButtonFragment.setButtonId(buttonId);
 
-        return ABFragment;
+        return ButtonFragment;
     }
 
     @Override

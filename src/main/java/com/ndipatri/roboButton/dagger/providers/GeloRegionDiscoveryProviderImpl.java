@@ -179,14 +179,9 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
                     
                     nearbyRegions.put(beaconRegion, new MutableInteger(0)); // reset the 'LostMetric' value back to 0.
                 } else {
-                    if (nearbyRegions.containsKey(beaconRegion)) {
-                        // First time inferior RSSI found for previously Found region..
-                        Log.d(TAG, "Existing Region with INFERIOR RSSI '" + rssi + "' (" + beaconRegion + "'!");
-                        postRegionLostEvent(beaconRegion);
-                        nearbyRegions.remove(nearbyRegions);
-                    } else {
-                        Log.d(TAG, "New Region with INFERIOR RSSI '" + rssi + "' (" + beaconRegion + "'!");
-                    }
+                    Log.d(TAG, "Region with INFERIOR RSSI '" + rssi + "' (" + beaconRegion + "'!");
+                    postRegionLostEvent(beaconRegion);
+                    nearbyRegions.remove(nearbyRegions);
                 }
             }
         }
