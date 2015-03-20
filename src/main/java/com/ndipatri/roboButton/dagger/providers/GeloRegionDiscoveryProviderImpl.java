@@ -45,6 +45,7 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
     private int beaconDetectionThresholdDbms = -1;
     private int beaconLostScanIntervals = 0;
     private int beaconScanIntervalMillis;
+    private int beaconInferiorRSSICountThreshold;
     
     private boolean scanning = false;
     
@@ -72,6 +73,7 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
         beaconDetectionThresholdDbms = context.getResources().getInteger(R.integer.gele_beacon_detection_threshold);
         beaconLostScanIntervals = context.getResources().getInteger(R.integer.beacon_lost_scan_intervals);
         beaconScanIntervalMillis = context.getResources().getInteger(R.integer.beacon_scan_interval_millis);
+        beaconInferiorRSSICountThreshold = context.getResources().getInteger(R.integer.beacon_inferior_rssi_count_threshold);
 
         BusProvider.getInstance().register(this);
     }
@@ -154,6 +156,8 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
 
     private BluetoothAdapter.LeScanCallback scanRunnable = new BluetoothAdapter.LeScanCallback() {
         
+        private int successiveInferiorRSSICount = 0;         
+        
         // This call is always made on UI thread from BluetoothAdapter.
         @Override
         public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
@@ -174,14 +178,22 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
                 com.ndipatri.roboButton.models.Region beaconRegion = new com.ndipatri.roboButton.models.Region(minor, major, UUIDHex);
                 
                 if (rssi > beaconDetectionThresholdDbms) {
+                    successiveInferiorRSSICount = 0;
                     Log.d(TAG, "Region with ACCEPTABLE RSSI '" + rssi + "' (" + beaconRegion + "'!");
                     postRegionFoundEvent(beaconRegion);
                     
                     nearbyRegions.put(beaconRegion, new MutableInteger(0)); // reset the 'LostMetric' value back to 0.
                 } else {
                     Log.d(TAG, "Region with INFERIOR RSSI '" + rssi + "' (" + beaconRegion + "'!");
-                    postRegionLostEvent(beaconRegion);
-                    nearbyRegions.remove(nearbyRegions);
+                    ++successiveInferiorRSSICount;
+                    
+                    // This is an attempt to 'low pass filter' the RSSI measurements as at times they can be
+                    // spurious.
+                    if (successiveInferiorRSSICount >= beaconInferiorRSSICountThreshold) {
+                        successiveInferiorRSSICount = 0;
+                        postRegionLostEvent(beaconRegion);
+                        nearbyRegions.remove(nearbyRegions);
+                    }
                 }
             }
         }
