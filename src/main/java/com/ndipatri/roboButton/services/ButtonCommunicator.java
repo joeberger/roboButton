@@ -67,8 +67,7 @@ public class ButtonCommunicator {
 
     private Context context;
 
-    // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
-    private long lastButtonStateUpdateTimeMillis = 0;
+    private long lastButtonStateUpdateTimeMillis;
 
     // endregion
 
@@ -100,10 +99,8 @@ public class ButtonCommunicator {
     public void start() {
         shouldRun = true;
 
-        // We start by assuming the button is communicating (which is obviously optimistic).  The idea is the
-        // 'isCommunicating()' method will return 'true' for one 'grace period' interval.. After that, it will
-        // report false if no communications is established.
-        lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
+        // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
+        lastButtonStateUpdateTimeMillis = 0;
 
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
@@ -118,7 +115,11 @@ public class ButtonCommunicator {
 
     public boolean isCommunicating() {
         long timeSinceLastUpdate = SystemClock.uptimeMillis() - lastButtonStateUpdateTimeMillis;
-        return timeSinceLastUpdate <= communicationsGracePeriodMillis;
+        boolean isCommunicating = timeSinceLastUpdate <= communicationsGracePeriodMillis;
+        
+        Log.d(TAG, "isCommunicating(): '" + isCommunicating + "'");
+        
+        return isCommunicating;
     }
 
     private void scheduleImmediateQueryStateMessage() {
@@ -126,7 +127,7 @@ public class ButtonCommunicator {
     }
 
     private void scheduleConnectivityCheck() {
-        bluetoothMessageHandler.queueConnectivityCheck(communicationsGracePeriodMillis * 2);
+        bluetoothMessageHandler.queueConnectivityCheck(communicationsGracePeriodMillis);
     }
 
     public void shutdown() {
@@ -285,13 +286,13 @@ public class ButtonCommunicator {
                                     // Now that we've established we can communicate with newly discovered
                                     // button, let's set its auto-state....
                                     setRemoteState(ButtonState.ON);
-                                } else {
-                                    setLocalButtonState(newRemoteState);
                                 }
                                 
                                 // This first time, we want to emit an update right away
                                 postButtonConnectedEvent(button);
                             }
+                            
+                            setLocalButtonState(newRemoteState);
                         }
 
                         scheduleQueryStateMessage();

@@ -38,18 +38,17 @@ import com.squareup.otto.Subscribe;
 import javax.inject.Inject;
 
 /**
- *  This service constantly monitors for a nearby beacon Region.  If it finds one, it then tries to discover a nearby
- *  Button.  If it finds one, it then spawns a ButtonCommunicator object which is responsible for communicating with
- *  the Button.
- *
- *  This service periodically checks to make sure this ButtonCommunicator is lively - communicating properly to the Button.
- *  If not, it will destroy the ButtonCommunicator.
- *    
- *  Once the ButtonCommunicator exists, this service does not search for any more Buttons,
- *  but it continues to scan for nearby Beacons to detect when we've left a beacon Region.
- *  
- *  Upon leaving a Region, an existing ButtonCommunicator is destroyed, thus ending communications with the Button.
- *
+ * This service constantly monitors for a nearby beacon Region.  If it finds one, it then tries to discover a nearby
+ * Button.  If it finds one, it then spawns a ButtonCommunicator object which is responsible for communicating with
+ * the Button.
+ * <p/>
+ * This service periodically checks to make sure this ButtonCommunicator is lively - communicating properly to the Button.
+ * If not, it will destroy the ButtonCommunicator.
+ * <p/>
+ * Once the ButtonCommunicator exists, this service does not search for any more Buttons,
+ * but it continues to scan for nearby Beacons to detect when we've left a beacon Region.
+ * <p/>
+ * Upon leaving a Region, an existing ButtonCommunicator is destroyed, thus ending communications with the Button.
  */
 public class MonitoringService extends Service {
 
@@ -59,22 +58,28 @@ public class MonitoringService extends Service {
 
     protected boolean runInBackground = false;
 
-    @Inject protected RegionProvider regionProvider;
-    @Inject @Named(ABModule.ESTIMOTE_BEACONS) protected RegionDiscoveryProvider estimoteRegionDiscoveryProvider;
-    @Inject @Named(ABModule.GELO_BEACONS) protected RegionDiscoveryProvider geloRegionDiscoveryProvider;
+    @Inject
+    protected RegionProvider regionProvider;
+    @Inject
+    @Named(ABModule.ESTIMOTE_BEACONS)
+    protected RegionDiscoveryProvider estimoteRegionDiscoveryProvider;
+    @Inject
+    @Named(ABModule.GELO_BEACONS)
+    protected RegionDiscoveryProvider geloRegionDiscoveryProvider;
 
-    @Inject protected ButtonProvider buttonProvider;
-    @Inject protected ButtonDiscoveryProvider buttonDiscoveryProvider;
+    @Inject
+    protected ButtonProvider buttonProvider;
+    @Inject
+    protected ButtonDiscoveryProvider buttonDiscoveryProvider;
 
-    @Inject protected BluetoothProvider bluetoothProvider;
+    @Inject
+    protected BluetoothProvider bluetoothProvider;
 
     protected long buttonDiscoveryDurationMillis = -1;
-    
+
     protected long beaconDiscoveryDurationMillis = -1;
 
     protected int timeMultiplier = 1;
-
-    private boolean running = false;
 
     // Until we see a nearby beacon, this service does nothing...
     protected com.ndipatri.roboButton.models.Region nearbyRegion = null;
@@ -88,7 +93,7 @@ public class MonitoringService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-    
+
     // The last button state for which we sent a notification.
     ButtonState lastNotifiedState = null;
 
@@ -96,7 +101,7 @@ public class MonitoringService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        ((RBApplication)getApplication()).registerForDependencyInjection(this);
+        ((RBApplication) getApplication()).registerForDependencyInjection(this);
 
         buttonDiscoveryDurationMillis = getResources().getInteger(R.integer.button_discovery_duration_millis);
 
@@ -107,11 +112,9 @@ public class MonitoringService extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        running = false;
-        
         stopRegionDiscovery();
         stopButtonDiscovery();
-        
+
         BusProvider.getInstance().unregister(this);
 
         if (buttonCommunicator != null) {
@@ -125,7 +128,7 @@ public class MonitoringService extends Service {
 
         if (null == intent) {
             String source = null == intent ? "intent" : "action";
-            Log.e (TAG, source + " was null, flags=" + flags + " bits=" + Integer.toBinaryString (flags));
+            Log.e(TAG, source + " was null, flags=" + flags + " bits=" + Integer.toBinaryString(flags));
             return START_STICKY;
         }
 
@@ -148,11 +151,8 @@ public class MonitoringService extends Service {
             }
         }
 
-        if (!running) {
-
+        if (buttonCommunicator == null) {
             startRegionDiscovery();
-
-            running = true;
         }
 
         return Service.START_FLAG_REDELIVERY; // this ensure the service is restarted
@@ -161,7 +161,7 @@ public class MonitoringService extends Service {
     protected int getTimeMultiplier() {
         return runInBackground ? getResources().getInteger(R.integer.background_time_multiplier) : 1;
     }
-    
+
     protected void startDelayedRegionDiscover() {
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -202,18 +202,12 @@ public class MonitoringService extends Service {
     @Subscribe
     public void onRegionFound(RegionFoundEvent regionFoundEvent) {
 
-        Region region = regionFoundEvent.getRegion();
+        nearbyRegion = regionFoundEvent.getRegion();
+        regionProvider.createOrUpdateRegion(nearbyRegion);
 
-        if (!runInBackground) {
-            Toast.makeText(MonitoringService.this, "RegionFound: '" + region.toString(), Toast.LENGTH_SHORT).show();
-        }
-
-        Log.d(TAG, "RegionFound: ('" + region + "'.)");
+        Log.d(TAG, "RegionFound: ('" + nearbyRegion + "'.)");
 
         if (nearbyButton == null) {
-            regionProvider.createOrUpdateRegion(region);
-            setNearbyRegion(region);
-
             stopRegionDiscovery();
             startButtonDiscovery();
         }
@@ -224,15 +218,13 @@ public class MonitoringService extends Service {
 
         Region region = regionLostEvent.getRegion();
 
-        if (region.equals(getNearbyRegion())) {
-            Log.d(TAG, "RegionLost: ('" + region + "'.)");
+        Log.d(TAG, "RegionLost: ('" + region + "'.)");
 
-            clearNearbyRegion();
-            stopButtonDiscovery();
+        nearbyRegion = null;
+        stopButtonDiscovery();
 
-            if (nearbyButton != null) {
-                forgetLostButton(nearbyButton.getId());
-            }
+        if (nearbyButton != null) {
+            forgetLostButton(nearbyButton.getId());
         }
     }
 
@@ -269,30 +261,25 @@ public class MonitoringService extends Service {
 
                 buttonProvider.createOrUpdateButton(discoveredButton);
 
-
                 // we immediately pair this discovered button with our nearby region.. overwriting any
                 // existing pairing.
-                // We are concerned with thread-safety here as 
-                com.ndipatri.roboButton.models.Region nearbyRegionThreadSafe = getNearbyRegion();
-                if (nearbyRegionThreadSafe != null) {
 
-                    nearbyRegionThreadSafe.setName("Region for " + discoveredButton.getName());
-                    regionProvider.createOrUpdateRegion(nearbyRegionThreadSafe);
+                nearbyRegion.setName("Region for " + discoveredButton.getName());
+                regionProvider.createOrUpdateRegion(nearbyRegion);
 
-                    Button button = buttonProvider.getButton(discoveredButton.getId());
-                    button.setRegion(nearbyRegionThreadSafe);
-                    nearbyRegionThreadSafe.setButton(button);
+                Button button = buttonProvider.getButton(discoveredButton.getId());
+                button.setRegion(nearbyRegion);
+                nearbyRegion.setButton(button);
 
-                    buttonProvider.createOrUpdateButton(button);
-                    regionProvider.createOrUpdateRegion(nearbyRegionThreadSafe); // transitive persistence sucks in ormLite
+                buttonProvider.createOrUpdateButton(button);
+                regionProvider.createOrUpdateRegion(nearbyRegion); // transitive persistence sucks in ormLite
 
-                    nearbyButton = discoveredButton;
+                nearbyButton = discoveredButton;
 
-                    buttonCommunicator = new ButtonCommunicator(getApplicationContext(), nearbyButton);
-                }
+                buttonCommunicator = new ButtonCommunicator(getApplicationContext(), nearbyButton);
             }
         }
-        
+
         // We've stopped button discovery, so now we go back to monitoring for region changes...
         startDelayedRegionDiscover();
     }
@@ -317,7 +304,7 @@ public class MonitoringService extends Service {
     }
 
     protected void sendABNotification(String buttonId, ButtonState buttonState) {
-        
+
         Log.d(TAG, "Sending notification for state '" + buttonState + "'.");
 
         lastNotifiedState = buttonState;
@@ -364,17 +351,5 @@ public class MonitoringService extends Service {
         notification.contentView = contentView;
 
         notificationManager.notify(notifId, notification);
-    }
-
-    protected synchronized void setNearbyRegion(com.ndipatri.roboButton.models.Region nearbyRegion) {
-        this.nearbyRegion = nearbyRegion;
-    }
-
-    protected synchronized void clearNearbyRegion() {
-        this.nearbyRegion = null;
-    }
-
-    protected com.ndipatri.roboButton.models.Region getNearbyRegion() {
-        return this.nearbyRegion;
     }
 }

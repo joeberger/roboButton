@@ -103,7 +103,7 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
 
     @Override
     public synchronized void stopRegionDiscovery() throws RemoteException {
-        Log.d(TAG, "Stop Beacon Monitoring Process...");
+        Log.d(TAG, "Stopping region discovery ...");
         
         scanning = false;
         nearbyRegions = new HashMap<com.ndipatri.roboButton.models.Region, MutableInteger>();
@@ -173,18 +173,19 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
 
                 com.ndipatri.roboButton.models.Region beaconRegion = new com.ndipatri.roboButton.models.Region(minor, major, UUIDHex);
                 
-                Log.d(TAG, "RSSI of '" + rssi + "' for Region: '" + beaconRegion + "'.");
-
                 if (rssi > beaconDetectionThresholdDbms) {
-                    if (!nearbyRegions.containsKey(beaconRegion)) {
-                        postRegionFoundEvent(beaconRegion);
-                    }
+                    Log.d(TAG, "Region with ACCEPTABLE RSSI '" + rssi + "' (" + beaconRegion + "'!");
+                    postRegionFoundEvent(beaconRegion);
+                    
                     nearbyRegions.put(beaconRegion, new MutableInteger(0)); // reset the 'LostMetric' value back to 0.
                 } else {
                     if (nearbyRegions.containsKey(beaconRegion)) {
                         // First time inferior RSSI found for previously Found region..
+                        Log.d(TAG, "Existing Region with INFERIOR RSSI '" + rssi + "' (" + beaconRegion + "'!");
                         postRegionLostEvent(beaconRegion);
                         nearbyRegions.remove(nearbyRegions);
+                    } else {
+                        Log.d(TAG, "New Region with INFERIOR RSSI '" + rssi + "' (" + beaconRegion + "'!");
                     }
                 }
             }

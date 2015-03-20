@@ -10,5 +10,5 @@
     <!-- this is intentionally without units as this is an implementation detail -->
     <integer name="estimote_beacon_detection_threshold">8</integer>
     
-    <integer name="gele_beacon_detection_threshold">-60</integer>
+    <integer name="gele_beacon_detection_threshold">-70</integer>
 </resources>
