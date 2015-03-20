@@ -75,10 +75,6 @@ public class MonitoringService extends Service {
 
     protected long buttonDiscoveryDurationMillis = -1;
 
-    protected long beaconDiscoveryDurationMillis = -1;
-
-    protected int timeMultiplier = 1;
-
     // Until we see a nearby beacon, this service does nothing...
     protected com.ndipatri.roboButton.models.Region nearbyRegion = null;
 
@@ -140,24 +136,13 @@ public class MonitoringService extends Service {
 
         Log.d(TAG, "onStartCommand() (runInBackground='" + runInBackground + "').");
 
-        // When in the background, this service wakes up less often to do its thing...
-        int newTimeMultiplier = getTimeMultiplier();
-        if (newTimeMultiplier != timeMultiplier) {
-            timeMultiplier = newTimeMultiplier;
-            if (buttonCommunicator != null) {
-                buttonCommunicator.setTimeMultiplier(timeMultiplier);
-            }
-        }
-
         if (buttonCommunicator == null) {
             startRegionDiscovery();
+        } else {
+            buttonCommunicator.setInBackground(runInBackground);
         }
 
         return Service.START_FLAG_REDELIVERY; // this ensure the service is restarted
-    }
-
-    protected int getTimeMultiplier() {
-        return runInBackground ? getResources().getInteger(R.integer.background_time_multiplier) : 1;
     }
 
     protected void startDelayedRegionDiscover() {
@@ -170,8 +155,8 @@ public class MonitoringService extends Service {
     }
 
     protected void startRegionDiscovery() {
-        //estimoteRegionDiscoveryProvider.startRegionDiscovery(createRegionDiscoveryListener(estimoteRegionDiscoveryProvider));
-        geloRegionDiscoveryProvider.startRegionDiscovery();
+        //estimoteRegionDiscoveryProvider.startRegionDiscovery(runInBackground);
+        geloRegionDiscoveryProvider.startRegionDiscovery(runInBackground);
     }
 
     protected void stopRegionDiscovery() {

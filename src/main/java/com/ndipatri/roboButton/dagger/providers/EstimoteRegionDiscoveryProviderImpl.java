@@ -50,7 +50,7 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
     }
 
     @Override
-    public void startRegionDiscovery() {
+    public void startRegionDiscovery(final boolean inBackground) {
 
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
 

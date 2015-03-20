@@ -155,9 +155,9 @@ public class MainControllerActivity extends Activity {
 
         MenuItem toggleAutoControlMenuItem = menu.findItem(R.id.toggle_auto_control);
         
-        int autoControlStringResource = 
-                RBApplication.getInstance().getAutoModeEnabledFlag() ? R.string.disable_auto_control :
-                                                                       R.string.enable_auto_control;
+        int autoControlStringResource = isAutoModeEnabled() ? R.string.disable_auto_control :
+                                                              R.string.enable_auto_control;
+        
         toggleAutoControlMenuItem.setTitle(autoControlStringResource);
 
         return true;
@@ -171,6 +171,12 @@ public class MainControllerActivity extends Activity {
 
                 viewNearbyBeacons();
 
+                return true;
+            
+            case R.id.toggle_auto_control:
+                
+                setAutoModeEnabled(!isAutoModeEnabled()); 
+                
                 return true;
 
             default:
@@ -250,6 +256,14 @@ public class MainControllerActivity extends Activity {
 
     public BluetoothProvider getBluetoothProvider() {
         return bluetoothProvider;
+    }
+
+    protected boolean isAutoModeEnabled() {
+        return RBApplication.getInstance().getAutoModeEnabledFlag();
+    }
+
+    protected void setAutoModeEnabled(boolean enabled) {
+        RBApplication.getInstance().setAutoModeEnabledFlag(enabled);
     }
 }
 

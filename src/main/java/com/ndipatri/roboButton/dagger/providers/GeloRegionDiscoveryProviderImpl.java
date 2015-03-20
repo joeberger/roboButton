@@ -43,11 +43,20 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
     private static final Region AB_GELO_REGION = new Region("regionId", null, AB_GELO_MAJOR_VALUE, null);
 
     private int beaconDetectionThresholdDbms = -1;
+    
+    // If we've heard from a Region and then stop hearing from the Region (which isn't the same as INFERIOR RSSI), 
+    // this is the number of scan periods we wait before declaring the Region 'lost'.
     private int beaconLostScanIntervals = 0;
+    
+    // This is how long we allow BLE to scan before resting.
     private int beaconScanIntervalMillis;
+    
+    // This is how many consecutive 'INFERIOR' RSSI measurements we need before declaring the region lost.
     private int beaconInferiorRSSICountThreshold;
     
     private boolean scanning = false;
+    
+    private boolean inBackground = false;
     
     private Context context;
 
@@ -72,17 +81,24 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
 
         beaconDetectionThresholdDbms = context.getResources().getInteger(R.integer.gele_beacon_detection_threshold);
         beaconLostScanIntervals = context.getResources().getInteger(R.integer.beacon_lost_scan_intervals);
-        beaconScanIntervalMillis = context.getResources().getInteger(R.integer.beacon_scan_interval_millis);
         beaconInferiorRSSICountThreshold = context.getResources().getInteger(R.integer.beacon_inferior_rssi_count_threshold);
+        beaconScanIntervalMillis = context.getResources().getInteger(R.integer.beacon_scan_interval_millis);
 
         BusProvider.getInstance().register(this);
     }
 
     // This is a non-blocking call.
     @Override
-    public synchronized void startRegionDiscovery() {
+    public void startRegionDiscovery(final boolean inBackground) {
+        this.inBackground = inBackground;
+        
+        startRegionDiscovery();
+    }
 
+    protected void startRegionDiscovery() {
+        
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
+        
         if (scanning) {
             // make this request idempotent
             return;
@@ -97,14 +113,14 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
             mBluetoothAdapter.startLeScan(scanRunnable);
 
             // We should not let scan run indefinitely as it consumes POWER!
-            new Handler().postDelayed(scanTimeoutRunnable, getBeaconScanIntervalMillis());
+            new Handler().postDelayed(scanTimeoutRunnable, beaconScanIntervalMillis);
         } else {
             scanning = false;
         }
     }
 
     @Override
-    public synchronized void stopRegionDiscovery() throws RemoteException {
+    public void stopRegionDiscovery() throws RemoteException {
         Log.d(TAG, "Stopping region discovery ...");
         
         scanning = false;
@@ -149,7 +165,7 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
                     public void run() {
                         startRegionDiscovery();
                     }
-                }, getBeaconScanIntervalMillis() > 0 ? getBeaconScanIntervalMillis() / 3 : 0); // we don't sleep for the entire scan interval
+                }, getBeaconScanRestPeriod());
             }
         }
     };
@@ -219,12 +235,9 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
         
     }
 
-    protected int getBeaconScanIntervalMillis() {
-        if (RBApplication.getInstance().getAutoModeEnabledFlag()) {
-            return 0;
-        } else {
-            return beaconScanIntervalMillis;
-        }
+    protected int getBeaconScanRestPeriod() {
+        return RBApplication.getInstance().getAutoModeEnabledFlag() ? (inBackground ? beaconScanIntervalMillis/2  : 0) :
+                                                                      (inBackground ? beaconScanIntervalMillis : beaconScanIntervalMillis/2);
     }
     
     protected void postRegionFoundEvent(final com.ndipatri.roboButton.models.Region region) {

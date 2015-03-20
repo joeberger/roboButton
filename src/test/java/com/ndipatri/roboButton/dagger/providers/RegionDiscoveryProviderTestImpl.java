@@ -22,7 +22,7 @@ public class RegionDiscoveryProviderTestImpl implements RegionDiscoveryProvider 
     }
 
     @Override
-    public void startRegionDiscovery() {}
+    public void startRegionDiscovery(boolean inBackground) {}
 
     @Override
     public void stopRegionDiscovery() throws RemoteException {

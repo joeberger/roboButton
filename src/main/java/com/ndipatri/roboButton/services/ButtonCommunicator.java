@@ -54,7 +54,7 @@ public class ButtonCommunicator {
 
     protected long queryStateIntervalMillis = -1;
 
-    protected int timeMultiplier = 1;
+    protected boolean inBackground = false;
 
     private boolean shouldRun = false;
 
@@ -131,9 +131,7 @@ public class ButtonCommunicator {
     }
 
     public void shutdown() {
-        if (isCommunicating() &&
-            button.isAutoModeEnabled()) {
-
+        if (isAutoModeEnabled() && button.isAutoModeEnabled() && isCommunicating()) {
             bluetoothMessageHandler.queueAutoShutdownRequest();
         } else {
             stop();
@@ -283,7 +281,7 @@ public class ButtonCommunicator {
 
                             if (buttonState == ButtonState.NEVER_CONNECTED) {
                                 
-                                if (button.isAutoModeEnabled() && newRemoteState != ButtonState.ON) {
+                                if (isAutoModeEnabled() && button.isAutoModeEnabled() && newRemoteState != ButtonState.ON) {
 
                                     // Now that we've established we can communicate with newly discovered
                                     // button, let's set its auto-state....
@@ -561,11 +559,11 @@ public class ButtonCommunicator {
     }
 
     public synchronized long getQueryStateIntervalMillis() {
-        return queryStateIntervalMillis * timeMultiplier;
+        return queryStateIntervalMillis * (inBackground ? 10 : 1);
     }
 
-    public synchronized void setTimeMultiplier(int timeMultiplier) {
-        this.timeMultiplier = timeMultiplier;
+    public void setInBackground(boolean inBackground) {
+        this.inBackground = inBackground;
     }
 
     public MessageHandler getBluetoothMessageHandler() {
@@ -576,6 +574,13 @@ public class ButtonCommunicator {
         return shouldRun;
     }
 
+    protected boolean isAutoModeEnabled() {
+        return RBApplication.getInstance().getAutoModeEnabledFlag();
+    }
+
+    protected void setAutoModeEnabled(boolean enabled) {
+        RBApplication.getInstance().setAutoModeEnabledFlag(enabled);
+    }
 }
 
 

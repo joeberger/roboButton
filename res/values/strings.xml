@@ -24,7 +24,7 @@
     <string name="unknown">Unknown</string>
     <string name="is_connecting">is connecting</string>
     <string name="view_nearby_beacons">View Nearby Beacons</string>
-    <string name="enable_auto_control">Enable Auto Control (will consume more power)</string>
+    <string name="enable_auto_control">Enable Auto Control</string>
     <string name="disable_auto_control">Disable Auto Control</string>
     <string name="new_beacon">New Beacon</string>
     <string name="beacon_detected">Beacon Detected</string>
