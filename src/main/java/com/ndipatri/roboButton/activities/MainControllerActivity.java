@@ -53,6 +53,9 @@ public class MainControllerActivity extends Activity {
     // The main ViewGroup to which all ArduinoButtonFragments are added.
     protected @InjectView(R.id.mainViewGroup) ViewGroup mainViewGroup;
     //endregion
+    
+    // Should toggle the first button to which we attach.
+    protected boolean shouldToggleFlag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +65,16 @@ public class MainControllerActivity extends Activity {
         ((RBApplication)getApplicationContext()).registerForDependencyInjection(this);
 
         Views.inject(this);
+        
+        Intent intent = getIntent();
+        if (intent != null) {
+            shouldToggleFlag = intent.getBooleanExtra(SHOULD_TOGGLE_FLAG, false);
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
     }
 
     @Override
@@ -247,7 +260,7 @@ public class MainControllerActivity extends Activity {
 
         ButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
         if (existingButtonFragment == null) {
-            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId);
+            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId, shouldToggleFlag);
             getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
             buttonsWithFragments.add(foundButtonId);
         }
