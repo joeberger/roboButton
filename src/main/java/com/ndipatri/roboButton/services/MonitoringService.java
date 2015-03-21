@@ -294,12 +294,12 @@ public class MonitoringService extends Service {
         
         Button button = buttonProvider.getButton(buttonId);
 
-        StringBuilder sbuf = new StringBuilder("Tap here to toggle the '");
-        sbuf.append(button.getName()).append("' RoboButton.");
+        StringBuilder sbuf = new StringBuilder("Tap here to toggle '");
+        sbuf.append(button.getName()).append("'.");
 
         Intent intent = new Intent(this, MainControllerActivity.class);
         intent.putExtra(MainControllerActivity.SHOULD_TOGGLE_FLAG, true);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
         // NJD TODO - Could use 'notificationManager.cancel(NOTIFICATION_ID)' at some point for cleanup
         int notifId = 1234;

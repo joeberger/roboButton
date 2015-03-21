@@ -52,15 +52,16 @@ public class ButtonFragment extends Fragment {
         RBApplication.getInstance().registerForDependencyInjection(this);
     }
 
-    public static ButtonFragment newInstance(String buttonId) {
+    public static ButtonFragment newInstance(String buttonId, final boolean shouldToggleFlag) {
 
-        ButtonFragment ButtonFragment = new ButtonFragment();
+        ButtonFragment buttonFragment = new ButtonFragment();
         Bundle args = new Bundle();
-        ButtonFragment.setArguments(args);
+        buttonFragment.setArguments(args);
 
-        ButtonFragment.setButtonId(buttonId);
+        buttonFragment.setButtonId(buttonId);
+        buttonFragment.setShouldToggleFlag(shouldToggleFlag);
 
-        return ButtonFragment;
+        return buttonFragment;
     }
 
     @Override
@@ -120,16 +121,20 @@ public class ButtonFragment extends Fragment {
         BusProvider.getInstance().unregister(this);
     }
 
-    private synchronized String getButtonId() {
+    private String getButtonId() {
         return getArguments().getString("buttonId");
     }
 
-    private synchronized void setButtonId(String buttonId) {
+    private void setButtonId(String buttonId) {
         getArguments().putString("buttonId", buttonId);
     }
 
-    private Button getButton() {
-        return buttonProvider.getButton(getButtonId());
+    private boolean getShouldToggleFlag() {
+        return getArguments().getBoolean("shouldToggleFlag");
+    }
+
+    private void setShouldToggleFlag(boolean shouldToggleFlag) {
+        getArguments().putBoolean("shouldToggleFlag", shouldToggleFlag);
     }
 
     private void setButtonState(ButtonState buttonState) {
@@ -142,6 +147,14 @@ public class ButtonFragment extends Fragment {
     public void onArduinoButtonStateChangeReportEvent(final ButtonStateChangeReport event) {
         if (event.getButtonId().equals(getButtonId())) {
             setButtonState(event.getButtonState());
+            
+            if (getShouldToggleFlag()) {
+                setShouldToggleFlag(false);
+                
+                // Now that we know what the current state is, we must toggle it as instructed when we were
+                // first instantiated...
+                toggleButtonState();
+            }
         }
     }
 }
