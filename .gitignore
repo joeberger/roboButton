@@ -4,3 +4,6 @@
 target
 *.iml
 .idea
+gen/com/ndipatri/roboButton/BuildConfig.java
+gen/com/ndipatri/roboButton/Manifest.java
+gen/com/ndipatri/roboButton/R.java
