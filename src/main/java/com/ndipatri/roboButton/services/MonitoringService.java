@@ -17,16 +17,16 @@ import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.modules.ABModule;
+import com.ndipatri.roboButton.dagger.modules.RBModule;
 import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.RegionProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
-import com.ndipatri.roboButton.events.ButtonConnectedEvent;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
+import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.models.Button;
@@ -40,13 +40,12 @@ import javax.inject.Inject;
  * Button.  If it finds one, it then spawns a ButtonCommunicator object which is responsible for communicating with
  * the Button.
  * <p/>
- * This service periodically checks to make sure this ButtonCommunicator is lively - communicating properly to the Button.
- * If not, it will destroy the ButtonCommunicator.
- * <p/>
  * Once the ButtonCommunicator exists, this service does not search for any more Buttons,
  * but it continues to scan for nearby Beacons to detect when we've left a beacon Region.
  * <p/>
  * Upon leaving a Region, an existing ButtonCommunicator is destroyed, thus ending communications with the Button.
+ *
+ * The Service is purely driven by external events:
  */
 public class MonitoringService extends Service {
 
@@ -59,10 +58,10 @@ public class MonitoringService extends Service {
     @Inject
     protected RegionProvider regionProvider;
     @Inject
-    @Named(ABModule.ESTIMOTE_BEACONS)
+    @Named(RBModule.ESTIMOTE_BEACONS)
     protected RegionDiscoveryProvider estimoteRegionDiscoveryProvider;
     @Inject
-    @Named(ABModule.GELO_BEACONS)
+    @Named(RBModule.GELO_BEACONS)
     protected RegionDiscoveryProvider geloRegionDiscoveryProvider;
 
     @Inject
@@ -138,11 +137,79 @@ public class MonitoringService extends Service {
 
         if (buttonCommunicator == null) {
             startRegionDiscovery();
-        } else {
-            buttonCommunicator.setInBackground(runInBackground);
         }
 
         return Service.START_FLAG_REDELIVERY; // this ensure the service is restarted
+    }
+
+    @Subscribe
+    public void onRegionFound(RegionFoundEvent regionFoundEvent) {
+
+        nearbyRegion = regionFoundEvent.getRegion();
+        regionProvider.createOrUpdateRegion(nearbyRegion);
+
+        Log.d(TAG, "RegionFound: ('" + nearbyRegion + "'.)");
+
+        if (nearbyButton == null) {
+            stopRegionDiscovery();
+            startButtonDiscovery();
+        }
+    }
+
+    @Subscribe
+    public void onRegionLost(RegionLostEvent regionLostEvent) {
+
+        nearbyRegion = null;
+        stopButtonDiscovery();
+
+        if (nearbyButton != null) {
+            nearbyButton = null;
+            stopButtonCommunication();
+        }
+    }
+
+    @Subscribe
+    public void onButtonDiscovered(ButtonDiscoveryEvent buttonDiscoveryEvent) {
+
+        if (buttonDiscoveryEvent.isSuccess()) {
+
+            if (nearbyButton == null) {
+
+                stopButtonDiscovery();
+
+                nearbyButton = pairButtonWithRegion(buttonDiscoveryEvent.getButtonDevice());
+
+                startButtonCommunication(nearbyButton);
+            }
+        }
+
+        // We've stopped button discovery, so now we go back to monitoring for region changes...
+        startDelayedRegionDiscover();
+    }
+
+    @Subscribe
+    public void onButtonStateChangeReport(ButtonStateChangeReport buttonStateChangeReport) {
+        if (runInBackground && lastNotifiedState != buttonStateChangeReport.buttonState) {
+            sendNotification(buttonStateChangeReport.buttonId, buttonStateChangeReport.buttonState);
+        }
+    }
+
+    @Subscribe
+    public void onButtonLostEvent(ButtonLostEvent buttonLostEvent) {
+        nearbyButton = null;
+        buttonCommunicator = null;
+        startRegionDiscovery();
+    }
+
+    protected void startButtonCommunication(Button nearbyButton) {
+        buttonCommunicator = new ButtonCommunicator(getApplicationContext(), nearbyButton);
+    }
+
+    protected void stopButtonCommunication() {
+        if (buttonCommunicator != null) {
+            buttonCommunicator = null;
+            buttonCommunicator.shutdown();
+        }
     }
 
     protected void startDelayedRegionDiscover() {
@@ -169,46 +236,6 @@ public class MonitoringService extends Service {
         }
     }
 
-    protected void forgetLostButton(String buttonId) {
-        Log.d(TAG, "Forgetting lost button '" + buttonId + "'.");
-
-        if (buttonCommunicator != null) {
-            buttonCommunicator.shutdown();
-        }
-
-        nearbyButton = null;
-        buttonCommunicator = null;
-
-        if (runInBackground) {
-            sendNotification(buttonId, ButtonState.DISCONNECTED);
-        }
-    }
-
-    @Subscribe
-    public void onRegionFound(RegionFoundEvent regionFoundEvent) {
-
-        nearbyRegion = regionFoundEvent.getRegion();
-        regionProvider.createOrUpdateRegion(nearbyRegion);
-
-        Log.d(TAG, "RegionFound: ('" + nearbyRegion + "'.)");
-
-        if (nearbyButton == null) {
-            stopRegionDiscovery();
-            startButtonDiscovery();
-        }
-    }
-
-    @Subscribe
-    public void onRegionLost(RegionLostEvent regionLostEvent) {
-
-        nearbyRegion = null;
-        stopButtonDiscovery();
-
-        if (nearbyButton != null) {
-            forgetLostButton(nearbyButton.getId());
-        }
-    }
-
     // This is a costly operation and should only be done when we have confidence button will
     // be found... (e.g. we've already detected a beacon)
     protected void startButtonDiscovery() {
@@ -219,67 +246,33 @@ public class MonitoringService extends Service {
         buttonDiscoveryProvider.stopButtonDiscovery();
     }
 
-    @Subscribe
-    public void onButtonDiscovered(ButtonDiscoveryEvent buttonDiscoveryEvent) {
+    protected Button pairButtonWithRegion(BluetoothDevice device) {
 
-        if (buttonDiscoveryEvent.isSuccess()) {
+        Button discoveredButton;
 
-            if (nearbyButton == null) {
-
-                stopButtonDiscovery();
-
-                BluetoothDevice device = buttonDiscoveryEvent.getButtonDevice();
-
-                Button discoveredButton;
-
-                Button persistedButton = buttonProvider.getButton(device.getAddress());
-                if (persistedButton != null) {
-                    discoveredButton = persistedButton;
-                } else {
-                    discoveredButton = new Button(device.getAddress(), device.getAddress(), true);
-                }
-                discoveredButton.setBluetoothDevice(device);
-
-                buttonProvider.createOrUpdateButton(discoveredButton);
-
-                // we immediately pair this discovered button with our nearby region.. overwriting any
-                // existing pairing.
-
-                nearbyRegion.setName("Region for " + discoveredButton.getName());
-                regionProvider.createOrUpdateRegion(nearbyRegion);
-
-                Button button = buttonProvider.getButton(discoveredButton.getId());
-                button.setRegion(nearbyRegion);
-                nearbyRegion.setButton(button);
-
-                buttonProvider.createOrUpdateButton(button);
-                regionProvider.createOrUpdateRegion(nearbyRegion); // transitive persistence sucks in ormLite
-
-                nearbyButton = discoveredButton;
-
-                buttonCommunicator = new ButtonCommunicator(getApplicationContext(), nearbyButton);
-            }
+        Button persistedButton = buttonProvider.getButton(device.getAddress());
+        if (persistedButton != null) {
+            discoveredButton = persistedButton;
+        } else {
+            discoveredButton = new Button(device.getAddress(), device.getAddress(), true);
         }
+        discoveredButton.setBluetoothDevice(device);
 
-        // We've stopped button discovery, so now we go back to monitoring for region changes...
-        startDelayedRegionDiscover();
-    }
+        buttonProvider.createOrUpdateButton(discoveredButton);
 
-    @Subscribe
-    public void onButtonConnectedEvent(ButtonConnectedEvent buttonConnectedEvent) {
-        if (buttonCommunicator != null) {
-            ButtonState currentButtonState = buttonCommunicator.getButtonState();
-            if (runInBackground && lastNotifiedState != currentButtonState) {
-                sendNotification(buttonConnectedEvent.button.getId(), currentButtonState);
-            }
-        }
-    }
+        // we immediately pair this discovered button with our nearby region.. overwriting any
+        // existing pairing.
 
-    @Subscribe
-    public void onButtonLostEvent(ButtonLostEvent buttonLostEvent) {
-        forgetLostButton(buttonLostEvent.buttonId);
+        nearbyRegion.setName("Region for " + discoveredButton.getName());
+        regionProvider.createOrUpdateRegion(nearbyRegion);
 
-        startRegionDiscovery();
+        Button button = buttonProvider.getButton(discoveredButton.getId());
+        button.setRegion(nearbyRegion);
+        nearbyRegion.setButton(button);
+
+        buttonProvider.createOrUpdateButton(button);
+        regionProvider.createOrUpdateRegion(nearbyRegion); // transitive persistence sucks in ormLite
+        return discoveredButton;
     }
 
     public ButtonCommunicator getButtonCommunicator() {
@@ -291,7 +284,7 @@ public class MonitoringService extends Service {
         Log.d(TAG, "Sending notification for state '" + buttonState + "'.");
 
         lastNotifiedState = buttonState;
-        
+
         Button button = buttonProvider.getButton(buttonId);
 
         StringBuilder sbuf = new StringBuilder("Tap here to toggle '");

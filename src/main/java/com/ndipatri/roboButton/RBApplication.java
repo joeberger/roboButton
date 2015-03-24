@@ -7,8 +7,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.ActivityWatcher;
+import com.ndipatri.roboButton.utils.BusProvider;
 
 import java.util.List;
 
@@ -74,20 +76,30 @@ public abstract class RBApplication extends Application {
         Log.d(TAG, "Application foregrounded...");
 
         foregroundBluetoothMonitoringService();
+        postApplicationForegroundedEvent();
+    }
+
+    protected void foregroundBluetoothMonitoringService() {
+        startMonitoringService(false);
+    }
+
+    protected void postApplicationForegroundedEvent() {
+        BusProvider.getInstance().post(new ApplicationFocusChangeEvent(false));
     }
 
     protected void onBackground() {
         Log.d(TAG, "Application backgrounded...");
 
         backgroundBluetoothMonitoringService();
+        postApplicationBackgroundedEvent();
     }
 
     protected void backgroundBluetoothMonitoringService() {
         startMonitoringService(true);
     }
 
-    protected void foregroundBluetoothMonitoringService() {
-        startMonitoringService(false);
+    protected void postApplicationBackgroundedEvent() {
+        BusProvider.getInstance().post(new ApplicationFocusChangeEvent(true));
     }
 
     protected void setPreference(final String key, final int value) {

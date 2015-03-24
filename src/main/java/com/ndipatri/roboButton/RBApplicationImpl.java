@@ -1,6 +1,6 @@
 package com.ndipatri.roboButton;
 
-import com.ndipatri.roboButton.dagger.modules.ABModule;
+import com.ndipatri.roboButton.dagger.modules.RBModule;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,7 +11,7 @@ public class RBApplicationImpl extends RBApplication {
 
     protected List<? extends Object> getDependencyModules() {
         return Arrays.asList(
-                new ABModule(this)
+                new RBModule(this)
         );
     }
 }

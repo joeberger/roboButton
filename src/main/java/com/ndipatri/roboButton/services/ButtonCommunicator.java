@@ -13,7 +13,7 @@ import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
-import com.ndipatri.roboButton.events.ButtonConnectedEvent;
+import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
@@ -152,6 +152,8 @@ public class ButtonCommunicator {
 
         bluetoothMessageHandler.removeMessages(QUERY_STATE_MESSAGE);
         bluetoothMessageHandler.removeMessages(SET_STATE_MESSAGE);
+        bluetoothMessageHandler.removeMessages(AUTO_SHUTDOWN);
+        bluetoothMessageHandler.removeMessages(CONNECTIVITY_CHECK_MESSAGE);
 
         disconnect();
     }
@@ -167,15 +169,19 @@ public class ButtonCommunicator {
             Log.d(TAG, "Button state changed @'" + lastButtonStateUpdateTimeMillis + ".'");
             this.buttonState = buttonState;
 
-            new Handler(context.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "State is '" + buttonState + "'");
-
-                    BusProvider.getInstance().post(new ButtonStateChangeReport(getButton().getId(), buttonState));
-                }
-            });
+            postButtonStateChangeReport(buttonState);
         }
+    }
+
+    protected void postButtonStateChangeReport(final ButtonState buttonState) {
+        new Handler(context.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "State is '" + buttonState + "'");
+
+                BusProvider.getInstance().post(new ButtonStateChangeReport(getButton().getId(), buttonState));
+            }
+        });
     }
 
     @Produce
@@ -287,9 +293,6 @@ public class ButtonCommunicator {
                                     // button, let's set its auto-state....
                                     setRemoteState(ButtonState.ON);
                                 }
-                                
-                                // This first time, we want to emit an update right away
-                                postButtonConnectedEvent(button);
                             }
                             
                             setLocalButtonState(newRemoteState);
@@ -335,10 +338,11 @@ public class ButtonCommunicator {
                     if (shouldRun) {
 
                         if (isCommunicating()) {
-                            postButtonConnectedEvent(button);
+                            postButtonStateChangeReport(buttonState);
                             scheduleConnectivityCheck();
                         } else {
-                            postButtonLostEvent(button.getId());
+                            stop();
+                            postButtonStateChangeReport(ButtonState.DISCONNECTED);
                         }
                     }
 
@@ -352,15 +356,6 @@ public class ButtonCommunicator {
             @Override
             public void run() {
                 BusProvider.getInstance().post(new ButtonLostEvent(buttonId));
-            }
-        });
-    }
-
-    public void postButtonConnectedEvent(final Button button) {
-        new Handler(context.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                BusProvider.getInstance().post(new ButtonConnectedEvent(button));
             }
         });
     }
@@ -551,6 +546,11 @@ public class ButtonCommunicator {
     @Subscribe
     public void onArduinoButtonStateChangeRequestEvent(final ButtonStateChangeRequest event) {
         queueSetStateRequest(event.requestedButtonState);
+    }
+
+    @Subscribe
+    public void onApplicationFocusChangeEvent(final ApplicationFocusChangeEvent event) {
+        this.inBackground = event.inBackground;
     }
 
     // Presumaby, this is called from the UI thread...

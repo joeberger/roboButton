@@ -9,7 +9,8 @@ import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.TestUtils;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderTestImpl;
-import com.ndipatri.roboButton.events.ButtonConnectedEvent;
+import com.ndipatri.roboButton.enums.ButtonState;
+import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.services.MonitoringService;
@@ -71,7 +72,7 @@ public class MainControllerActivityTest {
     @Test
     public void testArduinoButtonFoundEventResultsInNewButtonFragment() {
 
-        BusProvider.getInstance().post(new ButtonConnectedEvent(singleButton));
+        BusProvider.getInstance().post(new ButtonStateChangeReport(singleButton.getId(), ButtonState.ON));
 
         ButtonFragment fragment = (ButtonFragment) activity.getFragmentManager().findFragmentByTag(singleButton.getId());
 

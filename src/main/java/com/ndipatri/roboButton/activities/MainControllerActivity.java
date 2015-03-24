@@ -15,9 +15,9 @@ import android.widget.Toast;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
-import com.ndipatri.roboButton.events.ButtonConnectedEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
+import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.BusProvider;
@@ -252,11 +252,11 @@ public class MainControllerActivity extends Activity {
     }
 
     @Subscribe
-    public void onButtonConnectedEvent(ButtonConnectedEvent ButtonConnectedEvent) {
+    public void onButtonStateChangeReport(ButtonStateChangeReport buttonStateChangeReport) {
         
         Log.d(TAG, "onButtonConnectedEvent()");
 
-        String foundButtonId = ButtonConnectedEvent.button.getId();
+        String foundButtonId = buttonStateChangeReport.buttonId;
 
         ButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
         if (existingButtonFragment == null) {
