@@ -37,13 +37,13 @@ import dagger.Provides;
                 ButtonDiscoveryProviderImpl.class,
         }
 )
-public class ABModule {
+public class RBModule {
 
     public static final String ESTIMOTE_BEACONS = "ESTIMOTE_BEACONS";
     public static final String GELO_BEACONS = "GELO_BEACONS";
     private Context context = null;
 
-    public ABModule(Context context) {
+    public RBModule(Context context) {
         this.context = context;
     }
 

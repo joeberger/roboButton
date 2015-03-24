@@ -21,7 +21,7 @@ import dagger.Module;
 import dagger.Provides;
 
 @Module(
-        includes  = {ABModule.class
+        includes  = {RBModule.class
         },
         injects = {
                 MainControllerActivityTest.class,
@@ -30,11 +30,11 @@ import dagger.Provides;
         },
         overrides = true
 )
-public class TestABModule {
+public class TestRBModule {
 
     private Context context = null;
 
-    public TestABModule(Context context) {
+    public TestRBModule(Context context) {
         this.context = context;
     }
 
@@ -58,14 +58,14 @@ public class TestABModule {
 
     @Provides
     @Singleton
-    @Named(ABModule.ESTIMOTE_BEACONS)
+    @Named(RBModule.ESTIMOTE_BEACONS)
     RegionDiscoveryProvider provideEstimoteBeaconDiscoveryProvider() {
         return new RegionDiscoveryProviderTestImpl(context);
     }
 
     @Provides
     @Singleton
-    @Named(ABModule.GELO_BEACONS)
+    @Named(RBModule.GELO_BEACONS)
     RegionDiscoveryProvider provideGeloBeaconDiscoveryProvider() {
         return new RegionDiscoveryProviderTestImpl(context);
     }
