@@ -31,6 +31,7 @@ import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
+import com.ndipatri.roboButton.utils.ButtonCommunicator;
 import com.squareup.otto.Subscribe;
 
 import javax.inject.Inject;
@@ -57,9 +58,11 @@ public class MonitoringService extends Service {
 
     @Inject
     protected RegionProvider regionProvider;
+
     @Inject
     @Named(RBModule.ESTIMOTE_BEACONS)
     protected RegionDiscoveryProvider estimoteRegionDiscoveryProvider;
+
     @Inject
     @Named(RBModule.GELO_BEACONS)
     protected RegionDiscoveryProvider geloRegionDiscoveryProvider;
@@ -207,8 +210,8 @@ public class MonitoringService extends Service {
 
     protected void stopButtonCommunication() {
         if (buttonCommunicator != null) {
-            buttonCommunicator = null;
             buttonCommunicator.shutdown();
+            buttonCommunicator = null;
         }
     }
 

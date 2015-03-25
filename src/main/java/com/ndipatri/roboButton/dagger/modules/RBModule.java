@@ -16,7 +16,7 @@ import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
-import com.ndipatri.roboButton.services.ButtonCommunicator;
+import com.ndipatri.roboButton.utils.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.LeDeviceListAdapter;
 
 import javax.inject.Singleton;

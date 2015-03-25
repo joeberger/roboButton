@@ -60,6 +60,8 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
     
     private Context context;
 
+    private BluetoothAdapter.LeScanCallback scanRunnable;
+
     /**
      * Key: Found Region
      * Object:  Number of scans for which this region was not found.
@@ -108,6 +110,8 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
         if (!scanning && mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
             
             scanning = true;
+
+            scanRunnable = getScanRunnable();
             
             // This is an idempotent operation
             mBluetoothAdapter.startLeScan(scanRunnable);
@@ -156,7 +160,7 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
                         postRegionLostEvent(lostRegion);
                         lostRegionIterator.remove();
                     } else {
-                        lostMetric.value += lostMetric.value;
+                        lostMetric.value += 1;
                     }
                 }
 
@@ -170,50 +174,58 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
         }
     };
 
-    private BluetoothAdapter.LeScanCallback scanRunnable = new BluetoothAdapter.LeScanCallback() {
-        
-        private int successiveInferiorRSSICount = 0;         
-        
-        // This call is always made on UI thread from BluetoothAdapter.
-        @Override
-        public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-            //For readability we convert the bytes of the UUID into hex
-            String UUIDHex = convertBytesToHex(Arrays.copyOfRange(scanRecord, 9, 25));
+    private BluetoothAdapter.LeScanCallback getScanRunnable() {
+        return new BluetoothAdapter.LeScanCallback() {
 
-            if (scanning && UUIDHex.equals(GELO_UUID)) {
-                //Bytes 25 and 26 of the advertisement packet represent the major value
-                int major = (scanRecord[25] << 8)
-                        | (scanRecord[26] << 0);
+            Map<BluetoothDevice, MutableInteger> successiveInferiorRSSICountMap = new HashMap<BluetoothDevice, MutableInteger>();
 
-                //Bytes 27 and 28 of the advertisement packet represent the minor value
-                int minor = ((scanRecord[27] & 0xFF) << 8)
-                        | (scanRecord[28] & 0xFF);
+            // This call is always made on UI thread from BluetoothAdapter.
+            @Override
+            public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
+                //For readability we convert the bytes of the UUID into hex
+                String UUIDHex = convertBytesToHex(Arrays.copyOfRange(scanRecord, 9, 25));
 
-                //RSSI values increase towards zero as the source gets closer to the reciever
+                if (scanning && UUIDHex.equals(GELO_UUID)) {
+                    //Bytes 25 and 26 of the advertisement packet represent the major value
+                    int major = (scanRecord[25] << 8)
+                            | (scanRecord[26] << 0);
 
-                com.ndipatri.roboButton.models.Region beaconRegion = new com.ndipatri.roboButton.models.Region(minor, major, UUIDHex);
-                
-                if (rssi > beaconDetectionThresholdDbms) {
-                    successiveInferiorRSSICount = 0;
-                    Log.d(TAG, "Region with ACCEPTABLE RSSI '" + rssi + "' (" + beaconRegion + "'!");
-                    postRegionFoundEvent(beaconRegion);
-                    
-                    nearbyRegions.put(beaconRegion, new MutableInteger(0)); // reset the 'LostMetric' value back to 0.
-                } else {
-                    Log.d(TAG, "Region with INFERIOR RSSI '" + rssi + "' (" + beaconRegion + "'!");
-                    ++successiveInferiorRSSICount;
-                    
-                    // This is an attempt to 'low pass filter' the RSSI measurements as at times they can be
-                    // spurious.
-                    if (successiveInferiorRSSICount >= beaconInferiorRSSICountThreshold) {
-                        successiveInferiorRSSICount = 0;
-                        postRegionLostEvent(beaconRegion);
-                        nearbyRegions.remove(nearbyRegions);
+                    //Bytes 27 and 28 of the advertisement packet represent the minor value
+                    int minor = ((scanRecord[27] & 0xFF) << 8)
+                            | (scanRecord[28] & 0xFF);
+
+                    //RSSI values increase towards zero as the source gets closer to the reciever
+
+                    com.ndipatri.roboButton.models.Region beaconRegion = new com.ndipatri.roboButton.models.Region(minor, major, UUIDHex);
+
+                    if (rssi > beaconDetectionThresholdDbms) {
+                        Log.d(TAG, "Region with ACCEPTABLE RSSI '" + rssi + "' (" + beaconRegion + "'!");
+                        postRegionFoundEvent(beaconRegion);
+
+                        successiveInferiorRSSICountMap.put(device, new MutableInteger(0)); // reset low pass filter for this device
+                        nearbyRegions.put(beaconRegion, new MutableInteger(0)); // reset the 'LostMetric' value back to 0.
+                    } else {
+                        Log.d(TAG, "Region with INFERIOR RSSI '" + rssi + "' (" + beaconRegion + "'!");
+
+                        MutableInteger inferiorRSSIInteger = successiveInferiorRSSICountMap.get(device);
+                        if (inferiorRSSIInteger == null) {
+                            inferiorRSSIInteger = new MutableInteger(0);
+                            successiveInferiorRSSICountMap.put(device, inferiorRSSIInteger);
+                        }
+                        inferiorRSSIInteger.value += 1;
+
+                        // This is an attempt to 'low pass filter' the RSSI measurements as at times they can be
+                        // spurious.
+                        if (inferiorRSSIInteger.value >= beaconInferiorRSSICountThreshold) {
+                            successiveInferiorRSSICountMap.remove(device);
+                            postRegionLostEvent(beaconRegion);
+                            nearbyRegions.remove(nearbyRegions);
+                        }
                     }
                 }
             }
-        }
-    };
+        };
+    }
 
     private static String convertBytesToHex(byte[] bytes) {
         char[] hex = new char[bytes.length * 2];

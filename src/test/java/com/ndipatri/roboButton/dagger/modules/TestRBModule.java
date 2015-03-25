@@ -12,7 +12,7 @@ import com.ndipatri.roboButton.dagger.providers.BluetoothProviderTestImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderTestImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
-import com.ndipatri.roboButton.services.ButtonCommunicatorTest;
+import com.ndipatri.roboButton.utils.ButtonCommunicatorTest;
 import com.ndipatri.roboButton.services.MonitoringServiceTest;
 
 import javax.inject.Singleton;

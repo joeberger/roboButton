@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.services;
+package com.ndipatri.roboButton.utils;
 
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
@@ -19,7 +19,6 @@ import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.models.Button;
-import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
 
@@ -138,7 +137,7 @@ public class ButtonCommunicator {
         }
     }
 
-    protected void stop() {
+    public void stop() {
         shouldRun = false;
 
         postButtonLostEvent(button.getId());

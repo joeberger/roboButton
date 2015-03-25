@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.services;
+package com.ndipatri.roboButton.utils;
 
 import android.app.NotificationManager;
 import android.content.Context;
@@ -12,7 +12,9 @@ import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderTestImpl;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.models.Button;
+import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.BusProvider;
+import com.ndipatri.roboButton.utils.ButtonCommunicator;
 import com.squareup.otto.Subscribe;
 
 import org.junit.Before;
