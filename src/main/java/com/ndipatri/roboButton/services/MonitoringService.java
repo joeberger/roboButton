@@ -27,6 +27,7 @@ import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
+import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.models.Button;
@@ -55,6 +56,8 @@ public class MonitoringService extends Service {
     public static final String RUN_IN_BACKGROUND = "run_in_background";
 
     protected boolean runInBackground = false;
+
+    public static final String SHOULD_TOGGLE_FLAG = "should_toggle_flag";
 
     @Inject
     protected RegionProvider regionProvider;
@@ -126,6 +129,14 @@ public class MonitoringService extends Service {
             String source = null == intent ? "intent" : "action";
             Log.e(TAG, source + " was null, flags=" + flags + " bits=" + Integer.toBinaryString(flags));
             return START_STICKY;
+        } else {
+            if (intent.getBooleanExtra(SHOULD_TOGGLE_FLAG, false)) {
+                if (buttonCommunicator != null) {
+                    BusProvider.getInstance().post(new ButtonStateChangeRequest(buttonCommunicator.getButton().getId()));
+
+                    return START_STICKY;
+                }
+            }
         }
 
         boolean newRunInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
@@ -293,9 +304,9 @@ public class MonitoringService extends Service {
         StringBuilder sbuf = new StringBuilder("Tap here to toggle '");
         sbuf.append(button.getName()).append("'.");
 
-        Intent intent = new Intent(this, MainControllerActivity.class);
-        intent.putExtra(MainControllerActivity.SHOULD_TOGGLE_FLAG, true);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        Intent intent = new Intent(this, MonitoringService.class);
+        intent.putExtra(SHOULD_TOGGLE_FLAG, true);
+        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
         // NJD TODO - Could use 'notificationManager.cancel(NOTIFICATION_ID)' at some point for cleanup
         int notifId = 1234;

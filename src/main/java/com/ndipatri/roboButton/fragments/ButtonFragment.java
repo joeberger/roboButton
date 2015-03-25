@@ -52,14 +52,13 @@ public class ButtonFragment extends Fragment {
         RBApplication.getInstance().registerForDependencyInjection(this);
     }
 
-    public static ButtonFragment newInstance(String buttonId, final boolean shouldToggleFlag) {
+    public static ButtonFragment newInstance(String buttonId) {
 
         ButtonFragment buttonFragment = new ButtonFragment();
         Bundle args = new Bundle();
         buttonFragment.setArguments(args);
 
         buttonFragment.setButtonId(buttonId);
-        buttonFragment.setShouldToggleFlag(shouldToggleFlag);
 
         return buttonFragment;
     }
@@ -129,14 +128,6 @@ public class ButtonFragment extends Fragment {
         getArguments().putString("buttonId", buttonId);
     }
 
-    private boolean getShouldToggleFlag() {
-        return getArguments().getBoolean("shouldToggleFlag");
-    }
-
-    private void setShouldToggleFlag(boolean shouldToggleFlag) {
-        getArguments().putBoolean("shouldToggleFlag", shouldToggleFlag);
-    }
-
     private void setButtonState(ButtonState buttonState) {
         this.buttonState = buttonState;
 
@@ -147,14 +138,6 @@ public class ButtonFragment extends Fragment {
     public void onArduinoButtonStateChangeReportEvent(final ButtonStateChangeReport event) {
         if (event.getButtonId().equals(getButtonId())) {
             setButtonState(event.getButtonState());
-            
-            if (getShouldToggleFlag()) {
-                setShouldToggleFlag(false);
-                
-                // Now that we know what the current state is, we must toggle it as instructed when we were
-                // first instantiated...
-                toggleButtonState();
-            }
         }
     }
 }

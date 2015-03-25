@@ -43,7 +43,6 @@ public class MainControllerActivity extends Activity {
     protected SparseArray<String> pendingImageRequestIdToButtonIdMap = new SparseArray<String>();
 
     private static final int REQUEST_ENABLE_BT = -101;
-    public static final String SHOULD_TOGGLE_FLAG = "should_toggle_flag";
 
     private static final String TAG = MainControllerActivity.class.getCanonicalName();
 
@@ -54,9 +53,6 @@ public class MainControllerActivity extends Activity {
     protected @InjectView(R.id.mainViewGroup) ViewGroup mainViewGroup;
     //endregion
     
-    // Should toggle the first button to which we attach.
-    protected boolean shouldToggleFlag = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,11 +61,6 @@ public class MainControllerActivity extends Activity {
         ((RBApplication)getApplicationContext()).registerForDependencyInjection(this);
 
         Views.inject(this);
-        
-        Intent intent = getIntent();
-        if (intent != null) {
-            shouldToggleFlag = intent.getBooleanExtra(SHOULD_TOGGLE_FLAG, false);
-        }
     }
 
     @Override
@@ -260,7 +251,7 @@ public class MainControllerActivity extends Activity {
 
         ButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
         if (existingButtonFragment == null) {
-            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId, shouldToggleFlag);
+            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId);
             getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
             buttonsWithFragments.add(foundButtonId);
         }

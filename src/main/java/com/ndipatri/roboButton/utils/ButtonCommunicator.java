@@ -461,7 +461,7 @@ public class ButtonCommunicator {
         return newButtonState;
     }
 
-    public void setRemoteState(ButtonState buttonState) {
+    private void setRemoteState(ButtonState buttonState) {
 
         try {
             if (socket == null || !socket.isConnected()) {
@@ -544,7 +544,17 @@ public class ButtonCommunicator {
 
     @Subscribe
     public void onArduinoButtonStateChangeRequestEvent(final ButtonStateChangeRequest event) {
-        queueSetStateRequest(event.requestedButtonState);
+
+        ButtonState requestedButtonState = event.requestedButtonState;
+        if (requestedButtonState == null)  {
+            if (buttonState.value) {
+                requestedButtonState = ButtonState.OFF_PENDING;
+            } else {
+                requestedButtonState = ButtonState.ON_PENDING;
+            }
+        }
+
+        queueSetStateRequest(requestedButtonState);
     }
 
     @Subscribe
