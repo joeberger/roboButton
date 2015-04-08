@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From: file:/Users/Nicholas.DiPatri/Documents/development/roboButton/app/src/main/res/values/bools.xml -->
+    <eat-comment/>
+    <bool name="auto_mode_enabled_default">true</bool>
+    <!-- From: file:/Users/Nicholas.DiPatri/Documents/development/roboButton/app/src/main/res/values/colors.xml -->
+    <eat-comment/>
+    <color name="ls_low_battery_color">#ffff6600</color>
+    <color name="off_white">#FFF5F5F5</color>
+    <color name="semi_transparent">#DD5e5e5e</color>
+    <color name="transparent">#00000000</color>
+    <color name="warning_red">#FF0000</color>
+    <!-- From: file:/Users/Nicholas.DiPatri/Documents/development/roboButton/app/src/main/res/values/integers.xml -->
+    <eat-comment/>
+    <integer name="beacon_inferior_rssi_count_threshold">2</integer>
+    <integer name="beacon_lost_scan_intervals">1</integer>
+    <integer name="beacon_scan_interval_millis">15000</integer>
+    <integer name="button_discovery_duration_millis">15000</integer>
+    <integer name="communications_grace_period_millis">20000</integer>
+    <integer name="estimote_beacon_detection_threshold">8</integer>
+    <integer name="gele_beacon_detection_threshold">-70</integer>
+    <integer name="remote_state_check_interval_millis">1000</integer>
+    <!-- From: file:/Users/Nicholas.DiPatri/Documents/development/roboButton/app/src/main/res/values/strings.xml -->
+    <eat-comment/>
+    <string name="beacon_detected">Beacon Detected</string>
+    <string name="beacon_found">Beacon Found!</string>
+    <string name="button_discovery_pattern">roboButton</string>
+    <string name="communication_established">Communication Established</string>
+    <string name="configure_beacon">Configure Beacon</string>
+    <string name="configure_button">Configure Button</string>
+    <string name="configuring_bluetooth">Configuring Bluetooth</string>
+    <string name="disable_auto_control">Disable Auto Control</string>
+    <string name="disconnected">disconnected</string>
+    <string name="enable_auto_control">Enable Auto Control</string>
+    <string name="forget_all_pairing">Forget All Pairing</string>
+    <string name="found">Found</string>
+    <string name="is_connecting">is connecting</string>
+    <string name="main_controller">Main Controller</string>
+    <string name="never_connected">nevet connected</string>
+    <string name="new_beacon">New Beacon</string>
+    <string name="new_robo_button">New Robo Button</string>
+    <string name="no_paired_bluetooth_devices">No Paired Bluetooth Devices Found</string>
+    <string name="off">off</string>
+    <string name="on">on</string>
+    <string name="opening_bluetooth_socket">Opening Bluetooth Socket ...</string>
+    <string name="robo_button">Robo Button</string>
+    <string name="robo_button_found">RoboButton Found!</string>
+    <string name="select_paired_device">Select a Paired Bluetooth Device</string>
+    <string name="shall_we_pair_it_with_this_beacon">Shall we pair it with this Beacon?</string>
+    <string name="transmission_failure">Transmission Failure ...</string>
+    <string name="transmission_success">Transmission Success</string>
+    <string name="transmitting_data">Transmitting Data ...</string>
+    <string name="unknown">Unknown</string>
+    <string name="unpair_from_beacon">Unpair from Beacon</string>
+    <string name="view_nearby_beacons">View Nearby Beacons</string>
+    <!-- From: file:/Users/Nicholas.DiPatri/Documents/development/roboButton/app/src/main/res/values/styles.xml -->
+    <eat-comment/>
+    <style name="slideup_dialog_animation" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/slide_up</item>
+        <item name="android:windowExitAnimation">@anim/slide_down</item>
+    </style>
+</resources>

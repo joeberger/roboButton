@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.android.builder.testing.ConnectedDevice" tests="1" failures="1" errors="0" skipped="0" time="5.095" timestamp="2015-04-08T03:21:46" hostname="localhost">
+  <properties>
+    <property name="device" value="Google Nexus 7 - 5.0.0 - API 21 - 800x1280 - 5.0" />
+    <property name="flavor" value="" />
+    <property name="project" value="app" />
+  </properties>
+  <testcase name="hasTests" classname="com.android.builder.testing.ConnectedDevice" time="0.0">
+    <failure>No tests found.</failure>
+  </testcase>
+</testsuite>

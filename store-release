@@ -1,8 +1,0 @@
-#!/bin/bash
-echo Building and deploying RoboButton Android Prod Store:
-echo
-
-export ANDROID_HOME="/usr/local/Cellar/android-sdk/r22.0.4"
-export ANDROID_SDK="/usr/local/Cellar/android-sdk/r22.0.4"
-
-mvn -Pprod-store-roboButton -f store-pom.xml clean generate-resources install -DskipTests
