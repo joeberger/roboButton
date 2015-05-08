@@ -37,11 +37,6 @@ public class MainControllerActivity extends Activity {
     // region localVariables
     @Inject protected BluetoothProvider bluetoothProvider;
 
-    private AtomicInteger imageRequestIdGenerator = new AtomicInteger();
-
-    // These are all outstanding intents to retrieve an image for a particular buttonId
-    protected SparseArray<String> pendingImageRequestIdToButtonIdMap = new SparseArray<String>();
-
     private static final int REQUEST_ENABLE_BT = -101;
 
     private static final String TAG = MainControllerActivity.class.getCanonicalName();
@@ -211,21 +206,6 @@ public class MainControllerActivity extends Activity {
             getFragmentManager().beginTransaction().remove(ButtonFragment).commitAllowingStateLoss();
             buttonsWithFragments.remove(lostButtonId);
         }
-    }
-
-    protected synchronized Integer getNextImageRequestId(String buttonId) {
-        Integer nextImageRequestId = imageRequestIdGenerator.incrementAndGet();
-        pendingImageRequestIdToButtonIdMap.put(nextImageRequestId, buttonId);
-
-        return nextImageRequestId;
-    }
-
-    protected synchronized String getButtonForRequestId(Integer imageRequestId) {
-        return pendingImageRequestIdToButtonIdMap.get(imageRequestId);
-    }
-
-    protected synchronized  void finishedRequest(Integer imageRequestId) {
-        pendingImageRequestIdToButtonIdMap.remove(imageRequestId);
     }
 
     @Subscribe

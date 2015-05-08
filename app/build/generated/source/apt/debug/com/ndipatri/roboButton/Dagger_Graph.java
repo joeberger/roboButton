@@ -1,5 +1,6 @@
 package com.ndipatri.roboButton;
 
+import com.ndipatri.roboButton.activities.InjectableActivityInstrumentationTest;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.activities.MainControllerActivity$$MembersInjector;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
@@ -16,11 +17,8 @@ import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.fragments.ButtonFragment$$MembersInjector;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.services.MonitoringService$$MembersInjector;
-import com.ndipatri.roboButton.services.MonitoringServiceTest;
 import com.ndipatri.roboButton.utils.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.ButtonCommunicator$$MembersInjector;
-import com.ndipatri.roboButton.utils.ButtonCommunicatorTest;
-import com.ndipatri.roboButton.utils.ButtonCommunicatorTest$$MembersInjector;
 import com.ndipatri.roboButton.utils.LeDeviceListAdapter;
 import com.ndipatri.roboButton.utils.LeDeviceListAdapter$$MembersInjector;
 import dagger.MembersInjector;
@@ -42,7 +40,6 @@ public final class Dagger_Graph implements Graph {
   private Provider<BluetoothProvider> provideBluetoothProvider;
   private MembersInjector<MonitoringService> monitoringServiceMembersInjector;
   private MembersInjector<ButtonCommunicator> buttonCommunicatorMembersInjector;
-  private MembersInjector<ButtonCommunicatorTest> buttonCommunicatorTestMembersInjector;
   private MembersInjector<MainControllerActivity> mainControllerActivityMembersInjector;
   private MembersInjector<ButtonProvider> buttonProviderMembersInjector;
 
@@ -67,14 +64,8 @@ public final class Dagger_Graph implements Graph {
     this.provideBluetoothProvider = ScopedProvider.create(TestRBModule$$ProvideBluetoothProviderFactory.create(builder.testRBModule));
     this.monitoringServiceMembersInjector = MonitoringService$$MembersInjector.create((MembersInjector) MembersInjectors.noOp(), provideRegionProvider, provideEstimoteBeaconDiscoveryProvider, provideGeloBeaconDiscoveryProvider, provideButtonProvider, provideButtonDiscoveryProvider, provideBluetoothProvider);
     this.buttonCommunicatorMembersInjector = ButtonCommunicator$$MembersInjector.create(provideButtonDiscoveryProvider);
-    this.buttonCommunicatorTestMembersInjector = ButtonCommunicatorTest$$MembersInjector.create(provideButtonDiscoveryProvider);
     this.mainControllerActivityMembersInjector = MainControllerActivity$$MembersInjector.create((MembersInjector) MembersInjectors.noOp(), provideBluetoothProvider);
     this.buttonProviderMembersInjector = ButtonProvider$$MembersInjector.create(provideRegionProvider);
-  }
-
-  @Override
-  public void inject(MonitoringServiceTest thingy) {  
-    MembersInjectors.noOp().injectMembers(thingy);
   }
 
   @Override
@@ -103,13 +94,13 @@ public final class Dagger_Graph implements Graph {
   }
 
   @Override
-  public void inject(ButtonCommunicatorTest thingy) {  
-    buttonCommunicatorTestMembersInjector.injectMembers(thingy);
+  public void inject(MainControllerActivity thingy) {  
+    mainControllerActivityMembersInjector.injectMembers(thingy);
   }
 
   @Override
-  public void inject(MainControllerActivity thingy) {  
-    mainControllerActivityMembersInjector.injectMembers(thingy);
+  public void inject(InjectableActivityInstrumentationTest thingy) {
+    MembersInjectors.noOp().injectMembers(thingy);
   }
 
   @Override

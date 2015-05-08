@@ -7,7 +7,7 @@ import butterknife.Views.Finder;
 public class MainControllerActivity$$ViewInjector {
   public static void inject(Finder finder, com.ndipatri.roboButton.activities.MainControllerActivity target, Object source) {
     View view;
-    view = finder.findById(source, 2131427328);
+    view = finder.findById(source, 2131230783);
     target.mainViewGroup = (android.view.ViewGroup) view;
   }
 

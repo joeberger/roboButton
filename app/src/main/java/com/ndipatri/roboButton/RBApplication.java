@@ -7,12 +7,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.ndipatri.roboButton.dagger.ObjectGraph;
 import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.ActivityWatcher;
 import com.ndipatri.roboButton.utils.BusProvider;
 
-public abstract class RBApplication extends Application {
+public class RBApplication extends Application {
 
     private static final String TAG = RBApplication.class.getCanonicalName();
     public static final String APPLICATION_PREFS = "RoboButton.prefs";
@@ -22,7 +23,7 @@ public abstract class RBApplication extends Application {
     // region localVars
     private boolean inBackground = true;
 
-    private Graph graph;
+    private ObjectGraph graph;
 
     private static RBApplication instance = null;
     // endregion
@@ -54,15 +55,23 @@ public abstract class RBApplication extends Application {
             }
         });
         registerActivityLifecycleCallbacks(activityWatcher);
-
-        graph = getObjectGraph();
     }
 
     public ActivityWatcher getActivityWatcher() {
         return activityWatcher;
     }
 
-    public abstract Graph getObjectGraph();
+    public synchronized ObjectGraph getGraph() {
+        if (graph == null) {
+            graph = ObjectGraph.Initializer.init(this);
+        }
+
+        return graph;
+    }
+
+    public synchronized void clearGraph() {
+        graph = null;
+    }
 
     public static RBApplication getInstance() {
         return instance;
@@ -159,13 +168,5 @@ public abstract class RBApplication extends Application {
         }
 
         return isEnabled;
-    }
-
-    public void setMockMode(boolean providesMocks) {
-        graph = Graph.Initializer.init(this, providesMocks);
-    }
-
-    public Graph getGraph() {
-        return graph;
     }
 }

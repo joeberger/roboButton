@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainLinearLayout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/nameEditText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="20dp"
+        android:gravity="center_horizontal"
+        android:hint="Button Name"
+        android:inputType="textPersonName"
+        android:maxLength="20"
+        android:minWidth="150dp" />
+
+    <Switch
+        android:id="@+id/autoModeSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:checked="false"
+        android:text="Auto Mode" />
+
+</LinearLayout><!-- From: file:/Users/Nicholas.DiPatri/Documents/development/roboButton/app/src/main/res/layout/dialog_button_details.xml -->

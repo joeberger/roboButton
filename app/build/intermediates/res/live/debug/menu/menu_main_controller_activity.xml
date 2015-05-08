@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/view_nearby_beacons"
+        android:icon="@drawable/beacon_gray"
+        android:title="@string/view_nearby_beacons"/>
+    
+    <item
+        android:id="@+id/toggle_auto_control"
+        android:icon="@drawable/beacon_gray"
+        android:title="@string/enable_auto_control"/>
+</menu><!-- From: file:/Users/Nicholas.DiPatri/Documents/development/roboButton/app/src/main/res/menu/menu_main_controller_activity.xml -->

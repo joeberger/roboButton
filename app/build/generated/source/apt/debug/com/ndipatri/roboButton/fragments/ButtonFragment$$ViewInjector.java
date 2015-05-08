@@ -7,7 +7,7 @@ import butterknife.Views.Finder;
 public class ButtonFragment$$ViewInjector {
   public static void inject(Finder finder, com.ndipatri.roboButton.fragments.ButtonFragment target, Object source) {
     View view;
-    view = finder.findById(source, 2131427333);
+    view = finder.findById(source, 2131230788);
     target.imageView = (android.widget.ImageView) view;
   }
 

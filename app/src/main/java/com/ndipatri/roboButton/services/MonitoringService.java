@@ -15,6 +15,7 @@ import android.widget.RemoteViews;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
+import com.ndipatri.roboButton.dagger.RBModule;
 import com.ndipatri.roboButton.dagger.annotations.Named;
 import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.RegionProvider;
@@ -61,11 +62,11 @@ public class MonitoringService extends Service {
     protected RegionProvider regionProvider;
 
     @Inject
-    @Named("ESTIMOTE")
+    @Named(RBModule.ESTIMOTE_BEACONS)
     protected RegionDiscoveryProvider estimoteRegionDiscoveryProvider;
 
     @Inject
-    @Named("GELO")
+    @Named(RBModule.GELO_BEACONS)
     protected RegionDiscoveryProvider geloRegionDiscoveryProvider;
 
     @Inject
