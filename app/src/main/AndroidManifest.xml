@@ -30,7 +30,7 @@
     </compatible-screens>
 
     <application
-            android:name="com.ndipatri.roboButton.RBApplicationImpl"
+            android:name=".RBApplication"
             android:icon="@drawable/green_button"
             android:debuggable="true"
             android:label="RoboButton">

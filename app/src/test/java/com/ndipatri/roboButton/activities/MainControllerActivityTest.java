@@ -1,12 +1,11 @@
-/*
 package com.ndipatri.roboButton.activities;
 
 import android.app.Activity;
 import android.content.Context;
 import android.view.View;
 
-import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
+import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.TestUtils;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderTestImpl;
@@ -17,20 +16,19 @@ import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.BusProvider;
 
+import org.junit.*;
+import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
 import org.robolectric.util.ActivityController;
 
-import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.junit.*;
-import org.junit.runner.RunWith;
 
 @RunWith(RobolectricTestRunner.class)
 public class MainControllerActivityTest {
@@ -124,4 +122,3 @@ public class MainControllerActivityTest {
 
     // NJD TODO - Need to write test around MenuItem (e.g. beaconFilterToggle)
 }
-*/

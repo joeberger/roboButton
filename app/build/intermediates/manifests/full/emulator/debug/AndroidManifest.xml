@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.ndipatri.roboButton"
-    android:versionCode="1"
+    android:versionCode="2"
     android:versionName="1.0.0-SNAPSHOT" >
 
     <uses-sdk
@@ -49,7 +49,7 @@
     </compatible-screens>
 
     <application
-        android:name="com.ndipatri.roboButton.RBApplicationImpl"
+        android:name="com.ndipatri.roboButton.RBApplication"
         android:debuggable="true"
         android:icon="@drawable/green_button"
         android:label="RoboButton" >
