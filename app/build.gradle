@@ -42,7 +42,6 @@ android {
         test {
             java {
                 srcDirs += ['build/generated/source/r/emulator/debug']
-                srcDirs += ['build/generated/source/apt/emulator/debug']
                 srcDirs += ['build/generated/source/buildConfig/emulator/debug']
                 srcDirs += ['src/main/java']
             }
@@ -50,7 +49,9 @@ android {
     }
 
     productFlavors {
-        emulator {
+        emulatorMocks {
+        }
+        emulatorStubs {
         }
         live {
         }

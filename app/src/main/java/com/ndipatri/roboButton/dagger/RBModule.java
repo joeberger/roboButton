@@ -2,7 +2,6 @@ package com.ndipatri.roboButton.dagger;
 
 import android.content.Context;
 
-import com.ndipatri.roboButton.BuildVariant;
 import com.ndipatri.roboButton.dagger.annotations.Named;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderImpl;
@@ -13,6 +12,7 @@ import com.ndipatri.roboButton.dagger.providers.EstimoteRegionDiscoveryProviderI
 import com.ndipatri.roboButton.dagger.providers.GeloRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.RegionProvider;
+import com.ndipatri.roboButton.BuildVariant;
 
 import javax.inject.Singleton;
 
@@ -35,7 +35,7 @@ public class RBModule {
     @Provides
     @Singleton
     ButtonProvider provideButtonProvider() {
-        if (BuildVariant.useMock) {
+        if (BuildVariant.useMocks) {
             return mock(ButtonProvider.class);
         } else {
             return new ButtonProvider(context);
@@ -45,7 +45,7 @@ public class RBModule {
     @Provides
     @Singleton
     RegionProvider provideRegionProvider() {
-        if (BuildVariant.useMock) {
+        if (BuildVariant.useMocks) {
             return mock(RegionProvider.class);
         } else {
             return new RegionProvider(context);
@@ -55,7 +55,7 @@ public class RBModule {
     @Provides
     @Singleton
     BluetoothProvider provideBluetoothProvider() {
-        if (BuildVariant.useMock) {
+        if (BuildVariant.useMocks) {
             return mock(BluetoothProvider.class);
         } else {
             return new BluetoothProviderImpl(context);
@@ -66,7 +66,7 @@ public class RBModule {
     @Singleton
     @Named(ESTIMOTE_BEACONS)
     RegionDiscoveryProvider provideEstimoteBeaconDiscoveryProvider() {
-        if (BuildVariant.useMock) {
+        if (BuildVariant.useMocks) {
             return mock(RegionDiscoveryProvider.class);
         } else {
             return new EstimoteRegionDiscoveryProviderImpl(context);
@@ -77,7 +77,7 @@ public class RBModule {
     @Singleton
     @Named(GELO_BEACONS)
     RegionDiscoveryProvider provideGeloBeaconDiscoveryProvider() {
-        if (BuildVariant.useMock) {
+        if (BuildVariant.useMocks) {
             return mock(RegionDiscoveryProvider.class);
         } else {
             return new GeloRegionDiscoveryProviderImpl(context);
@@ -87,7 +87,7 @@ public class RBModule {
     @Provides
     @Singleton
     ButtonDiscoveryProvider provideButtonDiscoveryProvider() {
-        if (BuildVariant.useMock) {
+        if (BuildVariant.useMocks) {
             return mock(ButtonDiscoveryProvider.class);
         } else {
             return new ButtonDiscoveryProviderImpl(context);

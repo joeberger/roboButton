@@ -53,9 +53,9 @@ public class MainControllerActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_controller);
 
-        ((RBApplication)getApplicationContext()).getGraph().inject(this);
-
         Views.inject(this);
+
+        ((RBApplication)getApplicationContext()).getGraph().inject(this);
     }
 
     @Override

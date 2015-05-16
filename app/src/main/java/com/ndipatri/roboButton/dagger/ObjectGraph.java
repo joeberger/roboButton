@@ -3,7 +3,7 @@ package com.ndipatri.roboButton.dagger;
 import android.content.Context;
 
 import com.ndipatri.roboButton.activities.MainControllerActivity;
-import com.ndipatri.roboButton.activities.MainControllerActivityInstrumentationTest;
+import com.ndipatri.roboButton.activities.MainControllerActivityInstrumentation;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
@@ -39,7 +39,7 @@ public interface ObjectGraph {
 
     void inject(ButtonDiscoveryProviderImpl thingy);
 
-    void inject(MainControllerActivityInstrumentationTest thingy);
+    void inject(MainControllerActivityInstrumentation thingy);
 
     public final static class Initializer {
         public static ObjectGraph init(Context context) {
