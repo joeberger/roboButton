@@ -13,6 +13,8 @@ import com.ndipatri.roboButton.dagger.providers.GeloRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.RegionProvider;
 import com.ndipatri.roboButton.BuildVariant;
+import com.ndipatri.roboButton.utils.BusProvider;
+import com.squareup.otto.Bus;
 
 import javax.inject.Singleton;
 
@@ -30,6 +32,12 @@ public class RBModule {
 
     public RBModule(Context context) {
         this.context = context;
+    }
+
+    @Provides
+    @Singleton
+    Bus provideBus() {
+        return new BusProvider();
     }
 
     @Provides

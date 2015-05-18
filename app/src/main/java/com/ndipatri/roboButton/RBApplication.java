@@ -11,7 +11,9 @@ import com.ndipatri.roboButton.dagger.ObjectGraph;
 import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.ActivityWatcher;
-import com.ndipatri.roboButton.utils.BusProvider;
+import com.squareup.otto.Bus;
+
+import javax.inject.Inject;
 
 public class RBApplication extends Application {
 
@@ -32,9 +34,13 @@ public class RBApplication extends Application {
         instance = this;
     }
 
+    @Inject Bus bus;
+
     @Override
     public void onCreate() {
         super.onCreate();
+
+        getGraph().inject(this);
 
         activityWatcher = new ActivityWatcher();
         activityWatcher.registerActivityWatcherCallbacks(new ActivityWatcher.ActivityWatcherCallbacks() {
@@ -89,7 +95,7 @@ public class RBApplication extends Application {
     }
 
     protected void postApplicationForegroundedEvent() {
-        BusProvider.getInstance().post(new ApplicationFocusChangeEvent(false));
+        bus.post(new ApplicationFocusChangeEvent(false));
     }
 
     protected void onBackground() {
@@ -104,7 +110,7 @@ public class RBApplication extends Application {
     }
 
     protected void postApplicationBackgroundedEvent() {
-        BusProvider.getInstance().post(new ApplicationFocusChangeEvent(true));
+        bus.post(new ApplicationFocusChangeEvent(true));
     }
 
     protected void setPreference(final String key, final int value) {

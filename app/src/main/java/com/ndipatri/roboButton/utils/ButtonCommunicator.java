@@ -19,6 +19,7 @@ import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.models.Button;
+import com.squareup.otto.Bus;
 import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
 
@@ -36,7 +37,11 @@ public class ButtonCommunicator {
 
     private static final String TAG = ButtonCommunicator.class.getCanonicalName();
 
-    @Inject protected ButtonDiscoveryProvider buttonDiscoveryProvider;
+    @Inject
+    Bus bus;
+
+    @Inject
+    protected ButtonDiscoveryProvider buttonDiscoveryProvider;
 
     protected long communicationsGracePeriodMillis = -1;
 
@@ -104,7 +109,7 @@ public class ButtonCommunicator {
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                BusProvider.getInstance().register(ButtonCommunicator.this);
+                bus.register(ButtonCommunicator.this);
             }
         });
 
@@ -145,7 +150,7 @@ public class ButtonCommunicator {
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                BusProvider.getInstance().unregister(ButtonCommunicator.this);
+                bus.unregister(ButtonCommunicator.this);
             }
         });
 
@@ -178,7 +183,7 @@ public class ButtonCommunicator {
             public void run() {
                 Log.d(TAG, "State is '" + buttonState + "'");
 
-                BusProvider.getInstance().post(new ButtonStateChangeReport(getButton().getId(), buttonState));
+                bus.post(new ButtonStateChangeReport(getButton().getId(), buttonState));
             }
         });
     }
@@ -354,7 +359,7 @@ public class ButtonCommunicator {
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                BusProvider.getInstance().post(new ButtonLostEvent(buttonId));
+                bus.post(new ButtonLostEvent(buttonId));
             }
         });
     }
@@ -525,7 +530,7 @@ public class ButtonCommunicator {
             }
 
             if (connectException.getMessage().contains("Bluetooth is off")) {
-                BusProvider.getInstance().post(new BluetoothDisabledEvent());
+                bus.post(new BluetoothDisabledEvent());
             }
 
             bluetoothSocket = null;

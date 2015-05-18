@@ -23,7 +23,7 @@ import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.providers.RegionProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.models.Button;
-import com.ndipatri.roboButton.utils.BusProvider;
+import com.squareup.otto.Bus;
 
 import javax.inject.Inject;
 
@@ -36,6 +36,9 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     // ButterKnife Injected Views
     protected @InjectView(R.id.nameEditText) EditText nameEditText;
     protected @InjectView(R.id.autoModeSwitch) Switch autoModeSwitch;
+
+    @Inject
+    Bus bus;
 
     @Inject
     protected ButtonProvider buttonProvider;
@@ -95,13 +98,13 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     @Override
     public void onPause() {
         super.onPause();
-        BusProvider.getInstance().unregister(this);
+        bus.unregister(this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        BusProvider.getInstance().register(this);
+        bus.register(this);
     }
 
     protected Button getButton() {

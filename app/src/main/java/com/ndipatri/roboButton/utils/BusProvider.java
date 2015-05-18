@@ -1,19 +1,25 @@
 package com.ndipatri.roboButton.utils;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
 import com.squareup.otto.Bus;
+import com.squareup.otto.DeadEvent;
 
-/**
- * Created by ndipatri on 1/1/14.
- */
-public class BusProvider {
+public class BusProvider extends Bus {
 
-    private static final Bus BUS = new Bus();
-
-    public static Bus getInstance() {
-        return BUS;
-    }
-
-    private BusProvider() {
-        // No instances.
+    @Override
+    public void post(final Object event) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            super.post(event);
+        } else {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    post(event);
+                }
+            });
+        }
     }
 }

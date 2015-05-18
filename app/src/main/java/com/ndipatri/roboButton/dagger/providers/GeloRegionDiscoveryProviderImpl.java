@@ -13,12 +13,14 @@ import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
-import com.ndipatri.roboButton.utils.BusProvider;
+import com.squareup.otto.Bus;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 /**
  * When 'startRegionDiscovery()' is called, this class will perform a scan for a defined period of time looking for Regions.
@@ -62,6 +64,9 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
 
     private BluetoothAdapter.LeScanCallback scanRunnable;
 
+    @Inject
+    Bus bus;
+
     /**
      * Key: Found Region
      * Object:  Number of scans for which this region was not found.
@@ -76,6 +81,8 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
         
         this.context = context;
 
+        RBApplication.getInstance().getGraph().inject(this);
+
         mBluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         if (mBluetoothManager != null) {
             mBluetoothAdapter = mBluetoothManager.getAdapter();
@@ -86,7 +93,7 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
         beaconInferiorRSSICountThreshold = context.getResources().getInteger(R.integer.beacon_inferior_rssi_count_threshold);
         beaconScanIntervalMillis = context.getResources().getInteger(R.integer.beacon_scan_interval_millis);
 
-        BusProvider.getInstance().register(this);
+        bus.register(this);
     }
 
     // This is a non-blocking call.
@@ -256,7 +263,7 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                BusProvider.getInstance().post(new RegionFoundEvent(region));
+                bus.post(new RegionFoundEvent(region));
             }
         });
     }
@@ -265,7 +272,7 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                BusProvider.getInstance().post(new RegionLostEvent(region));
+                bus.post(new RegionLostEvent(region));
             }
         });
     }

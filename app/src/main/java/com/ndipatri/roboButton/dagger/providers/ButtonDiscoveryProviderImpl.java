@@ -12,7 +12,9 @@ import android.util.Log;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
-import com.ndipatri.roboButton.utils.BusProvider;
+import com.squareup.otto.Bus;
+
+import javax.inject.Inject;
 
 /**
  * This class will perform a Bluetooth Classic 'Discovery' operation.  After a defined timeout period, the scan will
@@ -34,6 +36,9 @@ public class ButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
     protected boolean discovering = false;
     
     protected BluetoothDevice discoveredButton;
+
+    @Inject
+    Bus bus;
 
     public ButtonDiscoveryProviderImpl(Context context) {
         this.context = context;
@@ -118,6 +123,6 @@ public class ButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
     };
 
     protected void postButtonDiscoveredEvent(final boolean success, final BluetoothDevice buttonDevice) {
-        BusProvider.getInstance().post(new ButtonDiscoveryEvent(success, buttonDevice));
+        bus.post(new ButtonDiscoveryEvent(success, buttonDevice));
     }
 }

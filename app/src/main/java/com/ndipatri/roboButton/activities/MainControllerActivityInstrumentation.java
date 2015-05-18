@@ -1,6 +1,7 @@
 package com.ndipatri.roboButton.activities;
 
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
+import com.squareup.otto.Bus;
 
 import javax.inject.Inject;
 
@@ -9,6 +10,8 @@ import static org.mockito.Mockito.when;
 public abstract class MainControllerActivityInstrumentation extends InjectableActivityInstrumentation<MainControllerActivity> {
 
     @Inject protected BluetoothProvider bluetoothProvider;
+
+    @Inject protected Bus bus;
 
     public MainControllerActivityInstrumentation() {
         super(MainControllerActivity.class);

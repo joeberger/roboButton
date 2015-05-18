@@ -78,7 +78,7 @@ dependencies {
     provided fileTree(dir: 'libs', include: ['*.jar'])
 
     // Espresso dependencies
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.0'
+    compile 'com.android.support.test.espresso:espresso-core:2.0'
     androidTestCompile 'com.android.support.test:testing-support-lib:0.1'
     // dexmaker libraries are required to create Dalvik VM compatible mocks for Espresso.
     androidTestCompile 'com.google.dexmaker:dexmaker:1.2'

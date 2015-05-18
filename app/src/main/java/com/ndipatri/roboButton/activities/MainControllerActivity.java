@@ -20,7 +20,7 @@ import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
-import com.ndipatri.roboButton.utils.BusProvider;
+import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 import butterknife.Views;
 
@@ -33,6 +33,8 @@ import javax.inject.Inject;
 import butterknife.InjectView;
 
 public class MainControllerActivity extends Activity {
+
+    @Inject Bus bus;
 
     // region localVariables
     @Inject protected BluetoothProvider bluetoothProvider;
@@ -74,7 +76,7 @@ public class MainControllerActivity extends Activity {
     public void onPause() {
         super.onPause();
 
-        BusProvider.getInstance().unregister(this);
+        bus.unregister(this);
 
         forgetAllArduinoButtons();
     }
@@ -96,7 +98,7 @@ public class MainControllerActivity extends Activity {
     }
 
     protected void registerWithOttoBus() {
-        BusProvider.getInstance().register(this);
+        bus.register(this);
     }
 
     protected void requestUserToEnableBluetooth() {
@@ -224,8 +226,9 @@ public class MainControllerActivity extends Activity {
 
     @Subscribe
     public void onButtonStateChangeReport(ButtonStateChangeReport buttonStateChangeReport) {
-        
-        Log.d(TAG, "onButtonConnectedEvent()");
+
+        // The button itself handles its own change of state.. We use this event as an indication that we need
+        // to render the buttn if we haven't already done so.
 
         String foundButtonId = buttonStateChangeReport.buttonId;
 

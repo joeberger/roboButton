@@ -30,8 +30,8 @@ import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.models.Button;
-import com.ndipatri.roboButton.utils.BusProvider;
 import com.ndipatri.roboButton.utils.ButtonCommunicator;
+import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
 import javax.inject.Inject;
@@ -57,6 +57,9 @@ public class MonitoringService extends Service {
     protected boolean runInBackground = false;
 
     public static final String SHOULD_TOGGLE_FLAG = "should_toggle_flag";
+
+    @Inject
+    Bus bus;
 
     @Inject
     protected RegionProvider regionProvider;
@@ -103,7 +106,7 @@ public class MonitoringService extends Service {
 
         buttonDiscoveryDurationMillis = getResources().getInteger(R.integer.button_discovery_duration_millis);
 
-        BusProvider.getInstance().register(this);
+        bus.register(this);
     }
 
     @Override
@@ -113,7 +116,7 @@ public class MonitoringService extends Service {
         stopRegionDiscovery();
         stopButtonDiscovery();
 
-        BusProvider.getInstance().unregister(this);
+        bus.unregister(this);
 
         if (buttonCommunicator != null) {
             buttonCommunicator.stop();
@@ -131,7 +134,7 @@ public class MonitoringService extends Service {
         } else {
             if (intent.getBooleanExtra(SHOULD_TOGGLE_FLAG, false)) {
                 if (buttonCommunicator != null) {
-                    BusProvider.getInstance().post(new ButtonStateChangeRequest(buttonCommunicator.getButton().getId()));
+                    bus.post(new ButtonStateChangeRequest(buttonCommunicator.getButton().getId()));
 
                     return START_STICKY;
                 }

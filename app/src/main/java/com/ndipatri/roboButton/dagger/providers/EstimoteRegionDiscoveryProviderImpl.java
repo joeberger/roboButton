@@ -10,14 +10,17 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.estimote.sdk.Utils;
 import com.ndipatri.roboButton.R;
+import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
-import com.ndipatri.roboButton.utils.BusProvider;
+import com.squareup.otto.Bus;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 /**
  * Estimote provides two interfaces: Monitoring and Ranging.  You're meant to first use Monitoring to detect the presence of a region occupied by beacons.  This is a very rough
@@ -39,14 +42,20 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
 
     private BeaconManager beaconManager;
 
+    @Inject
+    Bus bus;
+
     public EstimoteRegionDiscoveryProviderImpl(Context context) {
+
         this.context = context;
+
+        RBApplication.getInstance().getGraph().inject(this);
 
         beaconDetectionThresholdMeters = context.getResources().getInteger(R.integer.estimote_beacon_detection_threshold);
 
         beaconManager = new BeaconManager(context);
         
-        BusProvider.getInstance().register(this);
+        bus.register(this);
     }
 
     @Override
@@ -158,7 +167,7 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                BusProvider.getInstance().post(new RegionFoundEvent(region));
+                bus.post(new RegionFoundEvent(region));
             }
         });
     }
@@ -167,7 +176,7 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                BusProvider.getInstance().post(new RegionLostEvent(region));
+                bus.post(new RegionLostEvent(region));
             }
         });
     }

@@ -1,2 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
-<items version="2" />
+<items version="2" >
+
+    <item
+        jar="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/exploded-aar/com.android.support.test/testing-support-lib/0.1/classes.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="2700b782e8c78b36636a15b0ed86126a96295de7">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/androidTest/emulatorMocks/debug/classes-a98d8f3f73a5504d69e741454c0293c0f3cfbf2a.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/javax.inject/javax.inject/1/6975da39a7040257bd51d21a231b76c915872d38/javax.inject-1.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="6975da39a7040257bd51d21a231b76c915872d38">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/javax.inject-1-5ae193de4ec0b6e5d15911db815636ef1ac032e5.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/com.google.dagger/dagger/2.0/da7ba0ee1d30edd955da276cdf01d3d7cb24aedc/dagger-2.0.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="da7ba0ee1d30edd955da276cdf01d3d7cb24aedc">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/dagger-2.0-a33ba170b11f9b11c5322b319935fda09cf68424.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/org.mockito/mockito-core/1.10.19/e8546f5bef4e061d8dd73895b4e8f40e3fe6effe/mockito-core-1.10.19.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="e8546f5bef4e061d8dd73895b4e8f40e3fe6effe">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/mockito-core-1.10.19-cdce0e9f88a1cef8e41d165fe29ab5a84c98bda7.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/21.0.2/classes.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="7ae2d38807a43b2f2185ff4089a92c790b579e54">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/classes-d401934a5ff80130d364b002b08b5dd00ba101a8.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.1/860340562250678d1a344907ac75754e259cdb14/hamcrest-core-1.1.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="860340562250678d1a344907ac75754e259cdb14">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/hamcrest-core-1.1-7d861c945998646faa7dcec89e55c1ca2fe88fe7.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/org.objenesis/objenesis/2.1/87c0ea803b69252868d09308b4618f766f135a96/objenesis-2.1.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="87c0ea803b69252868d09308b4618f766f135a96">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/objenesis-2.1-ae5ab8c6548262fba222a49077b9c7fe2b9b017e.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/com.j256.ormlite/ormlite-core/4.47/e11abddd1e9c2053a92133fa83f78f7bedb820a9/ormlite-core-4.47.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="e11abddd1e9c2053a92133fa83f78f7bedb820a9">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/ormlite-core-4.47-84ef3dde30ed0f8a245af611dc2068232804819e.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/com.squareup/otto/1.3.5/7941cd2c2c8ec006800d75c35f8a9dacf892ab93/otto-1.3.5.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="7941cd2c2c8ec006800d75c35f8a9dacf892ab93">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/otto-1.3.5-3c213542b44b4aa7ed95fbedb69d34c457788f2c.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/com.google.dexmaker/dexmaker/1.2/4d5045fefa6d286c5ddf733e321fe6e5e632efb6/dexmaker-1.2.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="4d5045fefa6d286c5ddf733e321fe6e5e632efb6">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/androidTest/emulatorMocks/debug/dexmaker-1.2-6d091ee9a4ed95a93d175e478bb40460fb712dbb.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/1.2/ad6ae511ca4608a18317fcb19850fd113bb2ae8/commons-io-1.2.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="0ad6ae511ca4608a18317fcb19850fd113bb2ae8">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/commons-io-1.2-2fe81050311340abeb39fd5b856120b4d71cfb88.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/com.jakewharton/butterknife/1.4.0/3d0bedf0f9a7708e6668e3231fe478fde9c3f2ed/butterknife-1.4.0.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="3d0bedf0f9a7708e6668e3231fe478fde9c3f2ed">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/butterknife-1.4.0-110581cd53dfa0e0d077668d3cc1540933ea7a51.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/classes.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="2c91c949a45a21cdecf26e03951e46c7beec9ad8">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/classes-02e7aa49b78140cc1f84281e4971a5725600fa21.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/com.j256.ormlite/ormlite-android/4.47/c72f9ed54d8a8bab3fbf56da2b358308a67899a4/ormlite-android-4.47.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="c72f9ed54d8a8bab3fbf56da2b358308a67899a4">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/ormlite-android-4.47-537a0b4a22071963d1634748da8565da67863134.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/Documents/development/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/21.0.3/support-annotations-21.0.3.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="4b74cefe1f0c1b819e7260c8627a14674e37fd35">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/support-annotations-21.0.3-f6dc52ab96feece42824097c9a6fd15799e6e7c1.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/.gradle/caches/modules-2/files-2.1/com.google.dexmaker/dexmaker-mockito/1.2/b99884a4c6ef6335ba376f79aa79632b2421c17c/dexmaker-mockito-1.2.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="b99884a4c6ef6335ba376f79aa79632b2421c17c">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/androidTest/emulatorMocks/debug/dexmaker-mockito-1.2-996295ef06d0b6399a6cb5c3627cb162354e75f3.jar" />
+    </item>
+    <item
+        jar="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/libs/internal_impl-21.0.3.jar"
+        jumboMode="false"
+        revision="21.0.2"
+        sha1="01ec05bfbafcc07646ba813000bf2ef11742dd03">
+        <dex dex="/Users/Nicholas.DiPatri/Documents/development/roboButton/app/build/intermediates/pre-dexed/emulatorMocks/debug/internal_impl-21.0.3-27191a138a7fc1de7cea97e5cbc8e12a3167a4c4.jar" />
+    </item>
+
+</items>

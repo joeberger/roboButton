@@ -2,11 +2,14 @@ package com.ndipatri.roboButton.dagger;
 
 import android.content.Context;
 
+import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.activities.MainControllerActivityInstrumentation;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
+import com.ndipatri.roboButton.dagger.providers.EstimoteRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.GeloRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
@@ -20,6 +23,12 @@ import dagger.Component;
 @Singleton
 @Component(modules = {RBModule.class})
 public interface ObjectGraph {
+
+    void inject(GeloRegionDiscoveryProviderImpl thingy);
+
+    void inject(EstimoteRegionDiscoveryProviderImpl thingy);
+
+    void inject(RBApplication thingy);
 
     void inject(ButtonFragment thingy);
 
