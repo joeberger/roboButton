@@ -43,10 +43,12 @@ public class ButtonFragment extends Fragment {
 
     // ButterKnife Injected Views
     protected
-    @InjectView(R.id.imageView)
+    @InjectView(R.id.buttonImageView)
     ImageView imageView;
 
     protected ButtonState buttonState = null;
+
+    protected ButtonState pendingButtonState = null;
 
     ButtonDetailsDialogFragment dialog = null;
 
@@ -54,13 +56,15 @@ public class ButtonFragment extends Fragment {
         RBApplication.getInstance().getGraph().inject(this);
     }
 
-    public static ButtonFragment newInstance(String buttonId) {
+    public static ButtonFragment newInstance(String buttonId, ButtonState buttonState) {
 
         ButtonFragment buttonFragment = new ButtonFragment();
         Bundle args = new Bundle();
         buttonFragment.setArguments(args);
 
         buttonFragment.setButtonId(buttonId);
+
+        buttonFragment.pendingButtonState = buttonState;
 
         return buttonFragment;
     }
@@ -71,6 +75,11 @@ public class ButtonFragment extends Fragment {
 
         // Use ButterKnife for view injection (http://jakewharton.github.io/butterknife/)
         Views.inject(this, rootView);
+
+        if (pendingButtonState != null) {
+            setButtonState(pendingButtonState);
+            pendingButtonState = null;
+        }
 
         rootView.setOnClickListener(new View.OnClickListener() {
             @Override

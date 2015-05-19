@@ -228,13 +228,13 @@ public class MainControllerActivity extends Activity {
     public void onButtonStateChangeReport(ButtonStateChangeReport buttonStateChangeReport) {
 
         // The button itself handles its own change of state.. We use this event as an indication that we need
-        // to render the buttn if we haven't already done so.
+        // to render the button if we haven't already done so.
 
         String foundButtonId = buttonStateChangeReport.buttonId;
 
         ButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
         if (existingButtonFragment == null) {
-            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId);
+            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId, buttonStateChangeReport.buttonState);
             getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
             buttonsWithFragments.add(foundButtonId);
         }
