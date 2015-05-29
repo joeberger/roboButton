@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          android:versionCode="2"
-          android:versionName="1.0.0-SNAPSHOT"
-          package="com.ndipatri.roboButton">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:versionCode="2"
+    android:versionName="1.0.0-SNAPSHOT"
+    package="com.ndipatri.roboButton">
 
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
@@ -29,6 +30,7 @@
             android:name=".RBApplication"
             android:icon="@drawable/green_button"
             android:debuggable="true"
+            tools:replace="android:label"
             android:label="RoboButton">
 
         <activity

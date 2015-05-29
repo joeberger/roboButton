@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.squareup.otto.Bus;
 
@@ -21,9 +22,9 @@ import javax.inject.Inject;
  * be stopped.  At that time a 'success' or 'failure' event will be emitted based on whether a device matching the
  * defined 'discoveryPattern' was found.
  */
-public class ButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
+public class PurpleButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
 
-    private static final String TAG = ButtonDiscoveryProviderImpl.class.getCanonicalName();
+    private static final String TAG = PurpleButtonDiscoveryProviderImpl.class.getCanonicalName();
 
     private Context context;
 
@@ -40,7 +41,7 @@ public class ButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
     @Inject
     Bus bus;
 
-    public ButtonDiscoveryProviderImpl(Context context) {
+    public PurpleButtonDiscoveryProviderImpl(Context context) {
         this.context = context;
 
         RBApplication.getInstance().getGraph().inject(this);
@@ -123,6 +124,6 @@ public class ButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
     };
 
     protected void postButtonDiscoveredEvent(final boolean success, final BluetoothDevice buttonDevice) {
-        bus.post(new ButtonDiscoveryEvent(success, buttonDevice));
+        bus.post(new ButtonDiscoveryEvent(success, buttonDevice, ButtonType.PURPLE_BUTTON));
     }
 }

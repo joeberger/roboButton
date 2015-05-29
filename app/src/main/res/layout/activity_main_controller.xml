@@ -7,4 +7,13 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
+    <Button
+        android:id="@+id/enableBluetoothButton"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/click_to_enable_bluetooth"
+
+        android:visibility="gone"/>
+
 </LinearLayout>

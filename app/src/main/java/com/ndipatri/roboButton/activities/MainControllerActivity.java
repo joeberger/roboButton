@@ -9,7 +9,9 @@ import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.ndipatri.roboButton.RBApplication;
@@ -47,7 +49,9 @@ public class MainControllerActivity extends Activity {
     private Set<String> buttonsWithFragments = new HashSet<String>();
 
     // The main ViewGroup to which all ArduinoButtonFragments are added.
-    protected @InjectView(R.id.mainViewGroup) ViewGroup mainViewGroup;
+    @InjectView(R.id.mainViewGroup) ViewGroup mainViewGroup;
+
+    @InjectView(R.id.enableBluetoothButton) Button enableBluetoothButton;
     //endregion
     
     @Override
@@ -92,7 +96,13 @@ public class MainControllerActivity extends Activity {
             finish();
         } else {
             if (!bluetoothProvider.isBluetoothEnabled()) {
-                requestUserToEnableBluetooth();
+                enableBluetoothButton.setVisibility(View.VISIBLE);
+                enableBluetoothButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        requestUserToEnableBluetooth();
+                    }
+                });
             }
         }
     }

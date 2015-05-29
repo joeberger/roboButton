@@ -23,6 +23,7 @@ import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
+import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
@@ -31,6 +32,7 @@ import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.ButtonCommunicator;
+import com.ndipatri.roboButton.utils.ButtonCommunicatorFactory;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -74,8 +76,14 @@ public class MonitoringService extends Service {
 
     @Inject
     protected ButtonProvider buttonProvider;
+
     @Inject
-    protected ButtonDiscoveryProvider buttonDiscoveryProvider;
+    @Named(RBModule.PURPLE_BUTTON)
+    protected ButtonDiscoveryProvider purpleButtonDiscoveryProvider;
+
+    @Inject
+    @Named(RBModule.LIGHTBLUE_BUTTON)
+    protected ButtonDiscoveryProvider lightBlueButtonDiscoveryProvider;
 
     @Inject
     protected BluetoothProvider bluetoothProvider;
@@ -119,7 +127,7 @@ public class MonitoringService extends Service {
         bus.unregister(this);
 
         if (buttonCommunicator != null) {
-            buttonCommunicator.stop();
+            buttonCommunicator.shutdown();
         }
     }
 
@@ -168,7 +176,7 @@ public class MonitoringService extends Service {
 
         if (nearbyButton == null) {
             stopRegionDiscovery();
-            startButtonDiscovery();
+            startButtonDiscovery(nearbyRegion);
         }
     }
 
@@ -193,7 +201,7 @@ public class MonitoringService extends Service {
 
                 stopButtonDiscovery();
 
-                nearbyButton = pairButtonWithRegion(buttonDiscoveryEvent.getButtonDevice());
+                nearbyButton = pairButtonWithRegion(buttonDiscoveryEvent.getButtonDevice(), buttonDiscoveryEvent.getButtonType());
 
                 startButtonCommunication(nearbyButton);
             }
@@ -218,7 +226,11 @@ public class MonitoringService extends Service {
     }
 
     protected void startButtonCommunication(Button nearbyButton) {
-        buttonCommunicator = new ButtonCommunicator(getApplicationContext(), nearbyButton);
+        buttonCommunicator = getButtonCommunicator(getApplicationContext(), nearbyButton);
+    }
+
+    public ButtonCommunicator getButtonCommunicator(final Context context, final Button nearbyButton) {
+        return ButtonCommunicatorFactory.getButtonCommunicator(context, nearbyButton);
     }
 
     protected void stopButtonCommunication() {
@@ -254,23 +266,29 @@ public class MonitoringService extends Service {
 
     // This is a costly operation and should only be done when we have confidence button will
     // be found... (e.g. we've already detected a beacon)
-    protected void startButtonDiscovery() {
-        buttonDiscoveryProvider.startButtonDiscovery();
+    protected void startButtonDiscovery(com.ndipatri.roboButton.models.Region nearbyRegion) {
+        purpleButtonDiscoveryProvider.startButtonDiscovery();
+        lightBlueButtonDiscoveryProvider.startButtonDiscovery();
     }
 
     private void stopButtonDiscovery() {
-        buttonDiscoveryProvider.stopButtonDiscovery();
+        purpleButtonDiscoveryProvider.stopButtonDiscovery();
+        lightBlueButtonDiscoveryProvider.stopButtonDiscovery();
     }
 
-    protected Button pairButtonWithRegion(BluetoothDevice device) {
+    protected Button pairButtonWithRegion(BluetoothDevice device, ButtonType buttonType) {
 
         Button discoveredButton;
 
         Button persistedButton = buttonProvider.getButton(device.getAddress());
+
+        // LIGHTBLUE TODO - need to distinguish buttonType somehow from passed BluetoothDevice and store
+        // that in local Button object.
+
         if (persistedButton != null) {
             discoveredButton = persistedButton;
         } else {
-            discoveredButton = new Button(device.getAddress(), device.getAddress(), true);
+            discoveredButton = new Button(device.getAddress(), device.getAddress(), true, buttonType);
         }
         discoveredButton.setBluetoothDevice(device);
 

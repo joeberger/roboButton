@@ -18,7 +18,9 @@ import com.squareup.otto.Bus;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -32,17 +34,16 @@ import javax.inject.Inject;
  * Before going to sleep, it will check for any Regions that were not detected in the last scan.. If a Region fails to report
  * after a defined number of scans, it will be also be declared lost.
  */
-public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider {
+public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvider {
 
-    private static final String TAG = GeloRegionDiscoveryProviderImpl.class.getCanonicalName();
+    private static final String TAG = GenericRegionDiscoveryProviderImpl.class.getCanonicalName();
 
     final static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
-    final static String GELO_UUID = "11E44F094EC4407E9203CF57A50FBCE0";
+
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
 
-    private static final int AB_GELO_MAJOR_VALUE = 0; // NJD TODO - once we program GELO beacons, this can change.
-    private static final Region AB_GELO_REGION = new Region("regionId", null, AB_GELO_MAJOR_VALUE, null);
+    protected List regionScanList;
 
     private int beaconDetectionThresholdDbms = -1;
     
@@ -77,9 +78,10 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
      */
     Map<com.ndipatri.roboButton.models.Region, MutableInteger> nearbyRegions = new HashMap<com.ndipatri.roboButton.models.Region, MutableInteger>();
 
-    public GeloRegionDiscoveryProviderImpl(Context context) {
+    public GenericRegionDiscoveryProviderImpl(final Context context, final List regionScanList) {
         
         this.context = context;
+        this.regionScanList = regionScanList;
 
         RBApplication.getInstance().getGraph().inject(this);
 
@@ -190,9 +192,9 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
             @Override
             public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
                 //For readability we convert the bytes of the UUID into hex
-                String UUIDHex = convertBytesToHex(Arrays.copyOfRange(scanRecord, 9, 25));
+                String uuidHex = convertBytesToHex(Arrays.copyOfRange(scanRecord, 9, 25));
 
-                if (scanning && UUIDHex.equals(GELO_UUID)) {
+                if (scanning && regionScanList.contains(uuidHex.toLowerCase())) {
                     //Bytes 25 and 26 of the advertisement packet represent the major value
                     int major = (scanRecord[25] << 8)
                             | (scanRecord[26] << 0);
@@ -203,11 +205,11 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
 
                     //RSSI values increase towards zero as the source gets closer to the reciever
 
-                    com.ndipatri.roboButton.models.Region beaconRegion = new com.ndipatri.roboButton.models.Region(minor, major, UUIDHex);
+                    com.ndipatri.roboButton.models.Region beaconRegion = new com.ndipatri.roboButton.models.Region(minor, major, uuidHex);
 
                     if (rssi > beaconDetectionThresholdDbms) {
                         Log.d(TAG, "Region with ACCEPTABLE RSSI '" + rssi + "' (" + beaconRegion + "'!");
-                        postRegionFoundEvent(beaconRegion);
+                        postRegionFoundEvent(beaconRegion, device);
 
                         successiveInferiorRSSICountMap.put(device, new MutableInteger(0)); // reset low pass filter for this device
                         nearbyRegions.put(beaconRegion, new MutableInteger(0)); // reset the 'LostMetric' value back to 0.
@@ -259,7 +261,7 @@ public class GeloRegionDiscoveryProviderImpl implements RegionDiscoveryProvider 
                                                                       (inBackground ? beaconScanIntervalMillis : beaconScanIntervalMillis/2);
     }
     
-    protected void postRegionFoundEvent(final com.ndipatri.roboButton.models.Region region) {
+    protected void postRegionFoundEvent(final com.ndipatri.roboButton.models.Region region, final BluetoothDevice device) {
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {

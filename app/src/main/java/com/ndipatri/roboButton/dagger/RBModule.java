@@ -6,15 +6,21 @@ import com.ndipatri.roboButton.dagger.annotations.Named;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.providers.BluetoothProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.LightBlueButtonDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.PurpleButtonDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.dagger.providers.EstimoteRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.GeloRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.GenericRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.LightBlueRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.RegionProvider;
 import com.ndipatri.roboButton.BuildVariant;
 import com.ndipatri.roboButton.utils.BusProvider;
+import com.ndipatri.roboButton.utils.RegionUtils;
 import com.squareup.otto.Bus;
+
+import java.util.Arrays;
+import java.util.List;
 
 import javax.inject.Singleton;
 
@@ -28,6 +34,8 @@ public class RBModule {
 
     public static final String ESTIMOTE_BEACONS = "ESTIMOTE_BEACONS";
     public static final String GELO_BEACONS = "GELO_BEACONS";
+    public static final String LIGHTBLUE_BUTTON = "LIGHTBLUE_BUTTON";
+    public static final String PURPLE_BUTTON = "PURPLE_BUTTON";
     protected Context context = null;
 
     public RBModule(Context context) {
@@ -84,22 +92,39 @@ public class RBModule {
     @Provides
     @Singleton
     @Named(GELO_BEACONS)
-    RegionDiscoveryProvider provideGeloBeaconDiscoveryProvider() {
+    RegionDiscoveryProvider provideRegionDiscoveryProvider() {
+
+        List regionScanList = Arrays.asList(
+            new String[] {
+                    RegionUtils.GELO_UUID,
+                    RegionUtils.LIGHTBLUE_UUID});
+
         if (BuildVariant.useMocks) {
             return mock(RegionDiscoveryProvider.class);
         } else {
-            return new GeloRegionDiscoveryProviderImpl(context);
+            return new GenericRegionDiscoveryProviderImpl(context, regionScanList);
         }
     }
 
     @Provides
     @Singleton
-    ButtonDiscoveryProvider provideButtonDiscoveryProvider() {
+    @Named(LIGHTBLUE_BUTTON)
+    ButtonDiscoveryProvider provideLightBlueButtonDiscoveryProvider() {
         if (BuildVariant.useMocks) {
             return mock(ButtonDiscoveryProvider.class);
         } else {
-            return new ButtonDiscoveryProviderImpl(context);
+            return new LightBlueButtonDiscoveryProviderImpl(context);
         }
     }
 
+    @Provides
+    @Singleton
+    @Named(PURPLE_BUTTON)
+    ButtonDiscoveryProvider providePurpleButtonDiscoveryProvider() {
+        if (BuildVariant.useMocks) {
+            return mock(ButtonDiscoveryProvider.class);
+        } else {
+            return new PurpleButtonDiscoveryProviderImpl(context);
+        }
+    }
 }

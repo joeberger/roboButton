@@ -26,7 +26,6 @@ public abstract class MainControllerActivityInstrumentation extends InjectableAc
         when(bluetoothProvider.isBluetoothEnabled()).thenReturn(true);
         when(bluetoothProvider.isBluetoothSupported()).thenReturn(true);
 
-        getActivity();
     }
 
     @Override

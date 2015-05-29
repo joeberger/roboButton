@@ -2,6 +2,8 @@ package com.ndipatri.roboButton.events;
 
 import android.bluetooth.BluetoothDevice;
 
+import com.ndipatri.roboButton.enums.ButtonType;
+
 /**
  * Created by ndipatri on 1/1/14.
  */
@@ -12,9 +14,12 @@ public class ButtonDiscoveryEvent {
     // Will be null if success if false.
     public BluetoothDevice buttonDevice;
 
-    public ButtonDiscoveryEvent(final boolean success, final BluetoothDevice buttonDevice) {
+    public ButtonType buttonType = ButtonType.UNKNOWN;
+
+    public ButtonDiscoveryEvent(final boolean success, final BluetoothDevice buttonDevice, final ButtonType buttonType) {
         this.success = success;
         this.buttonDevice = buttonDevice;
+        this.buttonType =  buttonType;
     }
 
     public boolean isSuccess() {
@@ -23,6 +28,10 @@ public class ButtonDiscoveryEvent {
 
     public BluetoothDevice getButtonDevice() {
         return buttonDevice;
+    }
+
+    public ButtonType getButtonType() {
+        return buttonType;
     }
 
     @Override
@@ -35,14 +44,15 @@ public class ButtonDiscoveryEvent {
         if (success != that.success) return false;
         if (buttonDevice != null ? !buttonDevice.equals(that.buttonDevice) : that.buttonDevice != null)
             return false;
+        return buttonType == that.buttonType;
 
-        return true;
     }
 
     @Override
     public int hashCode() {
         int result = (success ? 1 : 0);
         result = 31 * result + (buttonDevice != null ? buttonDevice.hashCode() : 0);
+        result = 31 * result + (buttonType != null ? buttonType.hashCode() : 0);
         return result;
     }
 }

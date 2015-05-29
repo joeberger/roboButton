@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
+import com.ndipatri.roboButton.enums.ButtonType;
 
 /**
  * Created by ndipatri on 5/28/14.
@@ -13,10 +14,11 @@ public class Button {
 
     public Button() {}
 
-    public Button(final String id, final String name, final boolean autoModeEnabled) {
+    public Button(final String id, final String name, final boolean autoModeEnabled, final ButtonType buttonType) {
         this.id = id;
         this.name = name;
         this.autoModeEnabled = autoModeEnabled;
+        this.type = buttonType.getTypeValue();
     }
 
     private static final String TAG = Button.class.getCanonicalName();
@@ -38,15 +40,11 @@ public class Button {
     @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = REGION_ID)
     private Region region;
 
+    public static final String TYPE_COLUMN_NAME = "type";
+    @DatabaseField(columnName = TYPE_COLUMN_NAME)
+    private int type;
+
     private BluetoothDevice bluetoothDevice;
-
-    public Region getRegion() {
-        return region;
-    }
-
-    public void setRegion(Region region) {
-        this.region = region;
-    }
 
     public String getId() {
         return id;
@@ -72,6 +70,22 @@ public class Button {
         this.autoModeEnabled = autoModeEnabled;
     }
 
+    public Region getRegion() {
+        return region;
+    }
+
+    public void setRegion(Region region) {
+        this.region = region;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
     public BluetoothDevice getBluetoothDevice() {
         return bluetoothDevice;
     }
@@ -88,10 +102,12 @@ public class Button {
         Button button = (Button) o;
 
         if (autoModeEnabled != button.autoModeEnabled) return false;
+        if (type != button.type) return false;
         if (id != null ? !id.equals(button.id) : button.id != null) return false;
         if (name != null ? !name.equals(button.name) : button.name != null) return false;
+        if (region != null ? !region.equals(button.region) : button.region != null) return false;
+        return !(bluetoothDevice != null ? !bluetoothDevice.equals(button.bluetoothDevice) : button.bluetoothDevice != null);
 
-        return true;
     }
 
     @Override
@@ -99,6 +115,9 @@ public class Button {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (autoModeEnabled ? 1 : 0);
+        result = 31 * result + (region != null ? region.hashCode() : 0);
+        result = 31 * result + type;
+        result = 31 * result + (bluetoothDevice != null ? bluetoothDevice.hashCode() : 0);
         return result;
     }
 
@@ -108,8 +127,8 @@ public class Button {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", autoModeEnabled=" + autoModeEnabled +
-                ", beacon=" + region +
-                ", bluetoothDevice=" + bluetoothDevice +
+                ", region=" + region +
+                ", type=" + ButtonType.getByType(type) +
                 '}';
     }
 }

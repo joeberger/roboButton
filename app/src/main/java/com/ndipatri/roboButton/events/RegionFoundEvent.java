@@ -1,5 +1,7 @@
 package com.ndipatri.roboButton.events;
 
+import android.bluetooth.BluetoothDevice;
+
 import com.ndipatri.roboButton.models.Region;
 
 /**
@@ -8,15 +10,23 @@ import com.ndipatri.roboButton.models.Region;
 public class RegionFoundEvent {
 
     public Region region;
+    public BluetoothDevice device;
 
-    public RegionFoundEvent(final Region region) {
+    public RegionFoundEvent(final Region region, final BluetoothDevice device) {
         this.region = region;
+        this.device = device;
     }
 
     public Region getRegion() {
         return region;
     }
 
+    public BluetoothDevice getDevice() {
+        return device;
+    }
+
+    // The particular associated device for this RegionFoundEvent isn't important for
+    // identity or comparison
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
