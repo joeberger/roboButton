@@ -37,7 +37,7 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
     private static final String TAG = LightBlueButtonCommunicator.class.getCanonicalName();
 
     @Inject
-    Bus bus;
+    BusProvider bus;
 
     protected long communicationsGracePeriodMillis = -1;
 
@@ -79,19 +79,13 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
         // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
         lastButtonStateUpdateTimeMillis = 0;
 
-        new Handler(context.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                bus.register(LightBlueButtonCommunicator.this);
-            }
-        });
-
+        bus.register(this);
         startButtonConnect();
     }
 
     public synchronized void startButtonConnect() {
 
-        if (bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
+        if (shouldRun && bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
             getBeanManager().startDiscovery(getButtonDiscoveryListener());
         } else {
             shouldRun = false;
@@ -102,7 +96,7 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
         return new BeanDiscoveryListener() {
             @Override
             public void onBeanDiscovered(Bean discoveredBean) {
-                if (discoveredBean.getDevice().getAddress().equals(button.getBluetoothDevice().getAddress())) {
+                if (shouldRun && discoveredBean.getDevice().getAddress().equals(button.getBluetoothDevice().getAddress())) {
                     LightBlueButtonCommunicator.this.discoveredBean = discoveredBean;
                     discoveredBean.connect(context, getBeanConnectionListener());
                 }
@@ -110,7 +104,7 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
 
             @Override
             public void onDiscoveryComplete() {
-                if (LightBlueButtonCommunicator.this.discoveredBean == null) {
+                if (shouldRun && LightBlueButtonCommunicator.this.discoveredBean == null) {
                     // try indefinitely until this communicator is explicitly stopped
                     startButtonConnect();
                 }
@@ -123,48 +117,52 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
 
             @Override
             public void onConnected() {
+                Log.d(TAG, "onConnected()");
             }
 
             @Override
             public void onConnectionFailed() {
-
+                Log.d(TAG, "onConnectionFailed()");
             }
 
             @Override
             public void onDisconnected() {
-
+                Log.d(TAG, "onDisconnected()");
             }
 
             @Override
             public void onSerialMessageReceived(byte[] bytes) {
+                Log.d(TAG, "onSerialMessageReceived()");
 
-                ButtonState newButtonState;
+                if (shouldRun) {
+                    ButtonState newButtonState;
 
-                String responseChar = String.valueOf(new char[]{(char) bytes[0]});
-                Log.d(TAG, "Response from bluetooth device '" + this + " ', '" + responseChar + "'.");
-                try {
-                    newButtonState = Integer.valueOf(responseChar) > 0 ? ButtonState.ON : ButtonState.OFF;
-                } catch (NumberFormatException nex) {
-                    Log.d(TAG, "Invalid response from bluetooth device: '" + this + "'.");
-                    // NJD TODO - one theory is to reconnect and see if that helps...
-                    // disconnect();
+                    String responseChar = String.valueOf(new char[]{(char) bytes[0]});
+                    Log.d(TAG, "Serial data from LightBlue Bean: '" + this + " ', '" + responseChar + "'.");
+                    try {
+                        newButtonState = Integer.valueOf(responseChar) > 0 ? ButtonState.ON : ButtonState.OFF;
+                    } catch (NumberFormatException nex) {
+                        Log.d(TAG, "Invalid response from bluetooth device: '" + this + "'.");
+                        // NJD TODO - one theory is to reconnect and see if that helps...
+                        // disconnect();
 
-                    // another is to just continue to listen until we are declare no longer communicating and are killed
-                    // by the monitoring service.
-                    newButtonState = null;
-                }
-
-                if (buttonState == ButtonState.NEVER_CONNECTED) {
-
-                    if (isAutoModeEnabled() && button.isAutoModeEnabled() && newButtonState != ButtonState.ON) {
-
-                        // Now that we've established we can communicate with newly discovered
-                        // button, let's set its auto-state....
-                        setRemoteState(ButtonState.ON);
+                        // another is to just continue to listen until we are declare no longer communicating and are killed
+                        // by the monitoring service.
+                        newButtonState = null;
                     }
-                }
 
-                setLocalButtonState(newButtonState);
+                    if (buttonState == ButtonState.NEVER_CONNECTED) {
+
+                        if (isAutoModeEnabled() && button.isAutoModeEnabled() && newButtonState != ButtonState.ON) {
+
+                            // Now that we've established we can communicate with newly discovered
+                            // button, let's set its auto-state....
+                            setRemoteState(ButtonState.ON);
+                        }
+                    }
+
+                    setLocalButtonState(newButtonState);
+                }
             }
 
             @Override
@@ -175,19 +173,18 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
     }
 
     protected void setRemoteState(ButtonState buttonState) {
-        if (discoveredBean != null & discoveredBean.isConnected()) {
+        if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
+            byte[] encodedButtonState = null;
 
-            ByteBuffer desiredState = encodeCurrentButtonState(buttonState);
-
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            try {
-                bout.write(new byte[]{0x58, 0x58, 0x58}); // 'XXX' - StateChangeRequest
-                bout.write(desiredState.array());
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (this.buttonState != buttonState) {
+                // The LightBlueButton only can be toggled.. If you send the PIN code, it toggles.. so
+                // we only send if we are toggling...
+                encodedButtonState = new byte[] {'1', '2', '3', '4'};
             }
 
-            discoveredBean.sendSerialMessage(bout.toByteArray());
+            if (encodedButtonState != null) {
+                discoveredBean.sendSerialMessage(encodedButtonState);
+            }
         }
     }
 
@@ -318,22 +315,6 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
 
     protected BeanManager getBeanManager() {
         return BeanManager.getInstance();
-    }
-
-    public ByteBuffer encodeCurrentButtonState(final ButtonState buttonState) {
-
-        ByteBuffer byteBuffer = ByteBuffer.allocate(1);
-
-        if (buttonState.value) {
-            byteBuffer.put((byte) '1'); // a char is the ascii representation of '1'
-        } else {
-            byteBuffer.put((byte) '0');
-        }
-
-        // prepare for reading
-        byteBuffer.flip();
-
-        return byteBuffer;
     }
 }
 

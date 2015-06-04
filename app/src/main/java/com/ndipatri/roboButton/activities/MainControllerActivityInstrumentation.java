@@ -1,6 +1,7 @@
 package com.ndipatri.roboButton.activities;
 
 import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
+import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Bus;
 
 import javax.inject.Inject;
@@ -11,7 +12,7 @@ public abstract class MainControllerActivityInstrumentation extends InjectableAc
 
     @Inject protected BluetoothProvider bluetoothProvider;
 
-    @Inject protected Bus bus;
+    @Inject protected BusProvider bus;
 
     public MainControllerActivityInstrumentation() {
         super(MainControllerActivity.class);

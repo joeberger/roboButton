@@ -22,6 +22,7 @@ import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
+import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 import butterknife.Views;
@@ -36,7 +37,8 @@ import butterknife.InjectView;
 
 public class MainControllerActivity extends Activity {
 
-    @Inject Bus bus;
+    @Inject
+    BusProvider bus;
 
     // region localVariables
     @Inject protected BluetoothProvider bluetoothProvider;

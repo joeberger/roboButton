@@ -31,8 +31,10 @@ import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.models.Button;
+import com.ndipatri.roboButton.utils.BusProvider;
 import com.ndipatri.roboButton.utils.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.ButtonCommunicatorFactory;
+import com.ndipatri.roboButton.utils.RegionUtils;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -61,7 +63,7 @@ public class MonitoringService extends Service {
     public static final String SHOULD_TOGGLE_FLAG = "should_toggle_flag";
 
     @Inject
-    Bus bus;
+    BusProvider bus;
 
     @Inject
     protected RegionProvider regionProvider;
@@ -267,8 +269,11 @@ public class MonitoringService extends Service {
     // This is a costly operation and should only be done when we have confidence button will
     // be found... (e.g. we've already detected a beacon)
     protected void startButtonDiscovery(com.ndipatri.roboButton.models.Region nearbyRegion) {
-        purpleButtonDiscoveryProvider.startButtonDiscovery();
-        lightBlueButtonDiscoveryProvider.startButtonDiscovery();
+        if (RegionUtils.isLighBlueRegion(nearbyRegion)) {
+            lightBlueButtonDiscoveryProvider.startButtonDiscovery();
+        } else {
+            purpleButtonDiscoveryProvider.startButtonDiscovery();
+        }
     }
 
     private void stopButtonDiscovery() {
@@ -281,9 +286,6 @@ public class MonitoringService extends Service {
         Button discoveredButton;
 
         Button persistedButton = buttonProvider.getButton(device.getAddress());
-
-        // LIGHTBLUE TODO - need to distinguish buttonType somehow from passed BluetoothDevice and store
-        // that in local Button object.
 
         if (persistedButton != null) {
             discoveredButton = persistedButton;

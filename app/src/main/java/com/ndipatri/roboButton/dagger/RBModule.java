@@ -11,7 +11,6 @@ import com.ndipatri.roboButton.dagger.providers.PurpleButtonDiscoveryProviderImp
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.dagger.providers.EstimoteRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.GenericRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.LightBlueRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.RegionProvider;
 import com.ndipatri.roboButton.BuildVariant;
@@ -44,7 +43,7 @@ public class RBModule {
 
     @Provides
     @Singleton
-    Bus provideBus() {
+    BusProvider provideBus() {
         return new BusProvider();
     }
 
@@ -94,15 +93,22 @@ public class RBModule {
     @Named(GELO_BEACONS)
     RegionDiscoveryProvider provideRegionDiscoveryProvider() {
 
-        List regionScanList = Arrays.asList(
+        // The UUIDs of the regions we care about.  These UUIDs are parsed
+        // from the 'scanRecord' which is returned by a BLE scan.
+        String[] regionUUIDPatternArray =
             new String[] {
                     RegionUtils.GELO_UUID,
-                    RegionUtils.LIGHTBLUE_UUID});
+                    RegionUtils.LIGHTBLUE_UUID};
+
+        // This is the number of bytes into the BLE 'scanRecord' where the 16-byte
+        // UUID begins.
+        Integer[] regionUUIDOffsetArray = new Integer[] {new Integer(0), new Integer(3)};
+
 
         if (BuildVariant.useMocks) {
             return mock(RegionDiscoveryProvider.class);
         } else {
-            return new GenericRegionDiscoveryProviderImpl(context, regionScanList);
+            return new GenericRegionDiscoveryProviderImpl(context, regionUUIDPatternArray, regionUUIDOffsetArray);
         }
     }
 

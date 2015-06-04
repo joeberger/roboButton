@@ -23,6 +23,7 @@ import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.providers.RegionProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.models.Button;
+import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Bus;
 
 import javax.inject.Inject;
@@ -38,7 +39,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     protected @InjectView(R.id.autoModeSwitch) Switch autoModeSwitch;
 
     @Inject
-    Bus bus;
+    BusProvider bus;
 
     @Inject
     protected ButtonProvider buttonProvider;

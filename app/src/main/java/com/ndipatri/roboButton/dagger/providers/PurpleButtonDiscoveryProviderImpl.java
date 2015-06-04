@@ -13,6 +13,7 @@ import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
+import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Bus;
 
 import javax.inject.Inject;
@@ -39,7 +40,7 @@ public class PurpleButtonDiscoveryProviderImpl implements ButtonDiscoveryProvide
     protected BluetoothDevice discoveredButton;
 
     @Inject
-    Bus bus;
+    BusProvider bus;
 
     public PurpleButtonDiscoveryProviderImpl(Context context) {
         this.context = context;
@@ -59,7 +60,7 @@ public class PurpleButtonDiscoveryProviderImpl implements ButtonDiscoveryProvide
     @Override
     public synchronized void startButtonDiscovery() {
 
-        Log.d(TAG, "Beginning Button Monitoring Process...");
+        Log.d(TAG, "Beginning Purple Button Monitoring Process...");
         if (discovering) {
             // make this request idempotent
             return;

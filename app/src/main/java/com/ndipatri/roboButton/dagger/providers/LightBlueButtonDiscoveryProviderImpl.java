@@ -9,6 +9,7 @@ import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
+import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Bus;
 
 import javax.inject.Inject;
@@ -29,7 +30,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
 
     private static final String TAG = LightBlueButtonDiscoveryProviderImpl.class.getCanonicalName();
 
-    private static final String BUTTON_SKETCH_NAME = "lightBlueButtonSketch";
+    private static final String BUTTON_SKETCH_NAME = "lightBlueButton";
 
     private Context context;
 
@@ -45,7 +46,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
     protected boolean isConnectedBeanAButton = false;
 
     @Inject
-    Bus bus;
+    BusProvider bus;
 
     public LightBlueButtonDiscoveryProviderImpl(Context context) {
         this.context = context;
@@ -61,7 +62,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
     @Override
     public synchronized void startButtonDiscovery() {
 
-        Log.d(TAG, "Beginning Button Monitoring Process...");
+        Log.d(TAG, "Beginning LightBlue Button Monitoring Process...");
         if (discovering) {
             // make this request idempotent
             return;

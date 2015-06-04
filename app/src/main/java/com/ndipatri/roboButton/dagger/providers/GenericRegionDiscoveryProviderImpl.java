@@ -8,19 +8,17 @@ import android.os.Handler;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.estimote.sdk.Region;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
-import com.squareup.otto.Bus;
+import com.ndipatri.roboButton.utils.BusProvider;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -33,6 +31,13 @@ import javax.inject.Inject;
  * 
  * Before going to sleep, it will check for any Regions that were not detected in the last scan.. If a Region fails to report
  * after a defined number of scans, it will be also be declared lost.
+ *
+ * This class can look for more than one type of Region.  A 'type' is identified by the UUID found in the transmitted iBeacon
+ * advertisement packet.
+ *
+ * This advertisement information is returned in a 'scanRecord' after a 'startLeScan()'.  Parsing this scanRecord for
+ * various Regions can require a different 'offset' from the beginning to find the UUID.  THis offset must also be passed
+ * in when constructing this provider.
  */
 public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvider {
 
@@ -43,7 +48,11 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
 
-    protected List regionScanList;
+    // List of desired Regions.
+    protected List<String> regionUUIDPatternList;
+
+    // List of parse offsets associated with each Region UUID.
+    protected List<Integer> regionUUIDOffsetList;
 
     private int beaconDetectionThresholdDbms = -1;
     
@@ -66,7 +75,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
     private BluetoothAdapter.LeScanCallback scanRunnable;
 
     @Inject
-    Bus bus;
+    BusProvider bus;
 
     /**
      * Key: Found Region
@@ -78,10 +87,11 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
      */
     Map<com.ndipatri.roboButton.models.Region, MutableInteger> nearbyRegions = new HashMap<com.ndipatri.roboButton.models.Region, MutableInteger>();
 
-    public GenericRegionDiscoveryProviderImpl(final Context context, final List regionScanList) {
+    public GenericRegionDiscoveryProviderImpl(final Context context, final String[] regionUUIDPatternArray, final Integer[] regionUUIDOffsetArray) {
         
         this.context = context;
-        this.regionScanList = regionScanList;
+        this.regionUUIDPatternList = Arrays.asList(regionUUIDPatternArray);
+        this.regionUUIDOffsetList= Arrays.asList(regionUUIDOffsetArray);
 
         RBApplication.getInstance().getGraph().inject(this);
 
@@ -191,49 +201,62 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
             // This call is always made on UI thread from BluetoothAdapter.
             @Override
             public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-                //For readability we convert the bytes of the UUID into hex
-                String uuidHex = convertBytesToHex(Arrays.copyOfRange(scanRecord, 9, 25));
+                for (String regionUUIDPattern : regionUUIDPatternList) {
+                    int index = 0;
+                    com.ndipatri.roboButton.models.Region
+                            discoveredRegion = checkForRegion(device, rssi, scanRecord, regionUUIDPattern, regionUUIDOffsetList.get(index++));
+                    if (discoveredRegion != null) {
 
-                if (scanning && regionScanList.contains(uuidHex.toLowerCase())) {
-                    //Bytes 25 and 26 of the advertisement packet represent the major value
-                    int major = (scanRecord[25] << 8)
-                            | (scanRecord[26] << 0);
+                        if (rssi > beaconDetectionThresholdDbms) {
+                            Log.d(TAG, "Region with ACCEPTABLE RSSI '" + rssi + "' (" + discoveredRegion + "'!");
+                            postRegionFoundEvent(discoveredRegion, device);
 
-                    //Bytes 27 and 28 of the advertisement packet represent the minor value
-                    int minor = ((scanRecord[27] & 0xFF) << 8)
-                            | (scanRecord[28] & 0xFF);
+                            successiveInferiorRSSICountMap.put(device, new MutableInteger(0)); // reset low pass filter for this device
+                            nearbyRegions.put(discoveredRegion, new MutableInteger(0)); // reset the 'LostMetric' value back to 0.
+                        } else {
+                            Log.d(TAG, "Region with INFERIOR RSSI '" + rssi + "' (" + discoveredRegion + "'!");
 
-                    //RSSI values increase towards zero as the source gets closer to the reciever
+                            MutableInteger inferiorRSSIInteger = successiveInferiorRSSICountMap.get(device);
+                            if (inferiorRSSIInteger == null) {
+                                inferiorRSSIInteger = new MutableInteger(0);
+                                successiveInferiorRSSICountMap.put(device, inferiorRSSIInteger);
+                            }
+                            inferiorRSSIInteger.value += 1;
 
-                    com.ndipatri.roboButton.models.Region beaconRegion = new com.ndipatri.roboButton.models.Region(minor, major, uuidHex);
-
-                    if (rssi > beaconDetectionThresholdDbms) {
-                        Log.d(TAG, "Region with ACCEPTABLE RSSI '" + rssi + "' (" + beaconRegion + "'!");
-                        postRegionFoundEvent(beaconRegion, device);
-
-                        successiveInferiorRSSICountMap.put(device, new MutableInteger(0)); // reset low pass filter for this device
-                        nearbyRegions.put(beaconRegion, new MutableInteger(0)); // reset the 'LostMetric' value back to 0.
-                    } else {
-                        Log.d(TAG, "Region with INFERIOR RSSI '" + rssi + "' (" + beaconRegion + "'!");
-
-                        MutableInteger inferiorRSSIInteger = successiveInferiorRSSICountMap.get(device);
-                        if (inferiorRSSIInteger == null) {
-                            inferiorRSSIInteger = new MutableInteger(0);
-                            successiveInferiorRSSICountMap.put(device, inferiorRSSIInteger);
-                        }
-                        inferiorRSSIInteger.value += 1;
-
-                        // This is an attempt to 'low pass filter' the RSSI measurements as at times they can be
-                        // spurious.
-                        if (inferiorRSSIInteger.value >= beaconInferiorRSSICountThreshold) {
-                            successiveInferiorRSSICountMap.remove(device);
-                            postRegionLostEvent(beaconRegion);
-                            nearbyRegions.remove(nearbyRegions);
+                            // This is an attempt to 'low pass filter' the RSSI measurements as at times they can be
+                            // spurious.
+                            if (inferiorRSSIInteger.value >= beaconInferiorRSSICountThreshold) {
+                                successiveInferiorRSSICountMap.remove(device);
+                                postRegionLostEvent(discoveredRegion);
+                                nearbyRegions.remove(nearbyRegions);
+                            }
                         }
                     }
                 }
             }
         };
+    }
+
+    protected com.ndipatri.roboButton.models.Region checkForRegion(BluetoothDevice device, int rssi, byte[] scanRecord, String regionUUIDPattern, int regionUUIDOffset) {
+
+        // TODO - should persist RSSI as this should effect what we consider 'close' (proximity measurement)
+
+        com.ndipatri.roboButton.models.Region region = null;
+
+        String uuidHex = convertBytesToHex(Arrays.copyOfRange(scanRecord, 9-regionUUIDOffset, 25-regionUUIDOffset)).toLowerCase(); // LightBlue
+
+        if (scanning && regionUUIDPattern.equals(uuidHex.toLowerCase())) {
+
+            int major = ((scanRecord[25-regionUUIDOffset] & 0xFF) << 8)
+                    | (scanRecord[26-regionUUIDOffset] & 0xFF);
+
+            int minor = ((scanRecord[27-regionUUIDOffset] & 0xFF) << 8)
+                    | (scanRecord[28-regionUUIDOffset] & 0xFF);
+
+            region = new com.ndipatri.roboButton.models.Region(minor, major, uuidHex);
+        }
+
+        return region;
     }
 
     private static String convertBytesToHex(byte[] bytes) {
@@ -265,7 +288,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                bus.post(new RegionFoundEvent(region));
+                bus.post(new RegionFoundEvent(region, device));
             }
         });
     }

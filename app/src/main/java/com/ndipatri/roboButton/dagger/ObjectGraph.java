@@ -11,12 +11,12 @@ import com.ndipatri.roboButton.dagger.providers.PurpleButtonDiscoveryProviderImp
 import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.dagger.providers.EstimoteRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.providers.GenericRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.LightBlueRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.LeDeviceListAdapter;
+import com.ndipatri.roboButton.utils.LightBlueButtonCommunicator;
 
 import javax.inject.Singleton;
 
@@ -25,8 +25,6 @@ import dagger.Component;
 @Singleton
 @Component(modules = {RBModule.class})
 public interface ObjectGraph {
-
-    void inject(LightBlueRegionDiscoveryProviderImpl thingy);
 
     void inject(GenericRegionDiscoveryProviderImpl thingy);
 
@@ -55,6 +53,8 @@ public interface ObjectGraph {
     void inject(MainControllerActivityInstrumentation thingy);
 
     void inject(LightBlueButtonDiscoveryProviderImpl thingy);
+
+    void inject(LightBlueButtonCommunicator thingy);
 
     public final static class Initializer {
         public static ObjectGraph init(Context context) {

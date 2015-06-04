@@ -11,6 +11,7 @@ import com.ndipatri.roboButton.dagger.ObjectGraph;
 import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.ActivityWatcher;
+import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Bus;
 
 import javax.inject.Inject;
@@ -34,7 +35,7 @@ public class RBApplication extends Application {
         instance = this;
     }
 
-    @Inject Bus bus;
+    @Inject BusProvider bus;
 
     @Override
     public void onCreate() {

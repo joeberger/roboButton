@@ -13,7 +13,7 @@ import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
-import com.squareup.otto.Bus;
+import com.ndipatri.roboButton.utils.BusProvider;
 
 import java.util.HashSet;
 import java.util.List;
@@ -43,7 +43,7 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
     private BeaconManager beaconManager;
 
     @Inject
-    Bus bus;
+    BusProvider bus;
 
     public EstimoteRegionDiscoveryProviderImpl(Context context) {
 
@@ -167,7 +167,7 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                bus.post(new RegionFoundEvent(region));
+                bus.post(new RegionFoundEvent(region, region.getButton().getBluetoothDevice()));
             }
         });
     }

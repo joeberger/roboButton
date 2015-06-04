@@ -15,6 +15,7 @@ import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
+import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -36,7 +37,7 @@ public class ButtonFragment extends Fragment {
     private static final String TAG = ButtonFragment.class.getCanonicalName();
 
     @Inject
-    Bus bus;
+    BusProvider bus;
 
     @Inject
     protected ButtonProvider buttonProvider;
