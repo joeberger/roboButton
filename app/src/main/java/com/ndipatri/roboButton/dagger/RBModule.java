@@ -97,13 +97,17 @@ public class RBModule {
         // from the 'scanRecord' which is returned by a BLE scan.
         String[] regionUUIDPatternArray =
             new String[] {
-                    RegionUtils.GELO_UUID,
-                    RegionUtils.LIGHTBLUE_UUID};
+                    RegionUtils.LIGHTBLUE_UUID,
+                    //RegionUtils.GELO_UUID,
+                    //RegionUtils.ESTIMOTE_UUID
+                    };
 
         // This is the number of bytes into the BLE 'scanRecord' where the 16-byte
         // UUID begins.
-        Integer[] regionUUIDOffsetArray = new Integer[] {new Integer(0), new Integer(3)};
-
+        Integer[] regionUUIDOffsetArray = new Integer[] {new Integer(3),
+                                                         //new Integer(0),
+                                                         //new Integer(0)
+                                                        };
 
         if (BuildVariant.useMocks) {
             return mock(RegionDiscoveryProvider.class);

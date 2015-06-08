@@ -30,11 +30,11 @@
 /*************************************************************************/
 #define UNLOCK_TIMEOUT_MS    300
 #define LOCK_TIMEOUT_MS      275
-#define KEYCODE_SIZE         sizeof(keycode)
+#define KEYCODE_SIZE         4
 /*************************************************************************/
 /* Pin Defines */
 /*************************************************************************/
-// Motor Controller
+// Motor Controller+
 int PWMA = 1; //Speed control
 int AIN1 = 0; //Direct ion
 int AIN2 = 2; //Direction
@@ -46,12 +46,18 @@ int SW1 = 5;
 /* Global Variables */
 /*************************************************************************/
 /* Define the unlock keycode from the sandbox */
-const char keycode[] = {'1', '2', '3', '4'};
+char lockCode[] = {'1', '2', '3', '4'};
+char queryCode[] = {'1', '2', '3', '4'};
+
+    
+// our position in code guess
+int guess_index = 0;
+char *targetCode;
+
 /*************************************************************************/
 void setup() {
   Serial.begin(57600);
   Serial.setTimeout(25);
-  Bean.enableWakeOnConnect(true); // wakes on connect or disconnect 
 
   // Motor Controller Setup
   pinMode(STBY, OUTPUT);
@@ -66,60 +72,80 @@ void setup() {
 }
 /*************************************************************************/
 void loop() {
+
+    // wake up serial input (bluetooth module is connect to arduino's STBY pin)
   
-  Serial.println("Loop entered.");
-  
-  char buffer[10];
-  size_t length = 10;
-  static char last_value = 0;
-  static char index = 0;
-  static char lock_state = 0;
-
-  length = Serial.readBytes(buffer, length);
-
-  Serial.println("Buffer: '" + String(buffer) + "'.");
-
-  if ( length > 0 ) {
-      Serial.println("currentValue: '" + String(buffer[0]) + "', lastValue '" + String(last_value) + "' , nextKey('" + String(keycode[index]) + "').");
-
-    if (buffer[0] != last_value) { // Check to see if it is the same value
-      if (buffer[0] == keycode[index]) {
-        Serial.println("Fuckyeah!: '" + String(buffer[0]) + "'.");
-        index++;
-        if (index == KEYCODE_SIZE) { 
-          Serial.println("Code complete!");
-         
-          // Lock / Unlock door
-          if (lock_state) {
-            //LockTheDoor();
-          } else {
-            //UnlockTheDoor();
-          }
-          lock_state = !lock_state;
-          //Serial.write(lock_state);
-
-          index = 0;
-        }
-      } else {
-        index = 0;
-      }
-    }
-    last_value = buffer[0];
-  } else {
-    // no data available, must have been awakened for connection change.. send current state. 
-    lock_state = digitalRead(SW1);
+    size_t length = 10;
+    char buffer[length];
     
-    //Serial.write(lock_state);
-  }
-  
-  if (lock_state) {
-    Bean.setLed(255,0,0);
-  } else {
-    Bean.setLed(0,255,0);
-  }   
-  
-  Bean.sleep(0xFFFFFFFF); // Sleep until a serial message wakes us up
+    // our position in incoming data
+    char incoming_index = 0;
+
+    length = Serial.readBytes(buffer, length);
+
+    Serial.println("Incoming bytes (" + String(length) + "): '" + String(buffer) + "'. (guess_index is '" + String(guess_index) + "')");
+
+    for (incoming_index = 0; incoming_index < length; incoming_index++) {
+      
+        if (buffer[incoming_index] == 'Q') {
+            Serial.println("Incoming Query Code!");
+
+            targetCode = queryCode;
+            guess_index = 0; 
+            continue;        
+        } else
+        if (buffer[incoming_index] == 'X') {
+            Serial.println("Incoming Action Code!");
+
+            targetCode = lockCode;
+            guess_index = 0;
+            continue;         
+        }
+
+        Serial.println("Checking '" + String(buffer[incoming_index]) + "' against '" + String(targetCode[guess_index]) + "'.");
+        if (buffer[incoming_index] == targetCode[guess_index]) {
+            Serial.println("Next code byte found!");
+            guess_index++;
+        }  
+             
+        if (guess_index == KEYCODE_SIZE) {
+            Serial.println("Code completed!");
+
+            char unlocked = digitalRead(SW1);
+          
+            if (targetCode == lockCode) {
+                if (unlocked) {
+                    Serial.println("Locking!");
+
+                    //LockTheDoor();
+                } else {
+                    Serial.println("Unlocking!");
+
+                    //UnlockTheDoor();
+                }
+            } else 
+            if (targetCode == queryCode) {
+                Serial.println("Replying to Query!");
+
+                //Serial.write(unlocked);
+            }  
+        
+            guess_index=0;  
+        } 
+    }    
+
+    Serial.println("Done. (guess_index is '" + String(guess_index) + "')");
+
+    char unlocked = digitalRead(SW1);
+    if (unlocked) {
+        Bean.setLed(0, 255, 0);
+    } else {
+        Bean.setLed(255, 0, 0);
+    }
+
+    Bean.sleep(0xFFFFFFFF); // Sleep until a serial message wakes us up
 }
+
 /*************************************************************************/
 void move(int speed, int direction) {
   //Move motor at speed and direction

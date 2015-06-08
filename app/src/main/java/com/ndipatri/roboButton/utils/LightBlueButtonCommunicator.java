@@ -59,7 +59,7 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
 
     public LightBlueButtonCommunicator(final Context context, final Button button) {
 
-        Log.d(TAG, "Starting new monitor for button '" + button.getId() + "'.");
+        Log.d(TAG, "Starting LightBlue button communicator for '" + button.getId() + "'.");
 
         this.context = context;
         this.button = button;
@@ -132,15 +132,17 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
 
             @Override
             public void onSerialMessageReceived(byte[] bytes) {
+
                 Log.d(TAG, "onSerialMessageReceived()");
 
                 if (shouldRun) {
                     ButtonState newButtonState;
 
-                    String responseChar = String.valueOf(new char[]{(char) bytes[0]});
-                    Log.d(TAG, "Serial data from LightBlue Bean: '" + this + " ', '" + responseChar + "'.");
+                    int buttonValue = bytes[0];
+
+                    Log.d(TAG, "Serial data from LightBlue Bean: '" + this + " ', '" + buttonValue + "'.");
                     try {
-                        newButtonState = Integer.valueOf(responseChar) > 0 ? ButtonState.ON : ButtonState.OFF;
+                        newButtonState = buttonValue > 0 ? ButtonState.ON : ButtonState.OFF;
                     } catch (NumberFormatException nex) {
                         Log.d(TAG, "Invalid response from bluetooth device: '" + this + "'.");
                         // NJD TODO - one theory is to reconnect and see if that helps...

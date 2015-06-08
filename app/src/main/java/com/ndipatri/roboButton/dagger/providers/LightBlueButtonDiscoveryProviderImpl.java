@@ -109,6 +109,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
                             // is running the Button sketch.
                             postButtonDiscoveredEvent(true, discoveredBean.getDevice());
                         }
+                        discoveredBean.disconnect();
                     }
                 });
             }

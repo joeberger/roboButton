@@ -204,7 +204,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
                 for (String regionUUIDPattern : regionUUIDPatternList) {
                     int index = 0;
                     com.ndipatri.roboButton.models.Region
-                            discoveredRegion = checkForRegion(device, rssi, scanRecord, regionUUIDPattern, regionUUIDOffsetList.get(index++));
+                            discoveredRegion = checkForRegion(rssi, scanRecord, regionUUIDPattern, regionUUIDOffsetList.get(index++));
                     if (discoveredRegion != null) {
 
                         if (rssi > beaconDetectionThresholdDbms) {
@@ -237,7 +237,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
         };
     }
 
-    protected com.ndipatri.roboButton.models.Region checkForRegion(BluetoothDevice device, int rssi, byte[] scanRecord, String regionUUIDPattern, int regionUUIDOffset) {
+    protected com.ndipatri.roboButton.models.Region checkForRegion(int rssi, byte[] scanRecord, String regionUUIDPattern, int regionUUIDOffset) {
 
         // TODO - should persist RSSI as this should effect what we consider 'close' (proximity measurement)
 
