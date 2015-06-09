@@ -122,6 +122,9 @@ public class RBModule {
     ButtonDiscoveryProvider provideLightBlueButtonDiscoveryProvider() {
         if (BuildVariant.useMocks) {
             return mock(ButtonDiscoveryProvider.class);
+        } else
+        if (BuildVariant.useStubs) {
+                return new LightBlueButtonDiscoveryProviderStub();
         } else {
             return new LightBlueButtonDiscoveryProviderImpl(context);
         }

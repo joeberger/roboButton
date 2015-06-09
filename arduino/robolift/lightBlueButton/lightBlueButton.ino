@@ -31,6 +31,7 @@
 #define UNLOCK_TIMEOUT_MS    300
 #define LOCK_TIMEOUT_MS      275
 #define KEYCODE_SIZE         4
+#define DEBUG 0
 /*************************************************************************/
 /* Pin Defines */
 /*************************************************************************/
@@ -49,7 +50,7 @@ int SW1 = 5;
 char lockCode[] = {'1', '2', '3', '4'};
 char queryCode[] = {'1', '2', '3', '4'};
 
-    
+
 // our position in code guess
 int guess_index = 0;
 char *targetCode;
@@ -73,77 +74,79 @@ void setup() {
 /*************************************************************************/
 void loop() {
 
-    // wake up serial input (bluetooth module is connect to arduino's STBY pin)
-  
-    size_t length = 10;
-    char buffer[length];
-    
-    // our position in incoming data
-    char incoming_index = 0;
+  // wake up serial input (bluetooth module is connect to arduino's STBY pin)
 
-    length = Serial.readBytes(buffer, length);
+  size_t length = 10;
+  char buffer[length];
 
-    Serial.println("Incoming bytes (" + String(length) + "): '" + String(buffer) + "'. (guess_index is '" + String(guess_index) + "')");
+  // our position in incoming data
+  char incoming_index = 0;
 
-    for (incoming_index = 0; incoming_index < length; incoming_index++) {
-      
-        if (buffer[incoming_index] == 'Q') {
-            Serial.println("Incoming Query Code!");
+  length = Serial.readBytes(buffer, length);
 
-            targetCode = queryCode;
-            guess_index = 0; 
-            continue;        
-        } else
-        if (buffer[incoming_index] == 'X') {
-            Serial.println("Incoming Action Code!");
+  if (DEBUG) Serial.println("Incoming bytes (" + String(length) + "): '" + String(buffer) + "'. (guess_index is '" + String(guess_index) + "')");
 
-            targetCode = lockCode;
-            guess_index = 0;
-            continue;         
-        }
+  for (incoming_index = 0; incoming_index < length; incoming_index++) {
 
-        Serial.println("Checking '" + String(buffer[incoming_index]) + "' against '" + String(targetCode[guess_index]) + "'.");
-        if (buffer[incoming_index] == targetCode[guess_index]) {
-            Serial.println("Next code byte found!");
-            guess_index++;
-        }  
-             
-        if (guess_index == KEYCODE_SIZE) {
-            Serial.println("Code completed!");
+      if (buffer[incoming_index] == 'Q') {
+          if (DEBUG) Serial.println("Incoming Query Code!");
 
-            char unlocked = digitalRead(SW1);
+          targetCode = queryCode;
+          guess_index = 0;
+          continue;
+      } else if (buffer[incoming_index] == 'X') {
+          if (DEBUG) Serial.println("Incoming Action Code!");
+
+          targetCode = lockCode;
+          guess_index = 0;
+          continue;
+      }
+
+      if (DEBUG) Serial.println("Checking '" + String(buffer[incoming_index]) + "' against '" + String(targetCode[guess_index]) + "'.");
+      if (buffer[incoming_index] == targetCode[guess_index]) {
+          if (DEBUG) Serial.println("Next code byte found!");
+          guess_index++;
+      }
+
+      if (guess_index == KEYCODE_SIZE) {
+          if (DEBUG) Serial.println("Code completed!");
+
+          char unlocked = digitalRead(SW1);
+
+          if (targetCode == lockCode) {
+              if (unlocked) {
+                  if (DEBUG) Serial.println("Locking!");
+                  //LockTheDoor();
+              } else {
+                  if (DEBUG) Serial.println("Unlocking!");
+                  //UnlockTheDoor();
+              }
+          } else if (targetCode == queryCode) {
+              if (DEBUG) {
+                  Serial.print("Replying to Query!");
+              }
+              
+              if (unlocked) {
+                  Serial.println("unlocked");
+               } else {
+                  Serial.println("locked");
+               }
+          } 
           
-            if (targetCode == lockCode) {
-                if (unlocked) {
-                    Serial.println("Locking!");
+          guess_index = 0;
+      } // end if code completed
+  } // done with current buffer
 
-                    //LockTheDoor();
-                } else {
-                    Serial.println("Unlocking!");
+  if (DEBUG) Serial.println("Done. (guess_index is '" + String(guess_index) + "')");
 
-                    //UnlockTheDoor();
-                }
-            } else 
-            if (targetCode == queryCode) {
-                Serial.println("Replying to Query!");
+  char unlocked = digitalRead(SW1);
+  if (unlocked) {
+      Bean.setLed(0, 255, 0);
+  } else {
+      Bean.setLed(255, 0, 0);
+  }
 
-                //Serial.write(unlocked);
-            }  
-        
-            guess_index=0;  
-        } 
-    }    
-
-    Serial.println("Done. (guess_index is '" + String(guess_index) + "')");
-
-    char unlocked = digitalRead(SW1);
-    if (unlocked) {
-        Bean.setLed(0, 255, 0);
-    } else {
-        Bean.setLed(255, 0, 0);
-    }
-
-    Bean.sleep(0xFFFFFFFF); // Sleep until a serial message wakes us up
+  Bean.sleep(0xFFFFFFFF); // Sleep until a serial message wakes us up
 }
 
 /*************************************************************************/

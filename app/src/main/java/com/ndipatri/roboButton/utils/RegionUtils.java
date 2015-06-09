@@ -8,8 +8,9 @@ public class RegionUtils {
     public static final String ESTIMOTE_UUID = "b9407f30f5f8466eaff925556b57fe6d";
 
     // TODO - For now, we will assume homogenous regions: same beacon types in any paritcular region.
+
     public static boolean isLighBlueRegion(Region region)  {
-       return region.getUuid().toLowerCase().equals(LIGHTBLUE_UUID);
+        return region.getUuid().toLowerCase().equals(LIGHTBLUE_UUID);
     }
 
     public static boolean isGeloRegion(Region region)  {

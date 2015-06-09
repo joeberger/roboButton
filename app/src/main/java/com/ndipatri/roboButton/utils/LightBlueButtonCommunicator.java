@@ -20,6 +20,7 @@ import com.squareup.otto.Subscribe;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 import javax.inject.Inject;
@@ -118,6 +119,8 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
             @Override
             public void onConnected() {
                 Log.d(TAG, "onConnected()");
+
+                sendRemoteStateQuery();
             }
 
             @Override
@@ -138,32 +141,42 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
                 if (shouldRun) {
                     ButtonState newButtonState;
 
-                    int buttonValue = bytes[0];
-
-                    Log.d(TAG, "Serial data from LightBlue Bean: '" + this + " ', '" + buttonValue + "'.");
+                    String lightBlueButtonValue = null;
                     try {
-                        newButtonState = buttonValue > 0 ? ButtonState.ON : ButtonState.OFF;
-                    } catch (NumberFormatException nex) {
-                        Log.d(TAG, "Invalid response from bluetooth device: '" + this + "'.");
-                        // NJD TODO - one theory is to reconnect and see if that helps...
-                        // disconnect();
-
-                        // another is to just continue to listen until we are declare no longer communicating and are killed
-                        // by the monitoring service.
-                        newButtonState = null;
+                        lightBlueButtonValue = new String(bytes, "US-ASCII");
+                    } catch (UnsupportedEncodingException e) {
+                        lightBlueButtonValue = null;
                     }
 
-                    if (buttonState == ButtonState.NEVER_CONNECTED) {
+                    if (lightBlueButtonValue != null) {
 
-                        if (isAutoModeEnabled() && button.isAutoModeEnabled() && newButtonState != ButtonState.ON) {
+                        int buttonValue = lightBlueButtonValue.equals("locked") ? 1 : 0;
 
-                            // Now that we've established we can communicate with newly discovered
-                            // button, let's set its auto-state....
-                            setRemoteState(ButtonState.ON);
+                        Log.d(TAG, "Serial data from LightBlue Bean: '" + this + " ', '" + buttonValue + "'.");
+                        try {
+                            newButtonState = buttonValue > 0 ? ButtonState.ON : ButtonState.OFF;
+                        } catch (NumberFormatException nex) {
+                            Log.d(TAG, "Invalid response from bluetooth device: '" + this + "'.");
+                            // NJD TODO - one theory is to reconnect and see if that helps...
+                            // disconnect();
+
+                            // another is to just continue to listen until we are declare no longer communicating and are killed
+                            // by the monitoring service.
+                            newButtonState = null;
                         }
-                    }
 
-                    setLocalButtonState(newButtonState);
+                        if (buttonState == ButtonState.NEVER_CONNECTED) {
+
+                            if (isAutoModeEnabled() && button.isAutoModeEnabled() && newButtonState != ButtonState.ON) {
+
+                                // Now that we've established we can communicate with newly discovered
+                                // button, let's set its auto-state....
+                                setRemoteState(ButtonState.ON);
+                            }
+                        }
+
+                        setLocalButtonState(newButtonState);
+                    }
                 }
             }
 
@@ -181,13 +194,22 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
             if (this.buttonState != buttonState) {
                 // The LightBlueButton only can be toggled.. If you send the PIN code, it toggles.. so
                 // we only send if we are toggling...
-                encodedButtonState = new byte[] {'1', '2', '3', '4'};
+                encodedButtonState = new byte[] {'X', '1', '2', '3', '4'};
             }
 
             if (encodedButtonState != null) {
                 discoveredBean.sendSerialMessage(encodedButtonState);
             }
         }
+    }
+
+    protected void sendRemoteStateQuery() {
+
+        if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
+            discoveredBean.sendSerialMessage(new byte[] {'Q', '1', '2', '3', '4'});
+        }
+
+        // The LightBlue will respond with a serial message..
     }
 
     public boolean isCommunicating() {
