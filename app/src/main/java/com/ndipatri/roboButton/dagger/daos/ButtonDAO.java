@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.providers;
+package com.ndipatri.roboButton.dagger.daos;
 
 import android.content.Context;
 import android.util.Log;
@@ -20,16 +20,16 @@ import javax.inject.Inject;
 /**
  * Created by ndipatri on 5/29/14.
  */
-public class ButtonProvider {
+public class ButtonDAO {
 
-    private static final String TAG = ButtonProvider.class.getCanonicalName();
+    private static final String TAG = ButtonDAO.class.getCanonicalName();
 
     protected @Inject
-    RegionProvider regionProvider;
+    RegionDAO regionDAO;
 
     private Context context;
 
-    public ButtonProvider(Context context) {
+    public ButtonDAO(Context context) {
         this.context = context;
 
         RBApplication.getInstance().getGraph().inject(this);

@@ -10,19 +10,13 @@ import com.ndipatri.roboButton.models.Region;
 public class RegionFoundEvent {
 
     public Region region;
-    public BluetoothDevice device;
 
-    public RegionFoundEvent(final Region region, final BluetoothDevice device) {
+    public RegionFoundEvent(final Region region) {
         this.region = region;
-        this.device = device;
     }
 
     public Region getRegion() {
         return region;
-    }
-
-    public BluetoothDevice getDevice() {
-        return device;
     }
 
     // The particular associated device for this RegionFoundEvent isn't important for

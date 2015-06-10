@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.providers;
+package com.ndipatri.roboButton.dagger.daos;
 
 import android.content.Context;
 import android.util.Log;
@@ -17,13 +17,13 @@ import java.util.List;
 /**
  * Created by ndipatri on 5/29/14.
  */
-public class RegionProvider {
+public class RegionDAO {
 
-    private static final String TAG = RegionProvider.class.getCanonicalName();
+    private static final String TAG = RegionDAO.class.getCanonicalName();
 
     private Context context;
 
-    public RegionProvider(Context context) {
+    public RegionDAO(Context context) {
         this.context = context;
     }
 

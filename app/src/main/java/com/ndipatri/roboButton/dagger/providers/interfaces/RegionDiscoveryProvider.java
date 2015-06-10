@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.providers;
+package com.ndipatri.roboButton.dagger.providers.interfaces;
 
 import android.os.RemoteException;
 

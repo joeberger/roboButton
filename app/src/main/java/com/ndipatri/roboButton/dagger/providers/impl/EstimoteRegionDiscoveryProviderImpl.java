@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.providers;
+package com.ndipatri.roboButton.dagger.providers.impl;
 
 import android.content.Context;
 import android.os.Handler;
@@ -11,6 +11,7 @@ import com.estimote.sdk.Region;
 import com.estimote.sdk.Utils;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.dagger.providers.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.utils.BusProvider;
@@ -167,7 +168,7 @@ public class EstimoteRegionDiscoveryProviderImpl implements RegionDiscoveryProvi
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                bus.post(new RegionFoundEvent(region, region.getButton().getBluetoothDevice()));
+                bus.post(new RegionFoundEvent(region));
             }
         });
     }

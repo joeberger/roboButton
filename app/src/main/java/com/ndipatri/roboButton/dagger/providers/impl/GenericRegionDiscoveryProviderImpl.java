@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.providers;
+package com.ndipatri.roboButton.dagger.providers.impl;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.dagger.providers.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.utils.BusProvider;
@@ -209,7 +210,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
 
                         if (rssi > beaconDetectionThresholdDbms) {
                             Log.d(TAG, "Region with ACCEPTABLE RSSI '" + rssi + "' (" + discoveredRegion + "'!");
-                            postRegionFoundEvent(discoveredRegion, device);
+                            postRegionFoundEvent(discoveredRegion);
 
                             successiveInferiorRSSICountMap.put(device, new MutableInteger(0)); // reset low pass filter for this device
                             nearbyRegions.put(discoveredRegion, new MutableInteger(0)); // reset the 'LostMetric' value back to 0.
@@ -284,11 +285,11 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
                                                                       (inBackground ? beaconScanIntervalMillis : beaconScanIntervalMillis/2);
     }
     
-    protected void postRegionFoundEvent(final com.ndipatri.roboButton.models.Region region, final BluetoothDevice device) {
+    protected void postRegionFoundEvent(final com.ndipatri.roboButton.models.Region region) {
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                bus.post(new RegionFoundEvent(region, device));
+                bus.post(new RegionFoundEvent(region));
             }
         });
     }

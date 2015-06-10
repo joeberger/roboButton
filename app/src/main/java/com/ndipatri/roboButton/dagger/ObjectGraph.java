@@ -5,12 +5,13 @@ import android.content.Context;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.activities.MainControllerActivityInstrumentation;
-import com.ndipatri.roboButton.dagger.providers.BluetoothProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.LightBlueButtonDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.PurpleButtonDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
-import com.ndipatri.roboButton.dagger.providers.EstimoteRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.GenericRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.daos.ButtonDAO;
+import com.ndipatri.roboButton.dagger.providers.impl.BluetoothProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.impl.GenericRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.impl.LightBlueButtonDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.impl.EstimoteRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.stubs.GenericRegionDiscoveryProviderStub;
+import com.ndipatri.roboButton.dagger.providers.stubs.LightBlueButtonDiscoveryProviderStub;
 import com.ndipatri.roboButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
@@ -27,6 +28,7 @@ import dagger.Component;
 public interface ObjectGraph {
 
     void inject(GenericRegionDiscoveryProviderImpl thingy);
+    void inject(GenericRegionDiscoveryProviderStub thingy);
 
     void inject(EstimoteRegionDiscoveryProviderImpl thingy);
 
@@ -46,13 +48,14 @@ public interface ObjectGraph {
 
     void inject(BluetoothProviderImpl thingy);
 
-    void inject(ButtonProvider thingy);
+    void inject(ButtonDAO thingy);
 
-    void inject(PurpleButtonDiscoveryProviderImpl thingy);
+    void inject(BluetoothProviderImpl.PurpleButtonDiscoveryProviderImpl thingy);
 
     void inject(MainControllerActivityInstrumentation thingy);
 
     void inject(LightBlueButtonDiscoveryProviderImpl thingy);
+    void inject(LightBlueButtonDiscoveryProviderStub thingy);
 
     void inject(LightBlueButtonCommunicator thingy);
 

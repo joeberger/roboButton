@@ -17,11 +17,11 @@ import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.RBModule;
 import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.providers.RegionProvider;
-import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
-import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
+import com.ndipatri.roboButton.dagger.daos.RegionDAO;
+import com.ndipatri.roboButton.dagger.providers.interfaces.RegionDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.interfaces.BluetoothProvider;
+import com.ndipatri.roboButton.dagger.providers.interfaces.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.daos.ButtonDAO;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
@@ -35,7 +35,6 @@ import com.ndipatri.roboButton.utils.BusProvider;
 import com.ndipatri.roboButton.utils.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.ButtonCommunicatorFactory;
 import com.ndipatri.roboButton.utils.RegionUtils;
-import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
 import javax.inject.Inject;
@@ -66,7 +65,7 @@ public class MonitoringService extends Service {
     BusProvider bus;
 
     @Inject
-    protected RegionProvider regionProvider;
+    protected RegionDAO regionDAO;
 
     @Inject
     @Named(RBModule.ESTIMOTE_BEACONS)
@@ -77,7 +76,7 @@ public class MonitoringService extends Service {
     protected RegionDiscoveryProvider geloRegionDiscoveryProvider;
 
     @Inject
-    protected ButtonProvider buttonProvider;
+    protected ButtonDAO buttonDAO;
 
     @Inject
     @Named(RBModule.PURPLE_BUTTON)
@@ -172,7 +171,7 @@ public class MonitoringService extends Service {
     public void onRegionFound(RegionFoundEvent regionFoundEvent) {
 
         nearbyRegion = regionFoundEvent.getRegion();
-        regionProvider.createOrUpdateRegion(nearbyRegion);
+        regionDAO.createOrUpdateRegion(nearbyRegion);
 
         Log.d(TAG, "RegionFound: ('" + nearbyRegion + "'.)");
 
@@ -291,7 +290,7 @@ public class MonitoringService extends Service {
 
         Button discoveredButton;
 
-        Button persistedButton = buttonProvider.getButton(device.getAddress());
+        Button persistedButton = buttonDAO.getButton(device.getAddress());
 
         if (persistedButton != null) {
             discoveredButton = persistedButton;
@@ -300,20 +299,20 @@ public class MonitoringService extends Service {
         }
         discoveredButton.setBluetoothDevice(device);
 
-        buttonProvider.createOrUpdateButton(discoveredButton);
+        buttonDAO.createOrUpdateButton(discoveredButton);
 
         // we immediately pair this discovered button with our nearby region.. overwriting any
         // existing pairing.
 
         nearbyRegion.setName("Region for " + discoveredButton.getName());
-        regionProvider.createOrUpdateRegion(nearbyRegion);
+        regionDAO.createOrUpdateRegion(nearbyRegion);
 
-        Button button = buttonProvider.getButton(discoveredButton.getId());
+        Button button = buttonDAO.getButton(discoveredButton.getId());
         button.setRegion(nearbyRegion);
         nearbyRegion.setButton(button);
 
-        buttonProvider.createOrUpdateButton(button);
-        regionProvider.createOrUpdateRegion(nearbyRegion); // transitive persistence sucks in ormLite
+        buttonDAO.createOrUpdateButton(button);
+        regionDAO.createOrUpdateRegion(nearbyRegion); // transitive persistence sucks in ormLite
         return discoveredButton;
     }
 
@@ -327,7 +326,7 @@ public class MonitoringService extends Service {
 
         lastNotifiedState = buttonState;
 
-        Button button = buttonProvider.getButton(buttonId);
+        Button button = buttonDAO.getButton(buttonId);
 
         StringBuilder sbuf = new StringBuilder("Tap here to toggle '");
         sbuf.append(button.getName()).append("'.");

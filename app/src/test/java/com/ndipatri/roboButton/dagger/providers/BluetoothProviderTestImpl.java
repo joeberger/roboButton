@@ -2,6 +2,9 @@ package com.ndipatri.roboButton.dagger.providers;
 
 import android.content.Context;
 
+import com.ndipatri.roboButton.dagger.providers.impl.BluetoothProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.interfaces.BluetoothProvider;
+
 public class BluetoothProviderTestImpl implements BluetoothProvider {
 
     private static final String TAG = BluetoothProviderImpl.class.getCanonicalName();

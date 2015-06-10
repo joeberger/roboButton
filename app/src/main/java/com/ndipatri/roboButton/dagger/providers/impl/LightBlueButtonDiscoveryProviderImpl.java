@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.providers;
+package com.ndipatri.roboButton.dagger.providers.impl;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -7,10 +7,10 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.dagger.providers.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.utils.BusProvider;
-import com.squareup.otto.Bus;
 
 import javax.inject.Inject;
 
@@ -22,7 +22,10 @@ import nl.littlerobots.bean.message.Callback;
 import nl.littlerobots.bean.message.SketchMetaData;
 
 /**
- * This class will perform a Bluetooth Classic 'Discovery' operation.  After a defined timeout period, the scan will
+ * This class will look for LightBlue Bean 'beacons' and if confirmed that it is running the right Arduino 'sketch', we will
+ * declare this a button as well.
+ *
+ * After a defined timeout period, the scan will
  * be stopped.  At that time a 'success' or 'failure' event will be emitted based on whether a device matching the
  * defined 'discoveryPattern' was found.
  */

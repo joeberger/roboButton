@@ -3,23 +3,17 @@ package com.ndipatri.roboButton.dagger;
 import android.content.Context;
 
 import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.providers.BluetoothProvider;
-import com.ndipatri.roboButton.dagger.providers.BluetoothProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.providers.LightBlueButtonDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.PurpleButtonDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.ButtonProvider;
-import com.ndipatri.roboButton.dagger.providers.EstimoteRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.GenericRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.RegionDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.providers.RegionProvider;
+import com.ndipatri.roboButton.dagger.daos.ButtonDAO;
+import com.ndipatri.roboButton.dagger.daos.RegionDAO;
+import com.ndipatri.roboButton.dagger.providers.impl.BluetoothProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.impl.EstimoteRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.impl.GenericRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.impl.LightBlueButtonDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.providers.interfaces.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.providers.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.BuildVariant;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.ndipatri.roboButton.utils.RegionUtils;
-import com.squareup.otto.Bus;
-
-import java.util.Arrays;
-import java.util.List;
 
 import javax.inject.Singleton;
 
@@ -49,29 +43,29 @@ public class RBModule {
 
     @Provides
     @Singleton
-    ButtonProvider provideButtonProvider() {
+    ButtonDAO provideButtonProvider() {
         if (BuildVariant.useMocks) {
-            return mock(ButtonProvider.class);
+            return mock(ButtonDAO.class);
         } else {
-            return new ButtonProvider(context);
+            return new ButtonDAO(context);
         }
     }
 
     @Provides
     @Singleton
-    RegionProvider provideRegionProvider() {
+    RegionDAO provideRegionProvider() {
         if (BuildVariant.useMocks) {
-            return mock(RegionProvider.class);
+            return mock(RegionDAO.class);
         } else {
-            return new RegionProvider(context);
+            return new RegionDAO(context);
         }
     }
 
     @Provides
     @Singleton
-    BluetoothProvider provideBluetoothProvider() {
+    com.ndipatri.roboButton.dagger.providers.interfaces.BluetoothProvider provideBluetoothProvider() {
         if (BuildVariant.useMocks) {
-            return mock(BluetoothProvider.class);
+            return mock(com.ndipatri.roboButton.dagger.providers.interfaces.BluetoothProvider.class);
         } else {
             return new BluetoothProviderImpl(context);
         }
@@ -124,7 +118,7 @@ public class RBModule {
             return mock(ButtonDiscoveryProvider.class);
         } else
         if (BuildVariant.useStubs) {
-                return new LightBlueButtonDiscoveryProviderStub();
+                return new LightBlueButtonDiscoveryProviderImpl(context);
         } else {
             return new LightBlueButtonDiscoveryProviderImpl(context);
         }
@@ -137,7 +131,7 @@ public class RBModule {
         if (BuildVariant.useMocks) {
             return mock(ButtonDiscoveryProvider.class);
         } else {
-            return new PurpleButtonDiscoveryProviderImpl(context);
+            return new BluetoothProviderImpl.PurpleButtonDiscoveryProviderImpl(context);
         }
     }
 }
