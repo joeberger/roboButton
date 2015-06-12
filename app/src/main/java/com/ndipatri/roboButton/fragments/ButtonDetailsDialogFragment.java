@@ -20,8 +20,8 @@ import butterknife.Views;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
-import com.ndipatri.roboButton.dagger.daos.ButtonDAO;
-import com.ndipatri.roboButton.dagger.daos.RegionDAO;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
+import com.ndipatri.roboButton.dagger.daos.RegionDao;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
 
@@ -41,10 +41,10 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     BusProvider bus;
 
     @Inject
-    protected ButtonDAO buttonDAO;
+    protected ButtonDao buttonDao;
 
     @Inject
-    protected RegionDAO regionDAO;
+    protected RegionDao regionDao;
 
     public static ButtonDetailsDialogFragment newInstance(String buttonId) {
 
@@ -108,7 +108,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
     }
 
     protected Button getButton() {
-        return buttonDAO.getButton(getButtonId());
+        return buttonDao.getButton(getButtonId());
     }
 
     protected void setupViews() {
@@ -132,7 +132,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
             public void afterTextChanged(Editable s) {
                 Button button = getButton();
                 button.setName(nameEditText.getText().toString());
-                buttonDAO.createOrUpdateButton(button);
+                buttonDao.createOrUpdateButton(button);
             }
         });
 
@@ -142,7 +142,7 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 Button button = getButton();
                 button.setAutoModeEnabled(autoModeSwitch.isChecked());
-                buttonDAO.createOrUpdateButton(button);
+                buttonDao.createOrUpdateButton(button);
             }
         });
     }

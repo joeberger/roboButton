@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.utils;
+package com.ndipatri.roboButton.dagger.bluetooth.communication.stubs;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
@@ -8,20 +8,18 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicator;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
 import com.ndipatri.roboButton.models.Button;
-import com.squareup.otto.Bus;
+import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 
 import javax.inject.Inject;
 
@@ -33,14 +31,14 @@ import nl.littlerobots.bean.BeanManager;
 /**
  * Communicates with each individual LightBlue Bean Button
  */
-public class LightBlueButtonCommunicator implements ButtonCommunicator {
+public class GenericButtonCommunicatorStub implements ButtonCommunicator {
 
-    private static final String TAG = LightBlueButtonCommunicator.class.getCanonicalName();
+    private static final String TAG = GenericButtonCommunicatorStub.class.getCanonicalName();
 
     @Inject
     BusProvider bus;
 
-    protected long communicationsGracePeriodMillis = -1;
+    protected Button button;
 
     protected boolean inBackground = false;
 
@@ -49,25 +47,14 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
     // This value will always be set by what is received from Button itself
     private ButtonState buttonState = ButtonState.NEVER_CONNECTED;
 
-    private Button button;
-    private Bean discoveredBean;
-
     private Context context;
 
-    private long lastButtonStateUpdateTimeMillis;
+    public GenericButtonCommunicatorStub(final Context context, final Button button) {
 
-    BluetoothAdapter bluetoothAdapter = null;
-
-    public LightBlueButtonCommunicator(final Context context, final Button button) {
-
-        Log.d(TAG, "Starting LightBlue button communicator for '" + button.getId() + "'.");
+        Log.d(TAG, "Starting GenericStub button communicator for '" + button.getId() + "'.");
 
         this.context = context;
         this.button = button;
-
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        communicationsGracePeriodMillis = context.getResources().getInteger(R.integer.communications_grace_period_millis);
 
         ((RBApplication)context).getGraph().inject(this);
 
@@ -77,43 +64,13 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
     public void start() {
         shouldRun = true;
 
-        // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
-        lastButtonStateUpdateTimeMillis = 0;
-
         bus.register(this);
-        startButtonConnect();
     }
 
-    public synchronized void startButtonConnect() {
-
-        if (shouldRun && bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
-            getBeanManager().startDiscovery(getButtonDiscoveryListener());
-        } else {
-            shouldRun = false;
-        }
-    }
-
-    protected BeanDiscoveryListener getButtonDiscoveryListener() {
-        return new BeanDiscoveryListener() {
-            @Override
-            public void onBeanDiscovered(Bean discoveredBean) {
-                if (shouldRun && discoveredBean.getDevice().getAddress().equals(button.getBluetoothDevice().getAddress())) {
-                    LightBlueButtonCommunicator.this.discoveredBean = discoveredBean;
-                    discoveredBean.connect(context, getBeanConnectionListener());
-                }
-            }
-
-            @Override
-            public void onDiscoveryComplete() {
-                if (shouldRun && LightBlueButtonCommunicator.this.discoveredBean == null) {
-                    // try indefinitely until this communicator is explicitly stopped
-                    startButtonConnect();
-                }
-            }
-        };
-    }
+need to impleement this communicator stub.
 
     protected BeanListener getBeanConnectionListener() {
+
         return new BeanListener() {
 
             @Override
@@ -251,7 +208,7 @@ public class LightBlueButtonCommunicator implements ButtonCommunicator {
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                bus.unregister(LightBlueButtonCommunicator.this);
+                bus.unregister(GenericButtonCommunicatorStub.this);
             }
         });
 

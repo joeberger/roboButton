@@ -5,19 +5,21 @@ import android.content.Context;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.activities.MainControllerActivityInstrumentation;
-import com.ndipatri.roboButton.dagger.daos.ButtonDAO;
-import com.ndipatri.roboButton.dagger.providers.impl.BluetoothProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.impl.GenericRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.impl.LightBlueButtonDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.impl.EstimoteRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.stubs.GenericRegionDiscoveryProviderStub;
-import com.ndipatri.roboButton.dagger.providers.stubs.LightBlueButtonDiscoveryProviderStub;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.GenericButtonCommunicatorStub;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
+import com.ndipatri.roboButton.dagger.bluetooth.BluetoothProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.GenericRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.LightBlueButtonDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.EstimoteRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.PurpleButtonDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.GenericRegionDiscoveryProviderStub;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.LightBlueButtonDiscoveryProviderStub;
 import com.ndipatri.roboButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
-import com.ndipatri.roboButton.utils.ButtonCommunicator;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.LeDeviceListAdapter;
-import com.ndipatri.roboButton.utils.LightBlueButtonCommunicator;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.LightBlueButtonCommunicatorImpl;
 
 import javax.inject.Singleton;
 
@@ -48,16 +50,17 @@ public interface ObjectGraph {
 
     void inject(BluetoothProviderImpl thingy);
 
-    void inject(ButtonDAO thingy);
+    void inject(ButtonDao thingy);
 
-    void inject(BluetoothProviderImpl.PurpleButtonDiscoveryProviderImpl thingy);
+    void inject(PurpleButtonDiscoveryProviderImpl thingy);
 
     void inject(MainControllerActivityInstrumentation thingy);
 
     void inject(LightBlueButtonDiscoveryProviderImpl thingy);
     void inject(LightBlueButtonDiscoveryProviderStub thingy);
 
-    void inject(LightBlueButtonCommunicator thingy);
+    void inject(LightBlueButtonCommunicatorImpl thingy);
+    void inject(GenericButtonCommunicatorStub thingy);
 
     public final static class Initializer {
         public static ObjectGraph init(Context context) {

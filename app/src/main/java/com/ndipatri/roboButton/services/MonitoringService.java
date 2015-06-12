@@ -17,11 +17,14 @@ import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.RBModule;
 import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.daos.RegionDAO;
-import com.ndipatri.roboButton.dagger.providers.interfaces.RegionDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.providers.interfaces.BluetoothProvider;
-import com.ndipatri.roboButton.dagger.providers.interfaces.ButtonDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.daos.ButtonDAO;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.LightBlueButtonCommunicatorImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.PurpleButtonCommunicatorImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
+import com.ndipatri.roboButton.dagger.daos.RegionDao;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
@@ -32,8 +35,7 @@ import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
-import com.ndipatri.roboButton.utils.ButtonCommunicator;
-import com.ndipatri.roboButton.utils.ButtonCommunicatorFactory;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.RegionUtils;
 import com.squareup.otto.Subscribe;
 
@@ -65,26 +67,27 @@ public class MonitoringService extends Service {
     BusProvider bus;
 
     @Inject
-    protected RegionDAO regionDAO;
+    protected RegionDao regionDao;
 
     @Inject
-    @Named(RBModule.ESTIMOTE_BEACONS)
-    protected RegionDiscoveryProvider estimoteRegionDiscoveryProvider;
+    protected RegionDiscoveryProvider regionDiscoveryProvider;
 
     @Inject
-    @Named(RBModule.GELO_BEACONS)
-    protected RegionDiscoveryProvider geloRegionDiscoveryProvider;
-
-    @Inject
-    protected ButtonDAO buttonDAO;
-
-    @Inject
-    @Named(RBModule.PURPLE_BUTTON)
-    protected ButtonDiscoveryProvider purpleButtonDiscoveryProvider;
+    protected ButtonDao buttonDao;
 
     @Inject
     @Named(RBModule.LIGHTBLUE_BUTTON)
+    protected ButtonCommunicatorFactory lightBlueButtonCommunicatorFactory;
+    @Inject
+    @Named(RBModule.LIGHTBLUE_BUTTON)
     protected ButtonDiscoveryProvider lightBlueButtonDiscoveryProvider;
+
+    @Inject
+    @Named(RBModule.PURPLE_BUTTON)
+    protected ButtonCommunicatorFactory purpleButtonCommunicatorFactory;
+    @Inject
+    @Named(RBModule.PURPLE_BUTTON)
+    protected ButtonDiscoveryProvider purpleButtonDiscoveryProvider;
 
     @Inject
     protected BluetoothProvider bluetoothProvider;
@@ -171,7 +174,7 @@ public class MonitoringService extends Service {
     public void onRegionFound(RegionFoundEvent regionFoundEvent) {
 
         nearbyRegion = regionFoundEvent.getRegion();
-        regionDAO.createOrUpdateRegion(nearbyRegion);
+        regionDao.createOrUpdateRegion(nearbyRegion);
 
         Log.d(TAG, "RegionFound: ('" + nearbyRegion + "'.)");
 
@@ -202,7 +205,7 @@ public class MonitoringService extends Service {
 
                 stopButtonDiscovery();
 
-                nearbyButton = pairButtonWithRegion(buttonDiscoveryEvent.getButtonDevice(), buttonDiscoveryEvent.getButtonType());
+                nearbyButton = pairButtonWithRegion(buttonDiscoveryEvent.getDevice(), buttonDiscoveryEvent.getButtonType());
 
                 startButtonCommunication(nearbyButton);
             }
@@ -231,7 +234,15 @@ public class MonitoringService extends Service {
     }
 
     public ButtonCommunicator getButtonCommunicator(final Context context, final Button nearbyButton) {
-        return ButtonCommunicatorFactory.getButtonCommunicator(context, nearbyButton);
+
+        switch(ButtonType.getByType(nearbyButton.getType())) {
+            case PURPLE_BUTTON:
+                return purpleButtonCommunicatorFactory.getButtonCommunicator(context, nearbyButton);
+            case LIGHTBLUE_BUTTON:
+                return lightBlueButtonCommunicatorFactory.getButtonCommunicator(context, nearbyButton);
+        }
+
+        return null;
     }
 
     protected void stopButtonCommunication() {
@@ -251,15 +262,12 @@ public class MonitoringService extends Service {
     }
 
     protected void startRegionDiscovery() {
-        //estimoteRegionDiscoveryProvider.startRegionDiscovery(runInBackground);
-        geloRegionDiscoveryProvider.startRegionDiscovery(runInBackground);
+        regionDiscoveryProvider.startRegionDiscovery(runInBackground);
     }
 
     protected void stopRegionDiscovery() {
-        //estimoteRegionDiscoveryProvider.stopRegionDiscovery();
-
         try {
-            geloRegionDiscoveryProvider.stopRegionDiscovery();
+            regionDiscoveryProvider.stopRegionDiscovery();
         } catch (RemoteException e) {
             Log.e(TAG, "Failed to stop GELO discovery.");
         }
@@ -290,7 +298,7 @@ public class MonitoringService extends Service {
 
         Button discoveredButton;
 
-        Button persistedButton = buttonDAO.getButton(device.getAddress());
+        Button persistedButton = buttonDao.getButton(device.getAddress());
 
         if (persistedButton != null) {
             discoveredButton = persistedButton;
@@ -299,20 +307,20 @@ public class MonitoringService extends Service {
         }
         discoveredButton.setBluetoothDevice(device);
 
-        buttonDAO.createOrUpdateButton(discoveredButton);
+        buttonDao.createOrUpdateButton(discoveredButton);
 
         // we immediately pair this discovered button with our nearby region.. overwriting any
         // existing pairing.
 
         nearbyRegion.setName("Region for " + discoveredButton.getName());
-        regionDAO.createOrUpdateRegion(nearbyRegion);
+        regionDao.createOrUpdateRegion(nearbyRegion);
 
-        Button button = buttonDAO.getButton(discoveredButton.getId());
+        Button button = buttonDao.getButton(discoveredButton.getId());
         button.setRegion(nearbyRegion);
         nearbyRegion.setButton(button);
 
-        buttonDAO.createOrUpdateButton(button);
-        regionDAO.createOrUpdateRegion(nearbyRegion); // transitive persistence sucks in ormLite
+        buttonDao.createOrUpdateButton(button);
+        regionDao.createOrUpdateRegion(nearbyRegion); // transitive persistence sucks in ormLite
         return discoveredButton;
     }
 
@@ -326,7 +334,7 @@ public class MonitoringService extends Service {
 
         lastNotifiedState = buttonState;
 
-        Button button = buttonDAO.getButton(buttonId);
+        Button button = buttonDao.getButton(buttonId);
 
         StringBuilder sbuf = new StringBuilder("Tap here to toggle '");
         sbuf.append(button.getName()).append("'.");

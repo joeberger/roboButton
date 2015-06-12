@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.utils;
+package com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces;
 
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.models.Button;

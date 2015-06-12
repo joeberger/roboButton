@@ -20,16 +20,16 @@ import javax.inject.Inject;
 /**
  * Created by ndipatri on 5/29/14.
  */
-public class ButtonDAO {
+public class ButtonDao {
 
-    private static final String TAG = ButtonDAO.class.getCanonicalName();
+    private static final String TAG = ButtonDao.class.getCanonicalName();
 
     protected @Inject
-    RegionDAO regionDAO;
+    RegionDao regionDao;
 
     private Context context;
 
-    public ButtonDAO(Context context) {
+    public ButtonDao(Context context) {
         this.context = context;
 
         RBApplication.getInstance().getGraph().inject(this);

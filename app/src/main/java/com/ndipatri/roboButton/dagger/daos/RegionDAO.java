@@ -17,13 +17,13 @@ import java.util.List;
 /**
  * Created by ndipatri on 5/29/14.
  */
-public class RegionDAO {
+public class RegionDao {
 
-    private static final String TAG = RegionDAO.class.getCanonicalName();
+    private static final String TAG = RegionDao.class.getCanonicalName();
 
     private Context context;
 
-    public RegionDAO(Context context) {
+    public RegionDao(Context context) {
         this.context = context;
     }
 

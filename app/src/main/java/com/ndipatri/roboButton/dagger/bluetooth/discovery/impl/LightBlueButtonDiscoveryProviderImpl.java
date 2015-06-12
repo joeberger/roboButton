@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.providers.impl;
+package com.ndipatri.roboButton.dagger.bluetooth.discovery.impl;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -7,7 +7,8 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.dagger.providers.interfaces.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.utils.BusProvider;
@@ -50,6 +51,9 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
 
     @Inject
     BusProvider bus;
+
+    @Inject
+    ButtonDao buttonDao;
 
     public LightBlueButtonDiscoveryProviderImpl(Context context) {
         this.context = context;
@@ -148,9 +152,11 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
         getBeanManager().cancelDiscovery();
     }
 
-    protected void postButtonDiscoveredEvent(final boolean success, final BluetoothDevice buttonDevice) {
-        bus.post(new ButtonDiscoveryEvent(success, buttonDevice, ButtonType.LIGHTBLUE_BUTTON));
+
+    protected void postButtonDiscoveredEvent(final boolean success, final BluetoothDevice device) {
+        bus.post(new ButtonDiscoveryEvent(success, ButtonType.LIGHTBLUE_BUTTON, device.getAddress(), device));
     }
+
 
     protected BeanManager getBeanManager() {
         return BeanManager.getInstance();

@@ -4,8 +4,8 @@ import android.content.Context;
 import android.os.RemoteException;
 
 import com.estimote.sdk.BeaconManager;
-import com.ndipatri.roboButton.dagger.providers.impl.BluetoothProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.interfaces.RegionDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.BluetoothProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
 
 public class RegionDiscoveryProviderTestImpl implements RegionDiscoveryProvider {
 

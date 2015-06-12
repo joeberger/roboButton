@@ -11,7 +11,7 @@ import butterknife.Views;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
-import com.ndipatri.roboButton.dagger.daos.ButtonDAO;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
@@ -39,7 +39,7 @@ public class ButtonFragment extends Fragment {
     BusProvider bus;
 
     @Inject
-    protected ButtonDAO buttonDAO;
+    protected ButtonDao buttonDao;
 
     // ButterKnife Injected Views
     protected

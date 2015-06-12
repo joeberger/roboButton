@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.providers.impl;
+package com.ndipatri.roboButton.dagger.bluetooth.discovery.impl;
 
 import android.content.Context;
 import android.os.Handler;
@@ -11,7 +11,7 @@ import com.estimote.sdk.Region;
 import com.estimote.sdk.Utils;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.dagger.providers.interfaces.RegionDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.utils.BusProvider;

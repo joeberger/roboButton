@@ -3,14 +3,22 @@ package com.ndipatri.roboButton.dagger;
 import android.content.Context;
 
 import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.daos.ButtonDAO;
-import com.ndipatri.roboButton.dagger.daos.RegionDAO;
-import com.ndipatri.roboButton.dagger.providers.impl.BluetoothProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.impl.EstimoteRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.impl.GenericRegionDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.impl.LightBlueButtonDiscoveryProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.interfaces.ButtonDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.providers.interfaces.RegionDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.LightBlueButtonCommunicatorFactoryImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.LightBlueButtonCommunicatorImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.PurpleButtonCommunicatorFactoryImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicator;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.LightBlueButtonCommunicatorFactoryStub;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.PurpleButtonCommunicatorFactoryStub;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.PurpleButtonDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
+import com.ndipatri.roboButton.dagger.daos.RegionDao;
+import com.ndipatri.roboButton.dagger.bluetooth.BluetoothProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.EstimoteRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.GenericRegionDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.LightBlueButtonDiscoveryProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.BuildVariant;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.ndipatri.roboButton.utils.RegionUtils;
@@ -43,48 +51,35 @@ public class RBModule {
 
     @Provides
     @Singleton
-    ButtonDAO provideButtonProvider() {
+    ButtonDao provideButtonProvider() {
         if (BuildVariant.useMocks) {
-            return mock(ButtonDAO.class);
+            return mock(ButtonDao.class);
         } else {
-            return new ButtonDAO(context);
+            return new ButtonDao(context);
         }
     }
 
     @Provides
     @Singleton
-    RegionDAO provideRegionProvider() {
+    RegionDao provideRegionProvider() {
         if (BuildVariant.useMocks) {
-            return mock(RegionDAO.class);
+            return mock(RegionDao.class);
         } else {
-            return new RegionDAO(context);
+            return new RegionDao(context);
         }
     }
 
     @Provides
     @Singleton
-    com.ndipatri.roboButton.dagger.providers.interfaces.BluetoothProvider provideBluetoothProvider() {
+    com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider provideBluetoothProvider() {
         if (BuildVariant.useMocks) {
-            return mock(com.ndipatri.roboButton.dagger.providers.interfaces.BluetoothProvider.class);
+            return mock(com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider.class);
         } else {
             return new BluetoothProviderImpl(context);
         }
     }
 
-    @Provides
     @Singleton
-    @Named(ESTIMOTE_BEACONS)
-    RegionDiscoveryProvider provideEstimoteBeaconDiscoveryProvider() {
-        if (BuildVariant.useMocks) {
-            return mock(RegionDiscoveryProvider.class);
-        } else {
-            return new EstimoteRegionDiscoveryProviderImpl(context);
-        }
-    }
-
-    @Provides
-    @Singleton
-    @Named(GELO_BEACONS)
     RegionDiscoveryProvider provideRegionDiscoveryProvider() {
 
         // The UUIDs of the regions we care about.  These UUIDs are parsed
@@ -93,14 +88,12 @@ public class RBModule {
             new String[] {
                     RegionUtils.LIGHTBLUE_UUID,
                     //RegionUtils.GELO_UUID,
-                    //RegionUtils.ESTIMOTE_UUID
                     };
 
         // This is the number of bytes into the BLE 'scanRecord' where the 16-byte
         // UUID begins.
-        Integer[] regionUUIDOffsetArray = new Integer[] {new Integer(3),
+        Integer[] regionUUIDOffsetArray = new Integer[] {new Integer(2),
                                                          //new Integer(0),
-                                                         //new Integer(0)
                                                         };
 
         if (BuildVariant.useMocks) {
@@ -131,7 +124,35 @@ public class RBModule {
         if (BuildVariant.useMocks) {
             return mock(ButtonDiscoveryProvider.class);
         } else {
-            return new BluetoothProviderImpl.PurpleButtonDiscoveryProviderImpl(context);
+            return new PurpleButtonDiscoveryProviderImpl(context);
+        }
+    }
+
+    @Provides
+    @Singleton
+    @Named(LIGHTBLUE_BUTTON)
+    ButtonCommunicatorFactory provideLightBlueButtonCommunicatorFactory() {
+        if (BuildVariant.useMocks) {
+            return mock(ButtonCommunicatorFactory.class);
+        } else
+        if (BuildVariant.useStubs) {
+            return new LightBlueButtonCommunicatorFactoryStub();
+        } else {
+            return new LightBlueButtonCommunicatorFactoryImpl();
+        }
+    }
+
+    @Provides
+    @Singleton
+    @Named(PURPLE_BUTTON)
+    ButtonCommunicatorFactory providePurpleButtonCommunicatorFactory() {
+        if (BuildVariant.useMocks) {
+            return mock(ButtonCommunicatorFactory.class);
+        } else
+        if (BuildVariant.useStubs) {
+            return new PurpleButtonCommunicatorFactoryStub();
+        } else {
+            return new PurpleButtonCommunicatorFactoryImpl();
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.ndipatri.roboButton.activities;
 
-import com.ndipatri.roboButton.dagger.providers.interfaces.BluetoothProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
 import com.ndipatri.roboButton.utils.BusProvider;
 
 import javax.inject.Inject;

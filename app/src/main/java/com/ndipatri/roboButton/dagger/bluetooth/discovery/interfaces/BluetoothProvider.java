@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.providers.interfaces;
+package com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces;
 
 /**
  * Created by ndipatri on 5/29/14.

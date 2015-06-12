@@ -1,8 +1,6 @@
-package com.ndipatri.roboButton.dagger.providers.interfaces;
+package com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces;
 
 import android.os.RemoteException;
-
-import com.estimote.sdk.Region;
 
 public interface RegionDiscoveryProvider {
     

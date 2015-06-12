@@ -2,8 +2,8 @@ package com.ndipatri.roboButton.dagger.providers;
 
 import android.content.Context;
 
-import com.ndipatri.roboButton.dagger.providers.impl.BluetoothProviderImpl;
-import com.ndipatri.roboButton.dagger.providers.interfaces.BluetoothProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.BluetoothProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
 
 public class BluetoothProviderTestImpl implements BluetoothProvider {
 

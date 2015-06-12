@@ -8,7 +8,7 @@ import android.content.Intent;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.TestUtils;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
-import com.ndipatri.roboButton.dagger.providers.interfaces.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.providers.ButtonDiscoveryProviderTestImpl;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;

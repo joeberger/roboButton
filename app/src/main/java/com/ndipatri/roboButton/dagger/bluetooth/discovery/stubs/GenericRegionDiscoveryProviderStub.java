@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.providers.stubs;
+package com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs;
 
 import android.content.Context;
 import android.os.Handler;
@@ -6,7 +6,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.dagger.providers.interfaces.RegionDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.models.Region;

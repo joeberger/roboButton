@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.utils;
+package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
@@ -11,7 +11,8 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.dagger.providers.interfaces.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicator;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
@@ -33,9 +34,9 @@ import javax.inject.Inject;
 /**
  * Communicates with each individual Button
  */
-public class PurpleButtonCommunicator implements ButtonCommunicator {
+public class PurpleButtonCommunicatorImpl implements ButtonCommunicator {
 
-    private static final String TAG = PurpleButtonCommunicator.class.getCanonicalName();
+    private static final String TAG = PurpleButtonCommunicatorImpl.class.getCanonicalName();
 
     @Inject
     Bus bus;
@@ -75,7 +76,7 @@ public class PurpleButtonCommunicator implements ButtonCommunicator {
 
     // endregion
 
-    public PurpleButtonCommunicator(final Context context, final Button button) {
+    public PurpleButtonCommunicatorImpl(final Context context, final Button button) {
 
         Log.d(TAG, "Starting new monitor for button '" + button.getId() + "'.");
 
@@ -109,7 +110,7 @@ public class PurpleButtonCommunicator implements ButtonCommunicator {
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                bus.register(PurpleButtonCommunicator.this);
+                bus.register(PurpleButtonCommunicatorImpl.this);
             }
         });
 
@@ -150,7 +151,7 @@ public class PurpleButtonCommunicator implements ButtonCommunicator {
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                bus.unregister(PurpleButtonCommunicator.this);
+                bus.unregister(PurpleButtonCommunicatorImpl.this);
             }
         });
 
