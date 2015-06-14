@@ -9,5 +9,5 @@ import com.ndipatri.roboButton.models.Button;
 public interface ButtonCommunicator {
     void shutdown();
     Button getButton();
-    ButtonState getButtonState();
+    ButtonState getLocalButtonState();
 }

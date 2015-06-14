@@ -1,4 +1,4 @@
-package com.ndipatri.roboButton.dagger.bluetooth;
+package com.ndipatri.roboButton.dagger.bluetooth.discovery.impl;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
@@ -6,12 +6,6 @@ import android.content.Context;
 public class BluetoothProviderImpl implements com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider {
 
     private static final String TAG = BluetoothProviderImpl.class.getCanonicalName();
-
-    private Context context;
-
-    public BluetoothProviderImpl(Context context) {
-        this.context = context;
-    }
 
     @Override
     public boolean isBluetoothSupported() {

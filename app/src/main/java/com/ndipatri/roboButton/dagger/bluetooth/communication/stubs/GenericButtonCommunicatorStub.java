@@ -1,6 +1,5 @@
 package com.ndipatri.roboButton.dagger.bluetooth.communication.stubs;
 
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -19,18 +18,8 @@ import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
 
-import java.io.UnsupportedEncodingException;
-
 import javax.inject.Inject;
 
-import nl.littlerobots.bean.Bean;
-import nl.littlerobots.bean.BeanDiscoveryListener;
-import nl.littlerobots.bean.BeanListener;
-import nl.littlerobots.bean.BeanManager;
-
-/**
- * Communicates with each individual LightBlue Bean Button
- */
 public class GenericButtonCommunicatorStub implements ButtonCommunicator {
 
     private static final String TAG = GenericButtonCommunicatorStub.class.getCanonicalName();
@@ -38,23 +27,38 @@ public class GenericButtonCommunicatorStub implements ButtonCommunicator {
     @Inject
     BusProvider bus;
 
-    protected Button button;
+    protected long communicationsGracePeriodMillis = -1;
+
+    protected long STUB_DELAY_MILLIS = 3000;
 
     protected boolean inBackground = false;
 
     private boolean shouldRun = false;
 
     // This value will always be set by what is received from Button itself
-    private ButtonState buttonState = ButtonState.NEVER_CONNECTED;
+    private ButtonState localButtonState = ButtonState.NEVER_CONNECTED;
+
+    // This is our fake remote button's state.. This needs to persist across various instances
+    // of communicator (as we go in and out of region)
+    //
+    // We maintain a separate notion of the remote button state as synchronizing this and 'localButtonState'
+    // is the main job of a ButtonCommunicator.
+    private static ButtonState remoteButtonState = ButtonState.OFF;
+
+    private Button button;
 
     private Context context;
 
+    private long lastButtonStateUpdateTimeMillis;
+
     public GenericButtonCommunicatorStub(final Context context, final Button button) {
 
-        Log.d(TAG, "Starting GenericStub button communicator for '" + button.getId() + "'.");
+        Log.d(TAG, "Starting Stub button communicator for '" + button.getId() + "'.");
 
         this.context = context;
         this.button = button;
+
+        communicationsGracePeriodMillis = context.getResources().getInteger(R.integer.communications_grace_period_millis);
 
         ((RBApplication)context).getGraph().inject(this);
 
@@ -64,117 +68,25 @@ public class GenericButtonCommunicatorStub implements ButtonCommunicator {
     public void start() {
         shouldRun = true;
 
+        // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
+        lastButtonStateUpdateTimeMillis = 0;
+
         bus.register(this);
-    }
 
-need to impleement this communicator stub.
-
-    protected BeanListener getBeanConnectionListener() {
-
-        return new BeanListener() {
-
-            @Override
-            public void onConnected() {
-                Log.d(TAG, "onConnected()");
-
-                sendRemoteStateQuery();
-            }
-
-            @Override
-            public void onConnectionFailed() {
-                Log.d(TAG, "onConnectionFailed()");
-            }
-
-            @Override
-            public void onDisconnected() {
-                Log.d(TAG, "onDisconnected()");
-            }
-
-            @Override
-            public void onSerialMessageReceived(byte[] bytes) {
-
-                Log.d(TAG, "onSerialMessageReceived()");
-
-                if (shouldRun) {
-                    ButtonState newButtonState;
-
-                    String lightBlueButtonValue = null;
-                    try {
-                        lightBlueButtonValue = new String(bytes, "US-ASCII");
-                    } catch (UnsupportedEncodingException e) {
-                        lightBlueButtonValue = null;
-                    }
-
-                    if (lightBlueButtonValue != null) {
-
-                        int buttonValue = lightBlueButtonValue.equals("locked") ? 1 : 0;
-
-                        Log.d(TAG, "Serial data from LightBlue Bean: '" + this + " ', '" + buttonValue + "'.");
-                        try {
-                            newButtonState = buttonValue > 0 ? ButtonState.ON : ButtonState.OFF;
-                        } catch (NumberFormatException nex) {
-                            Log.d(TAG, "Invalid response from bluetooth device: '" + this + "'.");
-                            // NJD TODO - one theory is to reconnect and see if that helps...
-                            // disconnect();
-
-                            // another is to just continue to listen until we are declare no longer communicating and are killed
-                            // by the monitoring service.
-                            newButtonState = null;
-                        }
-
-                        if (buttonState == ButtonState.NEVER_CONNECTED) {
-
-                            if (isAutoModeEnabled() && button.isAutoModeEnabled() && newButtonState != ButtonState.ON) {
-
-                                // Now that we've established we can communicate with newly discovered
-                                // button, let's set its auto-state....
-                                setRemoteState(ButtonState.ON);
-                            }
-                        }
-
-                        setLocalButtonState(newButtonState);
-                    }
-                }
-            }
-
-            @Override
-            public void onScratchValueChanged(int i, byte[] bytes) {
-
-            }
-        };
-    }
-
-    protected void setRemoteState(ButtonState buttonState) {
-        if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
-            byte[] encodedButtonState = null;
-
-            if (this.buttonState != buttonState) {
-                // The LightBlueButton only can be toggled.. If you send the PIN code, it toggles.. so
-                // we only send if we are toggling...
-                encodedButtonState = new byte[] {'X', '1', '2', '3', '4'};
-            }
-
-            if (encodedButtonState != null) {
-                discoveredBean.sendSerialMessage(encodedButtonState);
-            }
-        }
-    }
-
-    protected void sendRemoteStateQuery() {
-
-        if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
-            discoveredBean.sendSerialMessage(new byte[] {'Q', '1', '2', '3', '4'});
+        if (isAutoModeEnabled() && button.isAutoModeEnabled()) {
+            setRemoteState(ButtonState.ON);
         }
 
-        // The LightBlue will respond with a serial message..
+        // Here we assume we've communicated with remote button and determined its current state, without changing it.
+        setLocalButtonState(remoteButtonState);
     }
 
     public boolean isCommunicating() {
         long timeSinceLastUpdate = SystemClock.uptimeMillis() - lastButtonStateUpdateTimeMillis;
         boolean isCommunicating = timeSinceLastUpdate <= communicationsGracePeriodMillis;
-        
+
         Log.d(TAG, "isCommunicating(): '" + isCommunicating + "'");
-        
+
         return isCommunicating;
     }
 
@@ -183,16 +95,9 @@ need to impleement this communicator stub.
 
             if (shouldRun) {
                 Log.d(TAG, "Auto Shutdown!");
-                if (isCommunicating() && buttonState != ButtonState.OFF) {
+                if (isCommunicating() && localButtonState != ButtonState.OFF) {
                     setRemoteState(ButtonState.OFF);
                 }
-
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // who cares
-                }
-
                 stop();
             }
         } else {
@@ -200,7 +105,7 @@ need to impleement this communicator stub.
         }
     }
 
-    public void stop() {
+    protected void stop() {
         shouldRun = false;
 
         postButtonLostEvent(button.getId());
@@ -211,26 +116,16 @@ need to impleement this communicator stub.
                 bus.unregister(GenericButtonCommunicatorStub.this);
             }
         });
-
-        disconnect();
     }
 
-    protected void disconnect() {
-        if (discoveredBean != null) {
-            discoveredBean.disconnect();
-        }
-    }
-
-    // This only sets local state, it does not result in a request to set remote state... this
-    // would presumably be called after we retrieve remote state (or during startup of this fragment)
     protected void setLocalButtonState(final ButtonState buttonState) {
 
         this.lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
         Log.d(TAG, "Button state updated @'" + lastButtonStateUpdateTimeMillis + ".'");
 
-        if (this.buttonState != buttonState) {
+        if (this.localButtonState != buttonState) {
             Log.d(TAG, "Button state changed @'" + lastButtonStateUpdateTimeMillis + ".'");
-            this.buttonState = buttonState;
+            this.localButtonState = buttonState;
 
             postButtonStateChangeReport(buttonState);
         }
@@ -249,7 +144,7 @@ need to impleement this communicator stub.
 
     @Produce
     public ButtonStateChangeReport produceStateChangeReport() {
-        return new ButtonStateChangeReport(getButton().getId(), buttonState);
+        return new ButtonStateChangeReport(getButton().getId(), localButtonState);
     }
 
     protected void postButtonLostEvent(final String buttonId) {
@@ -261,8 +156,8 @@ need to impleement this communicator stub.
         });
     }
 
-    public ButtonState getButtonState() {
-        return buttonState;
+    public ButtonState getLocalButtonState() {
+        return localButtonState;
     }
 
     public Button getButton() {
@@ -272,16 +167,37 @@ need to impleement this communicator stub.
     @Subscribe
     public void onArduinoButtonStateChangeRequestEvent(final ButtonStateChangeRequest event) {
 
+        boolean toggle = false;
         ButtonState requestedButtonState = event.requestedButtonState;
-        if (requestedButtonState == null)  {
-            if (buttonState.value) {
-                requestedButtonState = ButtonState.OFF_PENDING;
-            } else {
-                requestedButtonState = ButtonState.ON_PENDING;
-            }
+        if (requestedButtonState == null) {
+            toggle = true;
+            requestedButtonState = localButtonState;
+        }
+
+        if (requestedButtonState.value) {
+            requestedButtonState = toggle ? ButtonState.OFF : ButtonState.ON;
+        } else {
+            requestedButtonState = toggle ? ButtonState.ON : ButtonState.OFF;
         }
 
         setRemoteState(requestedButtonState);
+    }
+
+    // We will assume this is always successful with a slight delay..
+    protected void setRemoteState(final ButtonState requestedButtonState) {
+
+        GenericButtonCommunicatorStub.remoteButtonState = requestedButtonState;
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (requestedButtonState.value) {
+                    setLocalButtonState(ButtonState.ON);
+                } else {
+                    setLocalButtonState(ButtonState.OFF);
+                }
+            }
+        }, STUB_DELAY_MILLIS);
     }
 
     @Subscribe
@@ -292,10 +208,6 @@ need to impleement this communicator stub.
 
     protected boolean isAutoModeEnabled() {
         return RBApplication.getInstance().getAutoModeEnabledFlag();
-    }
-
-    protected BeanManager getBeanManager() {
-        return BeanManager.getInstance();
     }
 }
 

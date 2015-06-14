@@ -241,7 +241,7 @@ public class LightBlueButtonCommunicatorImpl implements ButtonCommunicator {
         }
     }
 
-    public void stop() {
+    protected void stop() {
         shouldRun = false;
 
         postButtonLostEvent(button.getId());
@@ -302,7 +302,7 @@ public class LightBlueButtonCommunicatorImpl implements ButtonCommunicator {
         });
     }
 
-    public ButtonState getButtonState() {
+    public ButtonState getLocalButtonState() {
         return buttonState;
     }
 
@@ -316,9 +316,9 @@ public class LightBlueButtonCommunicatorImpl implements ButtonCommunicator {
         ButtonState requestedButtonState = event.requestedButtonState;
         if (requestedButtonState == null)  {
             if (buttonState.value) {
-                requestedButtonState = ButtonState.OFF_PENDING;
+                requestedButtonState = ButtonState.OFF;
             } else {
-                requestedButtonState = ButtonState.ON_PENDING;
+                requestedButtonState = ButtonState.ON;
             }
         }
 

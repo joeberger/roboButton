@@ -17,8 +17,6 @@ import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.RBModule;
 import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.LightBlueButtonCommunicatorImpl;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.PurpleButtonCommunicatorImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
 import com.ndipatri.roboButton.dagger.daos.RegionDao;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
@@ -156,7 +154,7 @@ public class MonitoringService extends Service {
         boolean newRunInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
 
         if (!runInBackground && newRunInBackground && buttonCommunicator != null) {
-            sendNotification(buttonCommunicator.getButton().getId(), buttonCommunicator.getButtonState());
+            sendNotification(buttonCommunicator.getButton().getId(), buttonCommunicator.getLocalButtonState());
         }
 
         runInBackground = newRunInBackground;
@@ -205,7 +203,7 @@ public class MonitoringService extends Service {
 
                 stopButtonDiscovery();
 
-                nearbyButton = pairButtonWithRegion(buttonDiscoveryEvent.getDevice(), buttonDiscoveryEvent.getButtonType());
+                nearbyButton = pairButtonWithRegion(buttonDiscoveryEvent.getDevice(), buttonDiscoveryEvent.getDeviceAddress(), buttonDiscoveryEvent.getButtonType());
 
                 startButtonCommunication(nearbyButton);
             }
@@ -294,18 +292,21 @@ public class MonitoringService extends Service {
         lightBlueButtonDiscoveryProvider.stopButtonDiscovery();
     }
 
-    protected Button pairButtonWithRegion(BluetoothDevice device, ButtonType buttonType) {
+    protected Button pairButtonWithRegion(final BluetoothDevice device, final String buttonAddress, final ButtonType buttonType) {
 
         Button discoveredButton;
 
-        Button persistedButton = buttonDao.getButton(device.getAddress());
+        Button persistedButton = buttonDao.getButton(buttonAddress);
 
         if (persistedButton != null) {
             discoveredButton = persistedButton;
         } else {
-            discoveredButton = new Button(device.getAddress(), device.getAddress(), true, buttonType);
+            discoveredButton = new Button(buttonAddress, buttonAddress, true, buttonType);
         }
-        discoveredButton.setBluetoothDevice(device);
+
+        if (device != null) {
+            discoveredButton.setBluetoothDevice(device);
+        }
 
         buttonDao.createOrUpdateButton(discoveredButton);
 

@@ -2,7 +2,7 @@ package com.ndipatri.roboButton.dagger.providers;
 
 import android.content.Context;
 
-import com.ndipatri.roboButton.dagger.bluetooth.BluetoothProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.BluetoothProviderImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.models.Button;
 

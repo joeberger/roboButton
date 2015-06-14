@@ -7,7 +7,7 @@ import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.activities.MainControllerActivityInstrumentation;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.GenericButtonCommunicatorStub;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
-import com.ndipatri.roboButton.dagger.bluetooth.BluetoothProviderImpl;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.BluetoothProviderImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.GenericRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.LightBlueButtonDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.EstimoteRegionDiscoveryProviderImpl;
