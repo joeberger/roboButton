@@ -17,7 +17,7 @@ import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.LightBlueButtonD
 import com.ndipatri.roboButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicator;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.LeDeviceListAdapter;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.LightBlueButtonCommunicatorImpl;
 

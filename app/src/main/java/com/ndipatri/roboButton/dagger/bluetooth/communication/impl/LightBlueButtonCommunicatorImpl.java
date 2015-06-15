@@ -2,26 +2,12 @@ package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
-import android.os.Handler;
-import android.os.SystemClock;
 import android.util.Log;
 
-import com.ndipatri.roboButton.R;
-import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicator;
 import com.ndipatri.roboButton.enums.ButtonState;
-import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
-import com.ndipatri.roboButton.events.ButtonLostEvent;
-import com.ndipatri.roboButton.events.ButtonStateChangeReport;
-import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
 import com.ndipatri.roboButton.models.Button;
-import com.ndipatri.roboButton.utils.BusProvider;
-import com.squareup.otto.Produce;
-import com.squareup.otto.Subscribe;
 
 import java.io.UnsupportedEncodingException;
-
-import javax.inject.Inject;
 
 import nl.littlerobots.bean.Bean;
 import nl.littlerobots.bean.BeanDiscoveryListener;
@@ -31,54 +17,27 @@ import nl.littlerobots.bean.BeanManager;
 /**
  * Communicates with each individual LightBlue Bean Button
  */
-public class LightBlueButtonCommunicatorImpl implements ButtonCommunicator {
+public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
 
     private static final String TAG = LightBlueButtonCommunicatorImpl.class.getCanonicalName();
 
-    @Inject
-    BusProvider bus;
-
-    protected long communicationsGracePeriodMillis = -1;
-
-    protected boolean inBackground = false;
-
-    private boolean shouldRun = false;
-
-    // This value will always be set by what is received from Button itself
-    private ButtonState buttonState = ButtonState.NEVER_CONNECTED;
-
-    private Button button;
     private Bean discoveredBean;
-
-    private Context context;
-
-    private long lastButtonStateUpdateTimeMillis;
 
     BluetoothAdapter bluetoothAdapter = null;
 
     public LightBlueButtonCommunicatorImpl(final Context context, final Button button) {
+        super(context, button);
 
         Log.d(TAG, "Starting LightBlue button communicator for '" + button.getId() + "'.");
 
-        this.context = context;
-        this.button = button;
-
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        communicationsGracePeriodMillis = context.getResources().getInteger(R.integer.communications_grace_period_millis);
-
-        ((RBApplication)context).getGraph().inject(this);
 
         start();
     }
 
     public void start() {
-        shouldRun = true;
+        super.start();
 
-        // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
-        lastButtonStateUpdateTimeMillis = 0;
-
-        bus.register(this);
         startButtonConnect();
     }
 
@@ -118,6 +77,8 @@ public class LightBlueButtonCommunicatorImpl implements ButtonCommunicator {
             public void onConnected() {
                 Log.d(TAG, "onConnected()");
 
+                // The LightBlue Button doesn't send its state upon BT connect, so we query
+                // it once here.. after that, changes in state are pushed down to us.
                 sendRemoteStateQuery();
             }
 
@@ -163,15 +124,7 @@ public class LightBlueButtonCommunicatorImpl implements ButtonCommunicator {
                             newButtonState = null;
                         }
 
-                        if (buttonState == ButtonState.NEVER_CONNECTED) {
-
-                            if (isAutoModeEnabled() && button.isAutoModeEnabled() && newButtonState != ButtonState.ON) {
-
-                                // Now that we've established we can communicate with newly discovered
-                                // button, let's set its auto-state....
-                                setRemoteState(ButtonState.ON);
-                            }
-                        }
+                        setRemoteAutoStateIfApplicable(newButtonState);
 
                         setLocalButtonState(newButtonState);
                     }
@@ -189,7 +142,7 @@ public class LightBlueButtonCommunicatorImpl implements ButtonCommunicator {
         if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
             byte[] encodedButtonState = null;
 
-            if (this.buttonState != buttonState) {
+            if (this.localButtonState != buttonState) {
                 // The LightBlueButton only can be toggled.. If you send the PIN code, it toggles.. so
                 // we only send if we are toggling...
                 encodedButtonState = new byte[] {'X', '1', '2', '3', '4'};
@@ -210,48 +163,8 @@ public class LightBlueButtonCommunicatorImpl implements ButtonCommunicator {
         // The LightBlue will respond with a serial message..
     }
 
-    public boolean isCommunicating() {
-        long timeSinceLastUpdate = SystemClock.uptimeMillis() - lastButtonStateUpdateTimeMillis;
-        boolean isCommunicating = timeSinceLastUpdate <= communicationsGracePeriodMillis;
-        
-        Log.d(TAG, "isCommunicating(): '" + isCommunicating + "'");
-        
-        return isCommunicating;
-    }
-
-    public void shutdown() {
-        if (isAutoModeEnabled() && button.isAutoModeEnabled() && isCommunicating()) {
-
-            if (shouldRun) {
-                Log.d(TAG, "Auto Shutdown!");
-                if (isCommunicating() && buttonState != ButtonState.OFF) {
-                    setRemoteState(ButtonState.OFF);
-                }
-
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // who cares
-                }
-
-                stop();
-            }
-        } else {
-            stop();
-        }
-    }
-
     protected void stop() {
-        shouldRun = false;
-
-        postButtonLostEvent(button.getId());
-
-        new Handler(context.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                bus.unregister(LightBlueButtonCommunicatorImpl.this);
-            }
-        });
+        super.stop();
 
         disconnect();
     }
@@ -260,79 +173,6 @@ public class LightBlueButtonCommunicatorImpl implements ButtonCommunicator {
         if (discoveredBean != null) {
             discoveredBean.disconnect();
         }
-    }
-
-    // This only sets local state, it does not result in a request to set remote state... this
-    // would presumably be called after we retrieve remote state (or during startup of this fragment)
-    protected void setLocalButtonState(final ButtonState buttonState) {
-
-        this.lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
-        Log.d(TAG, "Button state updated @'" + lastButtonStateUpdateTimeMillis + ".'");
-
-        if (this.buttonState != buttonState) {
-            Log.d(TAG, "Button state changed @'" + lastButtonStateUpdateTimeMillis + ".'");
-            this.buttonState = buttonState;
-
-            postButtonStateChangeReport(buttonState);
-        }
-    }
-
-    protected void postButtonStateChangeReport(final ButtonState buttonState) {
-        new Handler(context.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "State is '" + buttonState + "'");
-
-                bus.post(new ButtonStateChangeReport(getButton().getId(), buttonState));
-            }
-        });
-    }
-
-    @Produce
-    public ButtonStateChangeReport produceStateChangeReport() {
-        return new ButtonStateChangeReport(getButton().getId(), buttonState);
-    }
-
-    protected void postButtonLostEvent(final String buttonId) {
-        new Handler(context.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                bus.post(new ButtonLostEvent(buttonId));
-            }
-        });
-    }
-
-    public ButtonState getLocalButtonState() {
-        return buttonState;
-    }
-
-    public Button getButton() {
-        return button;
-    }
-
-    @Subscribe
-    public void onArduinoButtonStateChangeRequestEvent(final ButtonStateChangeRequest event) {
-
-        ButtonState requestedButtonState = event.requestedButtonState;
-        if (requestedButtonState == null)  {
-            if (buttonState.value) {
-                requestedButtonState = ButtonState.OFF;
-            } else {
-                requestedButtonState = ButtonState.ON;
-            }
-        }
-
-        setRemoteState(requestedButtonState);
-    }
-
-    @Subscribe
-    public void onApplicationFocusChangeEvent(final ApplicationFocusChangeEvent event) {
-        // TODO - currently not using this w.r.t. our comms with LightBlue Bean
-        this.inBackground = event.inBackground;
-    }
-
-    protected boolean isAutoModeEnabled() {
-        return RBApplication.getInstance().getAutoModeEnabledFlag();
     }
 
     protected BeanManager getBeanManager() {

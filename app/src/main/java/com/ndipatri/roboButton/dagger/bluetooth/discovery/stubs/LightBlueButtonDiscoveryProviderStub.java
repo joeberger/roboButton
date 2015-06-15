@@ -3,6 +3,7 @@ package com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
@@ -50,6 +51,7 @@ public class LightBlueButtonDiscoveryProviderStub implements ButtonDiscoveryProv
         @Override
         public void run() {
             if (discovering) {
+                Toast.makeText(context, "LightBlue Button Found.", Toast.LENGTH_LONG).show();
                 bus.post(new ButtonDiscoveryEvent(true, ButtonType.LIGHTBLUE_BUTTON, "aa:bb:cc:dd:ee", null));
             }
         }

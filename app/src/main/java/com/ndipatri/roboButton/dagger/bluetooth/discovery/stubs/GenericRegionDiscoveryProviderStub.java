@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
@@ -78,6 +79,7 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
         @Override
         public void run() {
             if (running) {
+                Toast.makeText(context, "Beacon region found.", Toast.LENGTH_SHORT).show();
                 postRegionFoundEvent(new Region(1, 2, RegionUtils.LIGHTBLUE_UUID));
 
                 new Handler().postDelayed(beaconLostRunnable, 30000);
@@ -89,6 +91,7 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
         @Override
         public void run() {
             if (running) {
+                Toast.makeText(context, "Beacon region lost.", Toast.LENGTH_SHORT).show();
                 postRegionLostEvent(new Region(1, 2, RegionUtils.LIGHTBLUE_UUID));
 
                 new Handler().postDelayed(beaconFoundRunnable, 10000);

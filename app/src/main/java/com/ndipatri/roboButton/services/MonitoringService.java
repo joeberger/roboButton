@@ -33,7 +33,7 @@ import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicator;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.RegionUtils;
 import com.squareup.otto.Subscribe;
 
