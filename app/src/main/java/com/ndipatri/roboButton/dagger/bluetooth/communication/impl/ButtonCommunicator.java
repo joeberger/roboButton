@@ -59,6 +59,7 @@ public abstract class ButtonCommunicator {
     }
 
     protected abstract void setRemoteState(ButtonState buttonState);
+    protected abstract void startCommunicating();
 
     public void start() {
         shouldRun = true;
@@ -67,6 +68,8 @@ public abstract class ButtonCommunicator {
         lastButtonStateUpdateTimeMillis = 0;
 
         bus.register(busProxy);
+
+        startCommunicating();
     }
 
     public void shutdown() {
@@ -115,14 +118,13 @@ public abstract class ButtonCommunicator {
         this.lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
         Log.d(TAG, "Button state updated @'" + lastButtonStateUpdateTimeMillis + ".'");
 
-        if (this.localButtonState != buttonState) {
+        if (this.localButtonState == ButtonState.NEVER_CONNECTED || this.localButtonState != buttonState) {
             Log.d(TAG, "Button state changed @'" + lastButtonStateUpdateTimeMillis + ".'");
             this.localButtonState = buttonState;
 
             postButtonStateChangeReport(buttonState);
         }
     }
-
 
     protected void postButtonStateChangeReport(final ButtonState buttonState) {
         new Handler(context.getMainLooper()).post(new Runnable() {

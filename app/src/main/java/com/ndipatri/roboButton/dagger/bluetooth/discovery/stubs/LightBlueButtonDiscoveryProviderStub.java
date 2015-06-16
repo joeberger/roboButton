@@ -44,7 +44,7 @@ public class LightBlueButtonDiscoveryProviderStub implements ButtonDiscoveryProv
 
         discovering = true;
 
-        new Handler().postDelayed(buttonFoundRunnable, 10000);
+        new Handler().postDelayed(buttonFoundRunnable, 5000);
     }
 
     private Runnable buttonFoundRunnable = new Runnable() {

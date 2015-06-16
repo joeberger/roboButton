@@ -102,6 +102,8 @@ public class MainControllerActivity extends Activity {
                         requestUserToEnableBluetooth();
                     }
                 });
+            } else{
+                postBluetoothConfirmationSetup();
             }
         }
     }
@@ -130,13 +132,17 @@ public class MainControllerActivity extends Activity {
 
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_OK) {
-                startBluetoothMonitoringService();
+                postBluetoothConfirmationSetup();
             } else {
                 Toast.makeText(this, "This application cannot run without Bluetooth enabled!", Toast.LENGTH_SHORT).show();
                 stopBluetoothMonitoringService();
                 finish();
             }
         }
+    }
+
+    protected void postBluetoothConfirmationSetup() {
+        startBluetoothMonitoringService();
     }
 
     private void publishProgress(final String progressString)  {

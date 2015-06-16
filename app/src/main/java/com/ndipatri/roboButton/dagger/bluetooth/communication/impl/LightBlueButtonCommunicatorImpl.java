@@ -35,9 +35,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         start();
     }
 
-    public void start() {
-        super.start();
-
+    public void startCommunicating() {
         startButtonConnect();
     }
 

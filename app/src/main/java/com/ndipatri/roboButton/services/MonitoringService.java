@@ -137,21 +137,22 @@ public class MonitoringService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if (null == intent) {
-            String source = null == intent ? "intent" : "action";
-            Log.e(TAG, source + " was null, flags=" + flags + " bits=" + Integer.toBinaryString(flags));
-            return START_STICKY;
-        } else {
+        Log.d(TAG, "Starting.");
+        boolean newRunInBackground = false;
+
+        if (intent != null) {
             if (intent.getBooleanExtra(SHOULD_TOGGLE_FLAG, false)) {
                 if (buttonCommunicator != null) {
+                    Log.d(TAG, "Toggling.");
                     bus.post(new ButtonStateChangeRequest(buttonCommunicator.getButton().getId()));
 
                     return START_STICKY;
                 }
             }
+
+            newRunInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
         }
 
-        boolean newRunInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
 
         if (!runInBackground && newRunInBackground && buttonCommunicator != null) {
             sendNotification(buttonCommunicator.getButton().getId(), buttonCommunicator.getLocalButtonState());
@@ -165,16 +166,16 @@ public class MonitoringService extends Service {
             startRegionDiscovery();
         }
 
-        return Service.START_FLAG_REDELIVERY; // this ensure the service is restarted
+        return START_STICKY;
     }
 
     @Subscribe
     public void onRegionFound(RegionFoundEvent regionFoundEvent) {
 
+        Log.d(TAG, "RegionFound: ('" + regionFoundEvent.getRegion().toString() + "'.)");
+
         nearbyRegion = regionFoundEvent.getRegion();
         regionDao.createOrUpdateRegion(nearbyRegion);
-
-        Log.d(TAG, "RegionFound: ('" + nearbyRegion + "'.)");
 
         if (nearbyButton == null) {
             stopRegionDiscovery();
@@ -185,8 +186,11 @@ public class MonitoringService extends Service {
     @Subscribe
     public void onRegionLost(RegionLostEvent regionLostEvent) {
 
+        Log.d(TAG, "RegionLost: ('" + regionLostEvent.getRegion().toString() + "'.)");
+
         nearbyRegion = null;
         stopButtonDiscovery();
+        clearNotification();
 
         if (nearbyButton != null) {
             nearbyButton = null;
@@ -329,6 +333,11 @@ public class MonitoringService extends Service {
         return buttonCommunicator;
     }
 
+    protected void clearNotification() {
+        NotificationManager notificationManager = (NotificationManager) RBApplication.getInstance().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(1234);
+    }
+
     protected void sendNotification(String buttonId, ButtonState buttonState) {
 
         Log.d(TAG, "Sending notification for state '" + buttonState + "'.");
@@ -344,7 +353,6 @@ public class MonitoringService extends Service {
         intent.putExtra(SHOULD_TOGGLE_FLAG, true);
         PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-        // NJD TODO - Could use 'notificationManager.cancel(NOTIFICATION_ID)' at some point for cleanup
         int notifId = 1234;
 
         NotificationManager notificationManager = (NotificationManager) RBApplication.getInstance().getSystemService(Context.NOTIFICATION_SERVICE);

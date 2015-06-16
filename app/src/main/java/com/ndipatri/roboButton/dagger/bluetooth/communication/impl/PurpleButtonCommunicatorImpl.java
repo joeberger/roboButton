@@ -70,9 +70,8 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
         start();
     }
 
-    public void start() {
-        super.start();
-
+    @Override
+    public void startCommunicating() {
         scheduleImmediateQueryStateMessage();
         scheduleConnectivityCheck();
     }

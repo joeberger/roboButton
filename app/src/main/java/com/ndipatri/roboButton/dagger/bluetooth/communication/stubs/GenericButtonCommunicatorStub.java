@@ -27,9 +27,8 @@ public class GenericButtonCommunicatorStub extends ButtonCommunicator {
         start();
     }
 
-    public void start() {
-        super.start();
-
+    @Override
+    public void startCommunicating() {
         // Here we assume we've communicated with remote button and determined its current state, without changing it.
         setLocalButtonState(remoteButtonState);
     }
