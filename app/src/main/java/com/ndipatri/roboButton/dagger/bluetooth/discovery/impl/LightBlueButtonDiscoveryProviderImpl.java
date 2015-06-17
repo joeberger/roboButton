@@ -108,6 +108,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
 
             @Override
             public void onConnected() {
+                Log.d(TAG, "onConnected");
                 discoveredBean.readSketchMetaData(new Callback<SketchMetaData>() {
                     @Override
                     public void onResult(SketchMetaData sketchMetaData) {
@@ -123,22 +124,22 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
 
             @Override
             public void onConnectionFailed() {
-
+                Log.d(TAG, "onConnectionFailed");
             }
 
             @Override
             public void onDisconnected() {
-
+                Log.d(TAG, "onDisconnected");
             }
 
             @Override
             public void onSerialMessageReceived(byte[] bytes) {
-
+                Log.d(TAG, "onSerialMessageReceived");
             }
 
             @Override
             public void onScratchValueChanged(int i, byte[] bytes) {
-
+                Log.d(TAG, "onScratchValueChanged");
             }
         };
     }

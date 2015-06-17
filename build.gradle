@@ -7,6 +7,7 @@ allprojects {
         }
         flatDir {
             dirs 'libs'
+            dirs 'aars'
         }
     }
 }
@@ -21,6 +22,7 @@ subprojects {
             }
             flatDir {
                 dirs 'libs'
+                dirs 'aars'
             }
         }
 

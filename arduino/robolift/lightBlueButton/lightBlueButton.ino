@@ -28,8 +28,6 @@
 /*************************************************************************/
 /* Defines */
 /*************************************************************************/
-#define UNLOCK_TIMEOUT_MS    300
-#define LOCK_TIMEOUT_MS      275
 #define KEYCODE_SIZE         4
 #define DEBUG 0
 /*************************************************************************/
@@ -110,27 +108,28 @@ void loop() {
 
       if (guess_index == KEYCODE_SIZE) {
           if (DEBUG) Serial.println("Code completed!");
+          Bean.setLed(0, 0, 255);
 
           char unlocked = digitalRead(SW1);
 
           if (targetCode == lockCode) {
               if (unlocked) {
                   if (DEBUG) Serial.println("Locking!");
-                  //LockTheDoor();
+                  LockTheDoor();
               } else {
                   if (DEBUG) Serial.println("Unlocking!");
-                  //UnlockTheDoor();
+                  UnlockTheDoor();
               }
+              sendLockState();
+
           } else if (targetCode == queryCode) {
               if (DEBUG) {
                   Serial.print("Replying to Query!");
               }
-              
-              if (unlocked) {
-                  Serial.println("unlocked");
-               } else {
-                  Serial.println("locked");
-               }
+
+              sendLockState();
+              delay(1000);
+              sendLockState();
           } 
           
           guess_index = 0;
@@ -147,6 +146,15 @@ void loop() {
   }
 
   Bean.sleep(0xFFFFFFFF); // Sleep until a serial message wakes us up
+}
+
+void sendLockState() {
+  char unlocked = digitalRead(SW1);
+  if (unlocked) {
+      Serial.print("unlocked");
+   } else {
+      Serial.print("locked");
+   } 
 }
 
 /*************************************************************************/
@@ -169,25 +177,19 @@ void move(int speed, int direction) {
 
 /*************************************************************************/
 void LockTheDoor(void) {
-  if (digitalRead(SW1) == HIGH) {
-    digitalWrite(STBY, HIGH); //disable standby
-    move(255, 0);
-    while (digitalRead(SW1) == HIGH);
-    delay(LOCK_TIMEOUT_MS);
-    move(0, 0);
-    digitalWrite(STBY, LOW); //enable standby
-  }
+  digitalWrite(STBY, HIGH); //disable standby
+  move(255, 0);
+  while (digitalRead(SW1) == HIGH);
+  move(0, 0);
+  digitalWrite(STBY, LOW); //enable standby
 }
 /*************************************************************************/
 void UnlockTheDoor(void) {
-  if (digitalRead(SW1) == LOW) {
-    digitalWrite(STBY, HIGH); //disable
-    move(255, 1);
-    while (digitalRead(SW1) == LOW);
-    delay(UNLOCK_TIMEOUT_MS);
-    move(0, 1);
-    digitalWrite(STBY, LOW); //enable standby
-  }
+  digitalWrite(STBY, HIGH); //disable
+  move(255, 1);
+  while (digitalRead(SW1) == LOW);
+  move(0, 1);
+  digitalWrite(STBY, LOW); //enable standby
 }
 /*************************************************************************/
 

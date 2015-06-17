@@ -2,6 +2,7 @@ package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 
 import com.ndipatri.roboButton.enums.ButtonState;
@@ -53,6 +54,9 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             @Override
             public void onBeanDiscovered(Bean discoveredBean) {
                 if (shouldRun && discoveredBean.getDevice().getAddress().equals(button.getId())) {
+
+                    getBeanManager().cancelDiscovery();
+
                     LightBlueButtonCommunicatorImpl.this.discoveredBean = discoveredBean;
                     discoveredBean.connect(context, getBeanConnectionListener());
                 }
@@ -75,6 +79,12 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             public void onConnected() {
                 Log.d(TAG, "onConnected()");
 
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
                 // The LightBlue Button doesn't send its state upon BT connect, so we query
                 // it once here.. after that, changes in state are pushed down to us.
                 sendRemoteStateQuery();
@@ -88,6 +98,9 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             @Override
             public void onDisconnected() {
                 Log.d(TAG, "onDisconnected()");
+
+                stop();
+                setLocalButtonState(ButtonState.DISCONNECTED);
             }
 
             @Override
@@ -107,7 +120,8 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
 
                     if (lightBlueButtonValue != null) {
 
-                        int buttonValue = lightBlueButtonValue.equals("locked") ? 1 : 0;
+                        // I'm making unlocked equivalent to 'ON' so 'green' means the door is open :-)
+                        int buttonValue = lightBlueButtonValue.equals("unlocked") ? 1 : 0;
 
                         Log.d(TAG, "Serial data from LightBlue Bean: '" + this + " ', '" + buttonValue + "'.");
                         try {
@@ -155,7 +169,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
     protected void sendRemoteStateQuery() {
 
         if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
-            discoveredBean.sendSerialMessage(new byte[] {'Q', '1', '2', '3', '4'});
+            discoveredBean.sendSerialMessage(new byte[]{'Q', '1', '2', '3', '4'});
         }
 
         // The LightBlue will respond with a serial message..

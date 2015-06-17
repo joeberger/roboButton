@@ -245,7 +245,9 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
 
         com.ndipatri.roboButton.models.Region region = null;
 
-        String uuidHex = convertBytesToHex(Arrays.copyOfRange(scanRecord, 9-regionUUIDOffset, 25-regionUUIDOffset)).toLowerCase(); // LightBlue
+        String scanRecordHex = convertBytesToHex(scanRecord).toLowerCase();
+
+        String uuidHex = convertBytesToHex(Arrays.copyOfRange(scanRecord, 9-regionUUIDOffset, 25-regionUUIDOffset)).toLowerCase();
 
         if (scanning && regionUUIDPattern.equals(uuidHex.toLowerCase())) {
 

@@ -94,7 +94,7 @@ public class RBModule {
 
         // This is the number of bytes into the BLE 'scanRecord' where the 16-byte
         // UUID begins.
-        Integer[] regionUUIDOffsetArray = new Integer[] {new Integer(2),
+        Integer[] regionUUIDOffsetArray = new Integer[] {new Integer(3),
                                                          new Integer(0),
                                                         };
 
