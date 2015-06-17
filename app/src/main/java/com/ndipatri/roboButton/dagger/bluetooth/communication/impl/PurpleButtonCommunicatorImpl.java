@@ -9,6 +9,9 @@ import android.os.Message;
 import android.util.Log;
 
 import com.ndipatri.roboButton.R;
+import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.dagger.RBModule;
+import com.ndipatri.roboButton.dagger.annotations.Named;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
@@ -33,7 +36,8 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
     private static final String TAG = PurpleButtonCommunicatorImpl.class.getCanonicalName();
 
     @Inject
-    protected ButtonDiscoveryProvider buttonDiscoveryProvider;
+    @Named(RBModule.PURPLE_BUTTON)
+    protected ButtonDiscoveryProvider purpleButtonDiscoveryProvider;
 
     // region localArgs
     private BluetoothSocket socket = null;
@@ -56,6 +60,8 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
 
         Log.d(TAG, "Starting new monitor for button '" + button.getId() + "'.");
 
+        RBApplication.getInstance().getGraph().inject(this);
+
         // Create thread for handling communication with Bluetooth
         // This thread only runs if it's passed a message.. so no need worrying about if it's running or not after this point.
         HandlerThread messageProcessingThread = new HandlerThread("GetSet_BluetoothCommunicationThread", android.os.Process.THREAD_PRIORITY_BACKGROUND);
@@ -77,6 +83,8 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
     }
 
     protected void stop() {
+        super.stop();
+
         bluetoothMessageHandler.removeMessages(QUERY_STATE_MESSAGE);
         bluetoothMessageHandler.removeMessages(SET_STATE_MESSAGE);
         bluetoothMessageHandler.removeMessages(CONNECTIVITY_CHECK_MESSAGE);
@@ -105,6 +113,7 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
     }
 
     private void scheduleConnectivityCheck() {
+        Log.d(TAG, "scheduleConnectivityCheck()");
         bluetoothMessageHandler.queueConnectivityCheck(communicationsGracePeriodMillis);
     }
 
@@ -350,7 +359,7 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
             bluetoothSocket = button.getBluetoothDevice().createInsecureRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
 
             // Cancel discovery because it will slow down the connection
-            buttonDiscoveryProvider.stopButtonDiscovery();
+            purpleButtonDiscoveryProvider.stopButtonDiscovery();
 
             // Connect the device through the socket. This will block
             // until it succeeds or throws an exception

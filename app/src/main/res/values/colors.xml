@@ -5,4 +5,5 @@
     <color name="semi_transparent">#DD5e5e5e</color>
     <color name="warning_red">#FF0000</color>
     <color name="ls_low_battery_color">#ffff6600</color>
+    <color name="black">#ff000000</color>
 </resources>

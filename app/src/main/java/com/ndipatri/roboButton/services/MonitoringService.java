@@ -15,6 +15,7 @@ import android.widget.RemoteViews;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
+import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.dagger.RBModule;
 import com.ndipatri.roboButton.dagger.annotations.Named;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
@@ -153,9 +154,11 @@ public class MonitoringService extends Service {
             newRunInBackground = intent.getBooleanExtra(RUN_IN_BACKGROUND, false);
         }
 
-
-        if (!runInBackground && newRunInBackground && buttonCommunicator != null) {
+        if (appBackgroundedWhileCommunicating(newRunInBackground)) {
             sendNotification(buttonCommunicator.getButton().getId(), buttonCommunicator.getLocalButtonState());
+        } else
+        if (!newRunInBackground) {
+            clearNotification();
         }
 
         runInBackground = newRunInBackground;
@@ -167,6 +170,10 @@ public class MonitoringService extends Service {
         }
 
         return START_STICKY;
+    }
+
+    protected boolean appBackgroundedWhileCommunicating(boolean newRunInBackground) {
+        return !runInBackground && newRunInBackground && buttonCommunicator != null;
     }
 
     @Subscribe
@@ -349,10 +356,6 @@ public class MonitoringService extends Service {
         StringBuilder sbuf = new StringBuilder("Tap here to toggle '");
         sbuf.append(button.getName()).append("'.");
 
-        Intent intent = new Intent(this, MonitoringService.class);
-        intent.putExtra(SHOULD_TOGGLE_FLAG, true);
-        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-
         int notifId = 1234;
 
         NotificationManager notificationManager = (NotificationManager) RBApplication.getInstance().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -365,7 +368,7 @@ public class MonitoringService extends Service {
         builder.setNumber(1234);
         builder.setAutoCancel(true);
         builder.setOnlyAlertOnce(true);
-        builder.setContentIntent(pendingIntent);
+        ///builder.setContentIntent(pendingIntent);
         builder.setVibrate(new long[]{0,     // start immediately
                 200,   // on
                 1000,  // off
@@ -379,10 +382,19 @@ public class MonitoringService extends Service {
         Notification notification = builder.build();
 
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.notification_layout);
-        contentView.setImageViewResource(R.id.image, buttonState.smallDrawableResourceId);
-        contentView.setTextViewText(R.id.title, this.getString(R.string.robo_button));
-        contentView.setTextViewText(R.id.detail, sbuf.toString());
+        contentView.setImageViewResource(R.id.buttonImageView, buttonState.smallDrawableResourceId);
+        contentView.setTextViewText(R.id.detailTextView, sbuf.toString());
         notification.contentView = contentView;
+
+        Intent serviceIntent = new Intent(this, MonitoringService.class);
+        serviceIntent.putExtra(SHOULD_TOGGLE_FLAG, true);
+        PendingIntent togglePendingIntent = PendingIntent.getService(this, 0, serviceIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+        Intent activityIntent = new Intent(this, MainControllerActivity.class);
+        PendingIntent launchPendingIntent = PendingIntent.getActivity(this, 0, activityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+        contentView.setOnClickPendingIntent(R.id.detailTextView, togglePendingIntent);
+        contentView.setOnClickPendingIntent(R.id.buttonImageView, launchPendingIntent);
 
         notificationManager.notify(notifId, notification);
     }

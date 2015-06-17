@@ -1,24 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/layout"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:padding="10dp" >
-    <ImageView android:id="@+id/image"
-        android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_marginRight="20dp"
-        android:src="@drawable/green_button_small"/>
-    <TextView android:id="@+id/title"
-        android:layout_width="wrap_content"
+<LinearLayout
+    android:id="@+id/notificationRelativeLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:weightSum="4"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/buttonImageView"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:src="@drawable/red_button"/>
+
+    <TextView
+        android:id="@+id/detailTextView"
+        android:textColor="@color/black"
+        android:layout_weight="3"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/image"
-        android:text="Custom Notification Title" />
-    <TextView android:id="@+id/detail"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/image"
-        android:layout_below="@id/title"
-        android:text="Custom Notification Text" />
-</RelativeLayout>
+        android:layout_gravity="center"
+        android:paddingLeft="20dp"
+        android:text="Custom Notification Text"
+        android:orientation="vertical"/>
+
+
+</LinearLayout>

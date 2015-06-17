@@ -148,7 +148,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
         Log.d(TAG, "Stopping region discovery ...");
         
         scanning = false;
-        nearbyRegions = new HashMap<com.ndipatri.roboButton.models.Region, MutableInteger>();
+        nearbyRegions = new HashMap<>();
 
         //Check to see if the device supports Bluetooth and that it's turned on
         if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
@@ -202,8 +202,9 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
             // This call is always made on UI thread from BluetoothAdapter.
             @Override
             public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
+
+                int index = 0;
                 for (String regionUUIDPattern : regionUUIDPatternList) {
-                    int index = 0;
                     com.ndipatri.roboButton.models.Region
                             discoveredRegion = checkForRegion(rssi, scanRecord, regionUUIDPattern, regionUUIDOffsetList.get(index++));
                     if (discoveredRegion != null) {
@@ -289,6 +290,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
+                Log.d(TAG, "Region Found");
                 bus.post(new RegionFoundEvent(region));
             }
         });
@@ -298,6 +300,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
+                Log.d(TAG, "Region Lost");
                 bus.post(new RegionLostEvent(region));
             }
         });

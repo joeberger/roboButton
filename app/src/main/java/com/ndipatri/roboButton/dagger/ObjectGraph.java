@@ -5,6 +5,7 @@ import android.content.Context;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.activities.MainControllerActivityInstrumentation;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.PurpleButtonCommunicatorImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.GenericButtonCommunicatorStub;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.BluetoothProviderImpl;
@@ -31,6 +32,8 @@ public interface ObjectGraph {
 
     void inject(GenericRegionDiscoveryProviderImpl thingy);
     void inject(GenericRegionDiscoveryProviderStub thingy);
+
+    void inject(PurpleButtonCommunicatorImpl thingy);
 
     void inject(EstimoteRegionDiscoveryProviderImpl thingy);
 

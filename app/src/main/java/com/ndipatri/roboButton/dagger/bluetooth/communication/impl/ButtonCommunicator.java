@@ -48,7 +48,7 @@ public abstract class ButtonCommunicator {
 
     public ButtonCommunicator(final Context context, final Button button) {
 
-        Log.d(TAG, "Starting Stub button communicator for '" + button.getId() + "'.");
+        Log.d(TAG, "Starting button communicator for '" + button.getId() + "'.");
 
         this.context = context;
         this.button = button;
@@ -79,7 +79,15 @@ public abstract class ButtonCommunicator {
                 Log.d(TAG, "Auto Shutdown!");
                 if (isCommunicating() && localButtonState != ButtonState.OFF) {
                     setRemoteState(ButtonState.OFF);
+
+                    // Need to give above command time to reach button... I know this is lame.
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
+
                 stop();
             }
         } else {
@@ -88,6 +96,7 @@ public abstract class ButtonCommunicator {
     }
 
     protected void stop() {
+        Log.d(TAG, "stop()");
         shouldRun = false;
 
         postButtonLostEvent(button.getId());

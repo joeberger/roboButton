@@ -129,6 +129,6 @@ public class PurpleButtonDiscoveryProviderImpl implements ButtonDiscoveryProvide
     };
 
     protected void postButtonDiscoveredEvent(final boolean success, final BluetoothDevice device) {
-        bus.post(new ButtonDiscoveryEvent(success, ButtonType.PURPLE_BUTTON, device.getAddress(), device));
+        bus.post(new ButtonDiscoveryEvent(success, ButtonType.PURPLE_BUTTON, device == null ? null : device.getAddress(), device));
     }
 }

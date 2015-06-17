@@ -89,13 +89,13 @@ public class RBModule {
         String[] regionUUIDPatternArray =
             new String[] {
                     RegionUtils.LIGHTBLUE_UUID,
-                    //RegionUtils.GELO_UUID,
+                    RegionUtils.GELO_UUID,
                     };
 
         // This is the number of bytes into the BLE 'scanRecord' where the 16-byte
         // UUID begins.
         Integer[] regionUUIDOffsetArray = new Integer[] {new Integer(2),
-                                                         //new Integer(0),
+                                                         new Integer(0),
                                                         };
 
         if (BuildVariant.useMocks) {

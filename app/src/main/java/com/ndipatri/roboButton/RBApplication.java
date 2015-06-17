@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.ndipatri.roboButton.dagger.ObjectGraph;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
 import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.ActivityWatcher;
@@ -36,6 +37,9 @@ public class RBApplication extends Application {
     }
 
     @Inject BusProvider bus;
+
+    @Inject
+    BluetoothProvider bluetoothProvider;
 
     @Override
     public void onCreate() {
@@ -155,25 +159,10 @@ public class RBApplication extends Application {
         // Don't even bother starting service if BT isn't running.. The main activity will try to convince user to
         // do otherwise, and if so, will start the service manually at that time.
 
-        if (isBluetoothSupported() && isBluetoothEnabled()) {
+        if (bluetoothProvider.isBluetoothSupported() && bluetoothProvider.isBluetoothEnabled()) {
             final Intent buttonDiscoveryServiceIntent = new Intent(this, MonitoringService.class);
             buttonDiscoveryServiceIntent.putExtra(MonitoringService.RUN_IN_BACKGROUND, shouldBackground);
             startService(buttonDiscoveryServiceIntent);
         }
-    }
-
-    public boolean isBluetoothSupported() {
-        return BluetoothAdapter.getDefaultAdapter() != null;
-    }
-
-    public boolean isBluetoothEnabled() {
-        boolean isEnabled = false;
-
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter != null) {
-            isEnabled = bluetoothAdapter.isEnabled();
-        }
-
-        return isEnabled;
     }
 }

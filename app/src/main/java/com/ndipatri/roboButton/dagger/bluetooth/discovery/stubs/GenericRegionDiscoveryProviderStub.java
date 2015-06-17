@@ -65,7 +65,7 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
 
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
 
-        new Handler().postDelayed(beaconFoundRunnable, 20000);
+        new Handler().postDelayed(beaconFoundRunnable, 5000);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
                 Toast.makeText(context, "Beacon region lost.", Toast.LENGTH_SHORT).show();
                 postRegionLostEvent(new Region(1, 2, RegionUtils.LIGHTBLUE_UUID));
 
-                new Handler().postDelayed(beaconFoundRunnable, 20000);
+                new Handler().postDelayed(beaconFoundRunnable, 10000);
             }
         }
     };
