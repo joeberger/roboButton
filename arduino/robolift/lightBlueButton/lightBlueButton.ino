@@ -30,6 +30,9 @@
 /*************************************************************************/
 #define KEYCODE_SIZE         4
 #define DEBUG 0
+#define UNLOCK_TIMEOUT_MS    300
+#define LOCK_TIMEOUT_MS      275
+
 /*************************************************************************/
 /* Pin Defines */
 /*************************************************************************/
@@ -46,6 +49,7 @@ int SW1 = 5;
 /*************************************************************************/
 /* Define the unlock keycode from the sandbox */
 char lockCode[] = {'1', '2', '3', '4'};
+char unlockCode[] = {'1', '2', '3', '4'};
 char queryCode[] = {'1', '2', '3', '4'};
 
 
@@ -68,6 +72,8 @@ void setup() {
   pinMode(SW1, INPUT);
   digitalWrite(SW1, HIGH); // Enable internal pullup .. while switch is open (unlocked), pin will read HIGH
   digitalWrite(STBY, LOW); //enable standby
+  
+  Bean.attachChangeInterrupt(SW1, wakeUp); 
 }
 /*************************************************************************/
 void loop() {
@@ -81,60 +87,76 @@ void loop() {
   char incoming_index = 0;
 
   length = Serial.readBytes(buffer, length);
-
-  if (DEBUG) Serial.println("Incoming bytes (" + String(length) + "): '" + String(buffer) + "'. (guess_index is '" + String(guess_index) + "')");
-
-  for (incoming_index = 0; incoming_index < length; incoming_index++) {
-
-      if (buffer[incoming_index] == 'Q') {
-          if (DEBUG) Serial.println("Incoming Query Code!");
-
-          targetCode = queryCode;
-          guess_index = 0;
-          continue;
-      } else if (buffer[incoming_index] == 'X') {
-          if (DEBUG) Serial.println("Incoming Action Code!");
-
-          targetCode = lockCode;
-          guess_index = 0;
-          continue;
-      }
-
-      if (DEBUG) Serial.println("Checking '" + String(buffer[incoming_index]) + "' against '" + String(targetCode[guess_index]) + "'.");
-      if (buffer[incoming_index] == targetCode[guess_index]) {
-          if (DEBUG) Serial.println("Next code byte found!");
-          guess_index++;
-      }
-
-      if (guess_index == KEYCODE_SIZE) {
-          if (DEBUG) Serial.println("Code completed!");
-          Bean.setLed(0, 0, 255);
-
-          char unlocked = digitalRead(SW1);
-
-          if (targetCode == lockCode) {
-              if (unlocked) {
-                  if (DEBUG) Serial.println("Locking!");
-                  LockTheDoor();
-              } else {
-                  if (DEBUG) Serial.println("Unlocking!");
-                  UnlockTheDoor();
-              }
-              sendLockState();
-
-          } else if (targetCode == queryCode) {
-              if (DEBUG) {
-                  Serial.print("Replying to Query!");
-              }
-
-              sendLockState();
-              delay(1000);
-              sendLockState();
-          } 
-          
-          guess_index = 0;
-      } // end if code completed
-  } // done with current buffer
+  if (length > 0) {
+      if (DEBUG) Serial.println("Incoming bytes (" + String(length) + "): '" + String(buffer) + "'. (guess_index is '" + String(guess_index) + "')");
+    
+      for (incoming_index = 0; incoming_index < length; incoming_index++) {
+          if (buffer[incoming_index] == 'Q') {
+              if (DEBUG) Serial.println("Incoming Query Code!");
+    
+              targetCode = queryCode;
+              guess_index = 0;
+              continue;
+          } else if (buffer[incoming_index] == 'L') {
+              if (DEBUG) Serial.println("Incoming Lock Code!");
+    
+              targetCode = lockCode;
+              guess_index = 0;
+              continue;
+          } else if (buffer[incoming_index] == 'U') {
+              if (DEBUG) Serial.println("Incoming Unlock Code!");
+    
+              targetCode = unlockCode;
+              guess_index = 0;
+              continue;
+          }
+    
+          if (DEBUG) Serial.println("Checking '" + String(buffer[incoming_index]) + "' against '" + String(targetCode[guess_index]) + "'.");
+          if (buffer[incoming_index] == targetCode[guess_index]) {
+              if (DEBUG) Serial.println("Next code byte found!");
+              guess_index++;
+          }
+    
+          if (guess_index == KEYCODE_SIZE) {
+              if (DEBUG) Serial.println("Code completed!");
+              Bean.setLed(0, 0, 255);
+    
+              char unlocked = digitalRead(SW1);
+    
+              if (targetCode == lockCode) {
+                  if (unlocked) {
+                      if (DEBUG) Serial.println("Locking!");
+                      LockTheDoor();
+                  } else {
+                      if (DEBUG) Serial.println("Already Locked!");
+                  }
+                  sendLockState();
+    
+              } else if (targetCode == unlockCode) {
+                  if (unlocked) {
+                      if (DEBUG) Serial.println("Already Unlocked!");
+                  } else {
+                      if (DEBUG) Serial.println("Unlocking!");
+                      UnlockTheDoor();
+                  }
+                  sendLockState();
+        
+              } else if (targetCode == queryCode) {
+                  if (DEBUG) {
+                      Serial.print("Replying to Query!");
+                  }
+    
+                  sendLockState();
+                  delay(1000);
+                  sendLockState();
+              } 
+              
+              guess_index = 0;
+          } // end if code completed
+      } // done with current buffer
+  } else {
+      sendLockState(); 
+  }
 
   if (DEBUG) Serial.println("Done. (guess_index is '" + String(guess_index) + "')");
 
@@ -147,6 +169,8 @@ void loop() {
 
   Bean.sleep(0xFFFFFFFF); // Sleep until a serial message wakes us up
 }
+
+void wakeUp() {}
 
 void sendLockState() {
   char unlocked = digitalRead(SW1);
@@ -177,19 +201,29 @@ void move(int speed, int direction) {
 
 /*************************************************************************/
 void LockTheDoor(void) {
-  digitalWrite(STBY, HIGH); //disable standby
-  move(255, 0);
-  while (digitalRead(SW1) == HIGH);
-  move(0, 0);
-  digitalWrite(STBY, LOW); //enable standby
+  if(digitalRead(SW1) == HIGH){
+     digitalWrite(STBY, HIGH); //disable standby
+     Bean.detachChangeInterrupt(SW1);
+     move(255,0);
+     while(digitalRead(SW1) == HIGH);
+     delay(LOCK_TIMEOUT_MS);
+     move(0,0);
+     digitalWrite(STBY, LOW); //enable standby
+     Bean.attachChangeInterrupt(SW1, wakeUp); 
+  }
 }
 /*************************************************************************/
 void UnlockTheDoor(void) {
-  digitalWrite(STBY, HIGH); //disable
-  move(255, 1);
-  while (digitalRead(SW1) == LOW);
-  move(0, 1);
-  digitalWrite(STBY, LOW); //enable standby
+  if(digitalRead(SW1) == LOW){
+     digitalWrite(STBY, HIGH); //disable 
+     Bean.detachChangeInterrupt(SW1);
+     move(255,1);
+     while(digitalRead(SW1) == LOW);
+     delay(UNLOCK_TIMEOUT_MS);
+     move(0,1);
+     digitalWrite(STBY, LOW); //enable standby
+     Bean.attachChangeInterrupt(SW1, wakeUp); 
+  }
 }
 /*************************************************************************/
 

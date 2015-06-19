@@ -123,11 +123,15 @@ public abstract class ButtonCommunicator {
     }
 
     protected void setLocalButtonState(final ButtonState buttonState) {
+        setLocalButtonState(buttonState, false);
+    }
+
+    protected void setLocalButtonState(final ButtonState buttonState, boolean force) {
 
         this.lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
         Log.d(TAG, "Button state updated @'" + lastButtonStateUpdateTimeMillis + ".'");
 
-        if (this.localButtonState == ButtonState.NEVER_CONNECTED || this.localButtonState != buttonState) {
+        if (force || (this.localButtonState == ButtonState.NEVER_CONNECTED || this.localButtonState != buttonState)) {
             Log.d(TAG, "Button state changed @'" + lastButtonStateUpdateTimeMillis + ".'");
             this.localButtonState = buttonState;
 

@@ -69,7 +69,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
     @Override
     public synchronized void startButtonDiscovery() {
 
-        Log.d(TAG, "Beginning LightBlue Button Monitoring Process...");
+        Log.d(TAG, "Beginning LightBlue Button Discovery Process...");
         if (discovering) {
             // make this request idempotent
             return;
@@ -155,7 +155,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
 
 
     protected void postButtonDiscoveredEvent(final boolean success, final BluetoothDevice device) {
-        bus.post(new ButtonDiscoveryEvent(success, ButtonType.LIGHTBLUE_BUTTON, device.getAddress(), device));
+        bus.post(new ButtonDiscoveryEvent(success, ButtonType.LIGHTBLUE_BUTTON, device == null ? null : device.getAddress(), device));
     }
 
 

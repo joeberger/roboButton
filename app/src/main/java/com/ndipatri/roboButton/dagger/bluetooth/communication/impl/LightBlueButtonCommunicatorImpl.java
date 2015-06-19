@@ -55,8 +55,6 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             public void onBeanDiscovered(Bean discoveredBean) {
                 if (shouldRun && discoveredBean.getDevice().getAddress().equals(button.getId())) {
 
-                    getBeanManager().cancelDiscovery();
-
                     LightBlueButtonCommunicatorImpl.this.discoveredBean = discoveredBean;
                     discoveredBean.connect(context, getBeanConnectionListener());
                 }
@@ -79,15 +77,18 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             public void onConnected() {
                 Log.d(TAG, "onConnected()");
 
-                try {
-                    Thread.sleep(10000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
+                // TODO - The following is done purely due to a limitation of the LightBlueButton. Specifically, for the first 10
+                // seconds of a connection, this button cannot send back data.  Normally, upon connection we would immediately
+                // send a query message (sendRemoteStateQuery()), but the button won't respond to this.  So for now, we will
+                // send an 'unlock' command, assume it works, and post that as an immediate fake response so we can update
+                // our local state immediately... Once the button is fixed, we should just do a 'seendRemoteStateQuery()' call
+                // here and not do this set nonsense.
+                //
                 // The LightBlue Button doesn't send its state upon BT connect, so we query
                 // it once here.. after that, changes in state are pushed down to us.
-                sendRemoteStateQuery();
+                //sendRemoteStateQuery();
+                setRemoteState(ButtonState.ON); // 'ON' is unlocked
+                setLocalButtonState(ButtonState.ON);
             }
 
             @Override
@@ -138,7 +139,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
 
                         setRemoteAutoStateIfApplicable(newButtonState);
 
-                        setLocalButtonState(newButtonState);
+                        setLocalButtonState(newButtonState, true);
                     }
                 }
             }
@@ -155,9 +156,12 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             byte[] encodedButtonState = null;
 
             if (this.localButtonState != buttonState) {
-                // The LightBlueButton only can be toggled.. If you send the PIN code, it toggles.. so
-                // we only send if we are toggling...
-                encodedButtonState = new byte[] {'X', '1', '2', '3', '4'};
+                if (buttonState.value) {
+                    // For the LightBlue, 'ON' means unlocked
+                    encodedButtonState = new byte[]{'U', '1', '2', '3', '4'};
+                } else {
+                    encodedButtonState = new byte[]{'L', '1', '2', '3', '4'};
+                }
             }
 
             if (encodedButtonState != null) {
@@ -166,13 +170,17 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         }
     }
 
+    /**
+     * This will periodically 'poll' the LightBlueBean so it that it periodically sends an iBeacon
+     * advertisement.  If it goes out of range, we will eventually disconnect either due to our
+     * beacon monitor (low RSSI) or because we stop receiving data (isCommunicating()).  There is
+     * no direct ack to these requests: they are best effort.
+     */
     protected void sendRemoteStateQuery() {
-
         if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
             discoveredBean.sendSerialMessage(new byte[]{'Q', '1', '2', '3', '4'});
+            // The LightBlue will respond with a serial message..
         }
-
-        // The LightBlue will respond with a serial message..
     }
 
     protected void stop() {

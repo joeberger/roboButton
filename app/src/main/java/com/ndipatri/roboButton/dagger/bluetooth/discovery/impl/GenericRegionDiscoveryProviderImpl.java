@@ -119,7 +119,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
 
     protected void startRegionDiscovery() {
         
-        Log.d(TAG, "Beginning Beacon Monitoring Process...");
+        Log.d(TAG, "Starting region discovery process...");
         
         if (scanning) {
             // make this request idempotent
