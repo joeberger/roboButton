@@ -285,14 +285,16 @@ public class MonitoringService extends Service {
     // This is a costly operation and should only be done when we have confidence button will
     // be found... (e.g. we've already detected a beacon)
     //
-    // TODO - For simplicity, assume a region type implies a button type...
+    // TODO - For simplicity, assume a region type implies a button type...This is mostly so we don't have to
+    // deal with multiple simulateneous button communications.  Which is problemetically particularly because we have
+    // classic and BLE buttons
     protected void startButtonDiscovery(com.ndipatri.roboButton.models.Region nearbyRegion) {
         switch (nearbyRegion.getUuid())  {
             case RegionUtils.GELO_UUID:
                 purpleButtonDiscoveryProvider.startButtonDiscovery();
                 break;
 
-            case RegionUtils.LIGHTBLUE_UUID:
+            case RegionUtils.ESTIMOTE_UUID:
                 lightBlueButtonDiscoveryProvider.startButtonDiscovery();
                 break;
         }

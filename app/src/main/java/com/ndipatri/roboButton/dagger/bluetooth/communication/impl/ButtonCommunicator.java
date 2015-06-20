@@ -77,7 +77,7 @@ public abstract class ButtonCommunicator {
 
             if (shouldRun) {
                 Log.d(TAG, "Auto Shutdown!");
-                if (isCommunicating() && localButtonState != ButtonState.OFF) {
+                if (localButtonState != ButtonState.OFF) {
                     setRemoteState(ButtonState.OFF);
 
                     // Need to give above command time to reach button... I know this is lame.
