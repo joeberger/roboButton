@@ -23,14 +23,10 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
 
     private Bean discoveredBean;
 
-    BluetoothAdapter bluetoothAdapter = null;
-
     public LightBlueButtonCommunicatorImpl(final Context context, final Button button) {
         super(context, button);
 
         Log.d(TAG, "Starting LightBlue button communicator for '" + button.getId() + "'.");
-
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         start();
     }
@@ -40,12 +36,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
     }
 
     public synchronized void startButtonConnect() {
-
-        if (shouldRun && bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
-            getBeanManager().startDiscovery(getButtonDiscoveryListener());
-        } else {
-            shouldRun = false;
-        }
+        getBeanManager().startDiscovery(getButtonDiscoveryListener());
     }
 
     protected BeanDiscoveryListener getButtonDiscoveryListener() {
@@ -86,6 +77,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
                 // The LightBlue Button doesn't send its state upon BT connect, so we query
                 // it once here.. after that, changes in state are pushed down to us.
                 //sendRemoteStateQuery();
+
                 setRemoteState(ButtonState.ON); // 'ON' is unlocked
                 setLocalButtonState(ButtonState.ON);
             }
@@ -127,18 +119,14 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
                         try {
                             newButtonState = buttonValue > 0 ? ButtonState.ON : ButtonState.OFF;
                         } catch (NumberFormatException nex) {
-                            Log.d(TAG, "Invalid response from bluetooth device: '" + this + "'.");
-                            // NJD TODO - one theory is to reconnect and see if that helps...
-                            // disconnect();
-
-                            // another is to just continue to listen until we are declare no longer communicating and are killed
-                            // by the monitoring service.
                             newButtonState = null;
                         }
 
-                        setRemoteAutoStateIfApplicable(newButtonState);
+                        if (newButtonState != null) {
+                            setRemoteAutoStateIfApplicable(newButtonState);
 
-                        setLocalButtonState(newButtonState, true);
+                            setLocalButtonState(newButtonState, true);
+                        }
                     }
                 }
             }
@@ -169,12 +157,6 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         }
     }
 
-    /**
-     * This will periodically 'poll' the LightBlueBean so it that it periodically sends an iBeacon
-     * advertisement.  If it goes out of range, we will eventually disconnect either due to our
-     * beacon monitor (low RSSI) or because we stop receiving data (isCommunicating()).  There is
-     * no direct ack to these requests: they are best effort.
-     */
     protected void sendRemoteStateQuery() {
         if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
             discoveredBean.sendSerialMessage(new byte[]{'Q', '1', '2', '3', '4'});

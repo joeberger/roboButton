@@ -1,5 +1,6 @@
 package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -9,6 +10,7 @@ import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
+import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
@@ -20,7 +22,10 @@ import com.squareup.otto.Subscribe;
 import javax.inject.Inject;
 
 /**
- * Communicates with each individual Button
+ * Communicates with each individual Button.
+ *
+ * Implementations are expected to call 'setLocalButtonState(ButtonState)' when a new button state has been detected.
+ *
  */
 public abstract class ButtonCommunicator {
 
@@ -46,6 +51,8 @@ public abstract class ButtonCommunicator {
 
     private BusProxy busProxy = new BusProxy();
 
+    BluetoothAdapter bluetoothAdapter = null;
+
     public ButtonCommunicator(final Context context, final Button button) {
 
         Log.d(TAG, "Starting button communicator for '" + button.getId() + "'.");
@@ -55,6 +62,8 @@ public abstract class ButtonCommunicator {
 
         communicationsGracePeriodMillis = context.getResources().getInteger(R.integer.communications_grace_period_millis);
 
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
         ((RBApplication)context).getGraph().inject(this);
     }
 
@@ -62,14 +71,19 @@ public abstract class ButtonCommunicator {
     protected abstract void startCommunicating();
 
     public void start() {
-        shouldRun = true;
 
         // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
         lastButtonStateUpdateTimeMillis = 0;
 
         bus.register(busProxy);
 
-        startCommunicating();
+        if (bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
+            shouldRun = true;
+            startCommunicating();
+        } else {
+            bus.post(new BluetoothDisabledEvent());
+            shouldRun = false;
+        }
     }
 
     public void shutdown() {
