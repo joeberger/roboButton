@@ -9,7 +9,6 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import com.ndipatri.roboButton.models.Region;
 import com.ndipatri.roboButton.models.Button;
 
 import java.sql.SQLException;
@@ -29,9 +28,6 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     private Dao<Button, Long> buttonDao = null;
     private RuntimeExceptionDao<Button, Long> buttonRuntimeDao = null;
 
-    private Dao<Region, Long> regionDao = null;
-    private RuntimeExceptionDao<Region, Long> regionRuntimeDao = null;
-
     public OrmLiteDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -44,7 +40,6 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     public void onCreate(SQLiteDatabase db, ConnectionSource connectionSource) {
         try {
             TableUtils.createTableIfNotExists(connectionSource, Button.class);
-            TableUtils.createTableIfNotExists(connectionSource, Region.class);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -58,7 +53,6 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, ConnectionSource connectionSource, int oldVersion, int newVersion) {
         try {
             TableUtils.dropTable(connectionSource, Button.class, true);
-            TableUtils.dropTable(connectionSource, Region.class, true);
             // after we drop the old databases, we create the new ones
             onCreate(db, connectionSource);
         } catch (SQLException e) {
@@ -79,18 +73,6 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     }
 
     /**
-     * Returns the RuntimeExceptionDao (Database Access Object) version of a Dao for our Region class. It will
-     * create it or just give the cached value. RuntimeExceptionDao only through RuntimeExceptions.
-     */
-    public RuntimeExceptionDao<Region, Long> getRegionDao() {
-        if (regionRuntimeDao == null) {
-            regionRuntimeDao = getRuntimeExceptionDao(Region.class);
-        }
-
-        return regionRuntimeDao;
-    }
-
-    /**
      * Close the database connections and clear any cached DAOs.
      */
     @Override
@@ -102,7 +84,6 @@ public class OrmLiteDatabaseHelper extends OrmLiteSqliteOpenHelper {
     public void deleteDataFromAllTables() {
         try {
             TableUtils.clearTable(connectionSource, Button.class);
-            TableUtils.clearTable(connectionSource, Region.class);
 
         } catch (SQLException e) {
             Log.e(OrmLiteDatabaseHelper.class.getName(), "Can't clear databases", e);

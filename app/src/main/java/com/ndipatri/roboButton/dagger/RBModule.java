@@ -19,7 +19,6 @@ import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.BluetoothProvide
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.GenericRegionDiscoveryProviderStub;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.LightBlueButtonDiscoveryProviderStub;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
-import com.ndipatri.roboButton.dagger.daos.RegionDao;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.ndipatri.roboButton.utils.RegionUtils;
 
@@ -54,16 +53,6 @@ public class RBModule {
             return mock(ButtonDao.class);
         } else {
             return new ButtonDao(context);
-        }
-    }
-
-    @Provides
-    @Singleton
-    RegionDao provideRegionProvider() {
-        if (BuildVariant.useMocks) {
-            return mock(RegionDao.class);
-        } else {
-            return new RegionDao(context);
         }
     }
 

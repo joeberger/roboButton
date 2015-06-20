@@ -19,7 +19,6 @@ import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.dagger.RBModule;
 import com.ndipatri.roboButton.dagger.annotations.Named;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
-import com.ndipatri.roboButton.dagger.daos.RegionDao;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
@@ -64,9 +63,6 @@ public class MonitoringService extends Service {
 
     @Inject
     BusProvider bus;
-
-    @Inject
-    protected RegionDao regionDao;
 
     @Inject
     protected RegionDiscoveryProvider regionDiscoveryProvider;
@@ -182,7 +178,6 @@ public class MonitoringService extends Service {
         Log.d(TAG, "RegionFound: ('" + regionFoundEvent.getRegion().toString() + "'.)");
 
         nearbyRegion = regionFoundEvent.getRegion();
-        regionDao.createOrUpdateRegion(nearbyRegion);
 
         if (nearbyButton == null) {
             stopRegionDiscovery();
@@ -214,7 +209,7 @@ public class MonitoringService extends Service {
 
                 stopButtonDiscovery();
 
-                nearbyButton = pairButtonWithRegion(buttonDiscoveryEvent.getDevice(), buttonDiscoveryEvent.getDeviceAddress(), buttonDiscoveryEvent.getButtonType());
+                nearbyButton = persistButton(buttonDiscoveryEvent.getDevice(), buttonDiscoveryEvent.getDeviceAddress(), buttonDiscoveryEvent.getButtonType());
 
                 startButtonCommunication(nearbyButton);
             }
@@ -305,7 +300,7 @@ public class MonitoringService extends Service {
         lightBlueButtonDiscoveryProvider.stopButtonDiscovery();
     }
 
-    protected Button pairButtonWithRegion(final BluetoothDevice device, final String buttonAddress, final ButtonType buttonType) {
+    protected Button persistButton(final BluetoothDevice device, final String buttonAddress, final ButtonType buttonType) {
 
         Button discoveredButton;
 
@@ -323,18 +318,6 @@ public class MonitoringService extends Service {
 
         buttonDao.createOrUpdateButton(discoveredButton);
 
-        // we immediately pair this discovered button with our nearby region.. overwriting any
-        // existing pairing.
-
-        nearbyRegion.setName("Region for " + discoveredButton.getName());
-        regionDao.createOrUpdateRegion(nearbyRegion);
-
-        Button button = buttonDao.getButton(discoveredButton.getId());
-        button.setRegion(nearbyRegion);
-        nearbyRegion.setButton(button);
-
-        buttonDao.createOrUpdateButton(button);
-        regionDao.createOrUpdateRegion(nearbyRegion); // transitive persistence sucks in ormLite
         return discoveredButton;
     }
 

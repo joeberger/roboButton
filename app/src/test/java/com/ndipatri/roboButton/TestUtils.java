@@ -35,21 +35,10 @@ public class TestUtils {
                 OrmLiteDatabaseHelper.class);
         try {
             TableUtils.dropTable(helper.getConnectionSource(), Button.class, true);
-            TableUtils.dropTable(helper.getConnectionSource(), Region.class, true);
             TableUtils.createTable(helper.getConnectionSource(), Button.class);
-            TableUtils.createTable(helper.getConnectionSource(), Region.class);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        OpenHelperManager.releaseHelper();
-    }
-
-    public static void createOrUpdateRegion(Region region) {
-        OrmLiteDatabaseHelper
-                helper = OpenHelperManager.getHelper(RBApplication.getInstance().getApplicationContext(),
-                OrmLiteDatabaseHelper.class);
-        helper.getRegionDao().createOrUpdate(region);
-
         OpenHelperManager.releaseHelper();
     }
 

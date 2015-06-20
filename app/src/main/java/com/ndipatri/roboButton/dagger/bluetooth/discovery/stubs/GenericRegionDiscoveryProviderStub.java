@@ -80,7 +80,7 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
         public void run() {
             if (running) {
                 Toast.makeText(context, "Beacon region found.", Toast.LENGTH_SHORT).show();
-                postRegionFoundEvent(new Region(1, 2, RegionUtils.LIGHTBLUE_UUID));
+                postRegionFoundEvent(new Region(1, 2, RegionUtils.ESTIMOTE_UUID));
 
                 new Handler().postDelayed(beaconLostRunnable, 20000);
             }
@@ -92,7 +92,7 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
         public void run() {
             if (running) {
                 Toast.makeText(context, "Beacon region lost.", Toast.LENGTH_SHORT).show();
-                postRegionLostEvent(new Region(1, 2, RegionUtils.LIGHTBLUE_UUID));
+                postRegionLostEvent(new Region(1, 2, RegionUtils.ESTIMOTE_UUID));
 
                 new Handler().postDelayed(beaconFoundRunnable, 10000);
             }

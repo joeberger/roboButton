@@ -21,7 +21,6 @@ import butterknife.Views;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
-import com.ndipatri.roboButton.dagger.daos.RegionDao;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
 
@@ -42,9 +41,6 @@ public class ButtonDetailsDialogFragment extends DialogFragment {
 
     @Inject
     protected ButtonDao buttonDao;
-
-    @Inject
-    protected RegionDao regionDao;
 
     public static ButtonDetailsDialogFragment newInstance(String buttonId) {
 

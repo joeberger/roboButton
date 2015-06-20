@@ -24,9 +24,6 @@ public class ButtonDao {
 
     private static final String TAG = ButtonDao.class.getCanonicalName();
 
-    protected @Inject
-    RegionDao regionDao;
-
     private Context context;
 
     public ButtonDao(Context context) {

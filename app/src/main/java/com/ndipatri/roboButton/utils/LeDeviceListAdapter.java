@@ -9,15 +9,12 @@ import android.widget.TextView;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.Utils;
-import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
-import com.ndipatri.roboButton.dagger.daos.RegionDao;
+import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.models.Region;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
-import javax.inject.Inject;
 
 /**
  * Created by ndipatri on 7/9/14.
@@ -26,9 +23,6 @@ public class LeDeviceListAdapter extends BaseAdapter {
     private ArrayList<Beacon> beacons;
     private LayoutInflater inflater;
     private Context context;
-
-    @Inject
-    protected RegionDao regionDao;
 
     public LeDeviceListAdapter(Context context) {
         this.context = context;
@@ -69,12 +63,8 @@ public class LeDeviceListAdapter extends BaseAdapter {
     private void bind(Beacon beacon, View view) {
         final ViewHolder holder = (ViewHolder) view.getTag();
 
-        Region localRegion = regionDao.getRegion(beacon.getMinor(), beacon.getMajor(), beacon.getProximityUUID());
-        if (localRegion != null) {
-            holder.nameTextView.setText(localRegion.getName());
-        } else {
-            holder.nameTextView.setText(context.getString(R.string.new_beacon));
-        }
+        Region localRegion = new Region(beacon.getMinor(), beacon.getMajor(), beacon.getProximityUUID());
+        holder.nameTextView.setText(localRegion.getName());
 
         holder.macTextView.setText(String.format("MAC: %s (%.2fm)", beacon.getMacAddress(), Utils.computeAccuracy(beacon)));
         holder.majorTextView.setText("Major: " + beacon.getMajor());

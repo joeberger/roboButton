@@ -36,10 +36,6 @@ public class Button {
     @DatabaseField(columnName = AUTOMODEENABLED_COLUMN_NAME)
     private boolean autoModeEnabled;
 
-    public static final String REGION_ID = "region_id";
-    @DatabaseField(foreign = true, foreignAutoRefresh = true, columnName = REGION_ID)
-    private Region region;
-
     public static final String TYPE_COLUMN_NAME = "type";
     @DatabaseField(columnName = TYPE_COLUMN_NAME)
     private int type;
@@ -70,14 +66,6 @@ public class Button {
         this.autoModeEnabled = autoModeEnabled;
     }
 
-    public Region getRegion() {
-        return region;
-    }
-
-    public void setRegion(Region region) {
-        this.region = region;
-    }
-
     public int getType() {
         return type;
     }
@@ -105,7 +93,6 @@ public class Button {
         if (type != button.type) return false;
         if (id != null ? !id.equals(button.id) : button.id != null) return false;
         if (name != null ? !name.equals(button.name) : button.name != null) return false;
-        if (region != null ? !region.equals(button.region) : button.region != null) return false;
         return !(bluetoothDevice != null ? !bluetoothDevice.equals(button.bluetoothDevice) : button.bluetoothDevice != null);
 
     }
@@ -115,7 +102,6 @@ public class Button {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (autoModeEnabled ? 1 : 0);
-        result = 31 * result + (region != null ? region.hashCode() : 0);
         result = 31 * result + type;
         result = 31 * result + (bluetoothDevice != null ? bluetoothDevice.hashCode() : 0);
         return result;
@@ -127,7 +113,6 @@ public class Button {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", autoModeEnabled=" + autoModeEnabled +
-                ", region=" + region +
                 ", type=" + ButtonType.getByType(type) +
                 '}';
     }
