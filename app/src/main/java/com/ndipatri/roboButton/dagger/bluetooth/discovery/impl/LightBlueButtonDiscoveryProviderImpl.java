@@ -90,14 +90,16 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
         return new BeanDiscoveryListener() {
             @Override
             public void onBeanDiscovered(Bean discoveredBean) {
+                Log.d(TAG, "onBeanDiscovered():");
                 LightBlueButtonDiscoveryProviderImpl.this.discoveredBean = discoveredBean;
                 discoveredBean.connect(context, getBeanConnectionListener());
             }
 
             @Override
             public void onDiscoveryComplete() {
+                Log.d(TAG, "onBeanDiscoveryComplete():");
                 if (discoveredBean == null || !isConnectedBeanAButton) {
-                    postButtonDiscoveredEvent(false, null);
+                //    postButtonDiscoveredEvent(false, null);
                 }
             }
         };

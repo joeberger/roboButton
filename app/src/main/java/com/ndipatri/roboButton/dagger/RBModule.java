@@ -77,13 +77,16 @@ public class RBModule {
         // from the 'scanRecord' which is returned by a BLE scan.
         String[] regionUUIDPatternArray =
             new String[] {
+                    //RegionUtils.LIGHTBLUE_UUID,
                     RegionUtils.ESTIMOTE_UUID,
                     RegionUtils.GELO_UUID,
                     };
 
         // This is the number of bytes into the BLE 'scanRecord' where the 16-byte
         // UUID begins.
-        Integer[] regionUUIDOffsetArray = new Integer[] {new Integer(0), // TODO .. need to determien this for Estimote
+        Integer[] regionUUIDOffsetArray = new Integer[] {
+                                                      // new Integer(3), for LightBlue
+                                                         new Integer(0), // TODO .. need to determien this for Estimote
                                                          new Integer(0),
                                                         };
 
