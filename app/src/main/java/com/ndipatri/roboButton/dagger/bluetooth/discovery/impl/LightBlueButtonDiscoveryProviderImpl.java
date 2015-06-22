@@ -40,8 +40,6 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
 
     BluetoothAdapter bluetoothAdapter = null;
 
-    protected int buttonDiscoveryDurationMillis;
-
     String discoverableButtonPatternString;
 
     protected boolean discovering = false;
@@ -61,7 +59,6 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
         RBApplication.getInstance().getGraph().inject(this);
 
         discoverableButtonPatternString = context.getString(R.string.button_discovery_pattern);
-        buttonDiscoveryDurationMillis = context.getResources().getInteger(R.integer.button_discovery_duration_millis);
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
@@ -98,8 +95,11 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
             @Override
             public void onDiscoveryComplete() {
                 Log.d(TAG, "onBeanDiscoveryComplete():");
+
+                discovering = false;
+
                 if (discoveredBean == null || !isConnectedBeanAButton) {
-                //    postButtonDiscoveredEvent(false, null);
+                    postButtonDiscoveredEvent(false, null);
                 }
             }
         };
