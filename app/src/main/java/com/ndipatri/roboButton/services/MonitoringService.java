@@ -109,6 +109,8 @@ public class MonitoringService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        Log.d(TAG, "onCreate()");
+
         ((RBApplication) getApplication()).getGraph().inject(this);
 
         buttonDiscoveryDurationMillis = getResources().getInteger(R.integer.button_discovery_duration_millis);
@@ -119,6 +121,8 @@ public class MonitoringService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        Log.d(TAG, "onDestroy()");
 
         stopRegionDiscovery();
         stopButtonDiscovery();
@@ -180,6 +184,7 @@ public class MonitoringService extends Service {
         nearbyRegion = regionFoundEvent.getRegion();
 
         if (nearbyButton == null) {
+            Log.d(TAG, ".. currently not talking to a button, so let's look for one!");
             stopRegionDiscovery();
             startButtonDiscovery(nearbyRegion);
         }

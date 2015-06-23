@@ -148,7 +148,6 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
         Log.d(TAG, "Stopping region discovery ...");
         
         scanning = false;
-        nearbyRegions = new HashMap<>();
 
         //Check to see if the device supports Bluetooth and that it's turned on
         if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
@@ -159,6 +158,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
     private Runnable scanTimeoutRunnable = new Runnable() {
         @Override
         public void run() {
+
             if (scanning) {
 
                 try {

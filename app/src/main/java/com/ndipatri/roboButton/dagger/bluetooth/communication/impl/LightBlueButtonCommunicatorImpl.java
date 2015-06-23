@@ -2,6 +2,7 @@ package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 
 import com.ndipatri.roboButton.enums.ButtonState;
@@ -46,6 +47,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
                 if (shouldRun && discoveredBean.getDevice().getAddress().equals(button.getId())) {
 
                     LightBlueButtonCommunicatorImpl.this.discoveredBean = discoveredBean;
+                    getBeanManager().cancelDiscovery();
                     discoveredBean.connect(context, getBeanConnectionListener());
                 }
             }
@@ -80,6 +82,13 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
 
                 setRemoteState(ButtonState.ON); // 'ON' is unlocked
                 setLocalButtonState(ButtonState.ON);
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendRemoteStateQuery();
+                    }
+                }, 10000);
             }
 
             @Override
