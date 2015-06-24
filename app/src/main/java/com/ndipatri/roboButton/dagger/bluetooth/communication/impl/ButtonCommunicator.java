@@ -85,20 +85,16 @@ public abstract class ButtonCommunicator {
                 if (localButtonState != ButtonState.OFF) {
                     Log.d(TAG, "Auto Shutdown!");
                     setRemoteState(ButtonState.OFF);
-
-                    // Need to give above command time to reach button... I know this is lame.
-                    try {
-                        Thread.sleep(3000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                 }
+            }
+        }
 
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
                 stop();
             }
-        } else {
-            stop();
-        }
+        }, 3000);
     }
 
     protected void stop() {
