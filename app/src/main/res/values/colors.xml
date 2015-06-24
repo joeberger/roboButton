@@ -3,7 +3,10 @@
     <color name="off_white">#FFF5F5F5</color>
     <color name="transparent">#00000000</color>
     <color name="semi_transparent">#DD5e5e5e</color>
-    <color name="warning_red">#FF0000</color>
+    <color name="red">#DE1612</color>
+    <color name="yellow">#F7C015</color>
+    <color name="green">#45C813</color>
+    <color name="grey">#BBB9BE</color>
     <color name="ls_low_battery_color">#ffff6600</color>
     <color name="black">#ff000000</color>
 </resources>

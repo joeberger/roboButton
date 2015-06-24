@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.ndipatri.roboButton.R;
@@ -35,6 +36,10 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
 
     private static final String TAG = PurpleButtonCommunicatorImpl.class.getCanonicalName();
 
+    protected long communicationsGracePeriodMillis = -1;
+
+    private long lastButtonStateUpdateTimeMillis;
+
     @Inject
     @Named(RBModule.PURPLE_BUTTON)
     protected ButtonDiscoveryProvider purpleButtonDiscoveryProvider;
@@ -62,6 +67,8 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
 
         RBApplication.getInstance().getGraph().inject(this);
 
+        communicationsGracePeriodMillis = context.getResources().getInteger(R.integer.communications_grace_period_millis);
+
         // Create thread for handling communication with Bluetooth
         // This thread only runs if it's passed a message.. so no need worrying about if it's running or not after this point.
         HandlerThread messageProcessingThread = new HandlerThread("GetSet_BluetoothCommunicationThread", android.os.Process.THREAD_PRIORITY_BACKGROUND);
@@ -78,8 +85,21 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
 
     @Override
     public void startCommunicating() {
+
+        // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
+        lastButtonStateUpdateTimeMillis = 0;
+
         scheduleImmediateQueryStateMessage();
         scheduleConnectivityCheck();
+    }
+
+    public boolean isCommunicating() {
+        long timeSinceLastUpdate = SystemClock.uptimeMillis() - lastButtonStateUpdateTimeMillis;
+        boolean isCommunicating = timeSinceLastUpdate <= communicationsGracePeriodMillis;
+
+        Log.d(TAG, "isCommunicating(): '" + isCommunicating + "'");
+
+        return isCommunicating;
     }
 
     protected void stop() {
@@ -102,6 +122,16 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
 
             setLocalButtonState(ButtonState.DISCONNECTED);
         }
+    }
+
+    @Override
+    protected void setLocalButtonState(final ButtonState buttonState) {
+
+        this.lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
+        Log.d(TAG, "Purple button state updated @'" + lastButtonStateUpdateTimeMillis + ".'");
+
+        super.setLocalButtonState(buttonState);
+
     }
 
     private void scheduleImmediateQueryStateMessage() {

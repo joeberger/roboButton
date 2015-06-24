@@ -41,13 +41,9 @@ public abstract class ButtonCommunicator {
     // This value will always be set by what is received from Button itself
     protected ButtonState localButtonState = ButtonState.NEVER_CONNECTED;
 
-    protected long communicationsGracePeriodMillis = -1;
-
     protected Button button;
 
     protected Context context;
-
-    private long lastButtonStateUpdateTimeMillis;
 
     private BusProxy busProxy = new BusProxy();
 
@@ -60,8 +56,6 @@ public abstract class ButtonCommunicator {
         this.context = context;
         this.button = button;
 
-        communicationsGracePeriodMillis = context.getResources().getInteger(R.integer.communications_grace_period_millis);
-
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         ((RBApplication)context).getGraph().inject(this);
@@ -69,11 +63,9 @@ public abstract class ButtonCommunicator {
 
     protected abstract void setRemoteState(ButtonState buttonState);
     protected abstract void startCommunicating();
+    protected abstract boolean isCommunicating();
 
     public void start() {
-
-        // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
-        lastButtonStateUpdateTimeMillis = 0;
 
         bus.register(busProxy);
 
@@ -90,13 +82,13 @@ public abstract class ButtonCommunicator {
         if (isAutoModeEnabled() && button.isAutoModeEnabled() && isCommunicating()) {
 
             if (shouldRun) {
-                Log.d(TAG, "Auto Shutdown!");
                 if (localButtonState != ButtonState.OFF) {
+                    Log.d(TAG, "Auto Shutdown!");
                     setRemoteState(ButtonState.OFF);
 
                     // Need to give above command time to reach button... I know this is lame.
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(3000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -123,15 +115,6 @@ public abstract class ButtonCommunicator {
         });
     }
 
-    public boolean isCommunicating() {
-        long timeSinceLastUpdate = SystemClock.uptimeMillis() - lastButtonStateUpdateTimeMillis;
-        boolean isCommunicating = timeSinceLastUpdate <= communicationsGracePeriodMillis;
-
-        Log.d(TAG, "isCommunicating(): '" + isCommunicating + "'");
-
-        return isCommunicating;
-    }
-
     protected boolean isAutoModeEnabled() {
         return RBApplication.getInstance().getAutoModeEnabledFlag();
     }
@@ -142,11 +125,9 @@ public abstract class ButtonCommunicator {
 
     protected void setLocalButtonState(final ButtonState buttonState, boolean force) {
 
-        this.lastButtonStateUpdateTimeMillis = SystemClock.uptimeMillis();
-        Log.d(TAG, "Button state updated @'" + lastButtonStateUpdateTimeMillis + ".'");
+        Log.d(TAG, "setLocalButtonState()");
 
         if (force || (this.localButtonState == ButtonState.NEVER_CONNECTED || this.localButtonState != buttonState)) {
-            Log.d(TAG, "Button state changed @'" + lastButtonStateUpdateTimeMillis + ".'");
             this.localButtonState = buttonState;
 
             postButtonStateChangeReport(buttonState);

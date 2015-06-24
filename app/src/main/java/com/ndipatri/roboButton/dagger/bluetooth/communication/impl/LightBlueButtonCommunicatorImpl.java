@@ -36,6 +36,11 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         startButtonConnect();
     }
 
+    @Override
+    protected boolean isCommunicating() {
+        return discoveredBean != null && discoveredBean.isConnected();
+    }
+
     public synchronized void startButtonConnect() {
         getBeanManager().startDiscovery(getButtonDiscoveryListener());
     }
@@ -155,8 +160,10 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
                 if (buttonState.value) {
                     // For the LightBlue, 'ON' means unlocked
                     encodedButtonState = new byte[]{'U', '1', '2', '3', '4'};
+                    Log.d(TAG, "Sending 'Unlock' Command");
                 } else {
                     encodedButtonState = new byte[]{'L', '1', '2', '3', '4'};
+                    Log.d(TAG, "Sending 'Lock' Command");
                 }
             }
 

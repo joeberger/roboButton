@@ -33,6 +33,11 @@ public class GenericButtonCommunicatorStub extends ButtonCommunicator {
         setLocalButtonState(remoteButtonState);
     }
 
+    @Override
+    protected boolean isCommunicating() {
+        return true;
+    }
+
     // We will assume this is always successful with a slight delay..
     protected void setRemoteState(final ButtonState requestedButtonState) {
 

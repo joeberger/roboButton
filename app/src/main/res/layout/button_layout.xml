@@ -5,6 +5,17 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
+    <!--
+<com.lifeshield.android.lifeshield.views.FuelGaugeView
+    style="@style/SafetyScoreFuelGauge.Larger"
+    android:id="@+id/percentileFuelGauge"
+
+    lifeshield:descriptionTextColor="@color/dtv_top_panel"
+
+    lifeshield:tankCapacity="100"
+    lifeshield:descriptionText="" />
+    -->
+
         <ImageView
                 android:id="@+id/buttonImageView"
                 android:layout_width="wrap_content"
