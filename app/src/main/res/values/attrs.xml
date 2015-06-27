@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="ButtonView">
-        <attr name="strokeWidth" format="integer" />
+    <declare-styleable name="ProgressView">
+        <attr name="strokeWidth" format="dimension" />
         <attr name="animationDurationMillis" format="integer" />
-        <attr name="textPadding" format="dimension" />
-        <attr name="titleTextSize" format="dimension" />
-        <attr name="titleTextColor" format="integer" />
     </declare-styleable>
 </resources>

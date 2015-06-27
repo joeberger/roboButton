@@ -1,11 +1,13 @@
 package com.ndipatri.roboButton.dagger.bluetooth.communication.stubs;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
 import android.widget.Toast;
 
 import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.ButtonCommunicator;
 import com.ndipatri.roboButton.enums.ButtonState;
+import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.models.Button;
 
 public class GenericButtonCommunicatorStub extends ButtonCommunicator {
@@ -21,8 +23,8 @@ public class GenericButtonCommunicatorStub extends ButtonCommunicator {
     // is the main job of a ButtonCommunicator.
     private static ButtonState remoteButtonState = ButtonState.OFF;
 
-    public GenericButtonCommunicatorStub(final Context context, final Button button) {
-        super(context, button);
+    public GenericButtonCommunicatorStub(final Context context, final BluetoothDevice device, final String buttonId) {
+        super(context, device, buttonId);
 
         start();
     }

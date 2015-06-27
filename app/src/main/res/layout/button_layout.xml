@@ -1,25 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/buttonFragmentFrameLayout"
-    android:layout_gravity="center"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+<RelativeLayout android:id="@+id/buttonFragmentFrameLayout"
+             xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:progressView="http://schemas.android.com/apk/res-auto"
+             android:layout_width="190dp"
+             android:layout_height="190dp"
+             android:layout_gravity="center">
 
-    <!--
-<com.lifeshield.android.lifeshield.views.FuelGaugeView
-    style="@style/SafetyScoreFuelGauge.Larger"
-    android:id="@+id/percentileFuelGauge"
+    <ImageView
+        android:id="@+id/buttonImageView"
 
-    lifeshield:descriptionTextColor="@color/dtv_top_panel"
+        android:layout_margin="3dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/yellow_button"/>
 
-    lifeshield:tankCapacity="100"
-    lifeshield:descriptionText="" />
-    -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/grey_circle"/>
 
-        <ImageView
-                android:id="@+id/buttonImageView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/yellow_button"/>
+    <TextView
+        android:id="@+id/buttonLabelTextView"
 
-</FrameLayout>
+        android:layout_centerInParent="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <com.ndipatri.roboButton.views.ProgressView
+        android:id="@+id/progressView"
+
+        android:layout_margin="5dp"
+
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+
+        android:layout_centerInParent="true"
+
+        progressView:strokeWidth="7dp"
+        progressView:animationDurationMillis="2000"/>
+
+</RelativeLayout>

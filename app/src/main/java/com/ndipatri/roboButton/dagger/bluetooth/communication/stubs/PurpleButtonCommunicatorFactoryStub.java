@@ -1,5 +1,6 @@
 package com.ndipatri.roboButton.dagger.bluetooth.communication.stubs;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
 import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.ButtonCommunicator;
@@ -10,7 +11,7 @@ public class PurpleButtonCommunicatorFactoryStub implements ButtonCommunicatorFa
 
     private static final String TAG = PurpleButtonCommunicatorFactoryStub.class.getCanonicalName();
 
-    public ButtonCommunicator getButtonCommunicator(final Context context, final Button button) {
-        return new GenericButtonCommunicatorStub(context, button);
+    public ButtonCommunicator getButtonCommunicator(final Context context, final BluetoothDevice device, final String buttonId) {
+        return new GenericButtonCommunicatorStub(context, device, buttonId);
     }
 }

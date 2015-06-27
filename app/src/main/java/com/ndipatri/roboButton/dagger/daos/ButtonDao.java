@@ -1,6 +1,7 @@
 package com.ndipatri.roboButton.dagger.daos;
 
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
@@ -10,7 +11,9 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.database.OrmLiteDatabaseHelper;
+import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
 import com.ndipatri.roboButton.models.Button;
+import com.ndipatri.roboButton.utils.BusProvider;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -26,10 +29,14 @@ public class ButtonDao {
 
     private Context context;
 
+    @Inject BusProvider bus;
+
     public ButtonDao(Context context) {
         this.context = context;
 
         RBApplication.getInstance().getGraph().inject(this);
+
+        bus.register(this);
     }
 
     public void createOrUpdateButton(final Button dirtyButton) {
@@ -40,6 +47,8 @@ public class ButtonDao {
         buttonDao.createOrUpdate(dirtyButton);
 
         OpenHelperManager.releaseHelper();
+
+        bus.post(new ButtonUpdatedEvent(dirtyButton.getId()));
     }
 
     public Button getButton(String buttonId) {

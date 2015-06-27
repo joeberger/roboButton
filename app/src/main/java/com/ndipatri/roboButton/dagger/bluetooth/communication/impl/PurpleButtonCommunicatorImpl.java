@@ -1,5 +1,6 @@
 package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Handler;
@@ -15,8 +16,8 @@ import com.ndipatri.roboButton.dagger.RBModule;
 import com.ndipatri.roboButton.dagger.annotations.Named;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
+import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
-import com.ndipatri.roboButton.models.Button;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -60,10 +61,10 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
 
     // endregion
 
-    public PurpleButtonCommunicatorImpl(final Context context, final Button button) {
-        super(context, button);
+    public PurpleButtonCommunicatorImpl(final Context context, final BluetoothDevice device, final String buttonId) {
+        super(context, device, buttonId);
 
-        Log.d(TAG, "Starting new monitor for button '" + button.getId() + "'.");
+        Log.d(TAG, "Starting new monitor for button '" + buttonId + "'.");
 
         RBApplication.getInstance().getGraph().inject(this);
 
@@ -114,7 +115,7 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
 
     protected void disconnect() {
         if (socket != null) {
-            Log.d(TAG, "Shutting down Bluetooth Socket for Button('" + button.getId() + "').");
+            Log.d(TAG, "Shutting down Bluetooth Socket for Button('" + buttonId + "').");
             try {
                 socket.close();
             } catch (IOException ignored) {
@@ -242,11 +243,10 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
                     if (shouldRun) {
 
                         if (isCommunicating()) {
-                            postButtonStateChangeReport(localButtonState);
                             scheduleConnectivityCheck();
                         } else {
                             stop();
-                            postButtonStateChangeReport(ButtonState.DISCONNECTED);
+                            setButtonPersistedState(ButtonState.DISCONNECTED);
                         }
                     }
 
@@ -386,7 +386,8 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
             Log.d(TAG, "Creating Bluetooth Socket ...");
 
             //bluetoothSocket = button.getBluetoothDevice().createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
-            bluetoothSocket = button.getBluetoothDevice().createInsecureRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
+
+            bluetoothSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
 
             // Cancel discovery because it will slow down the connection
             purpleButtonDiscoveryProvider.stopButtonDiscovery();

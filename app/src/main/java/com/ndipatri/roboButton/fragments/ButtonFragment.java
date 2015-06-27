@@ -7,15 +7,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
+
 import butterknife.Views;
 
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.enums.ButtonState;
-import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
+import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
+import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
+import com.ndipatri.roboButton.views.ProgressView;
 import com.squareup.otto.Subscribe;
 
 import javax.inject.Inject;
@@ -39,16 +43,12 @@ public class ButtonFragment extends Fragment {
     BusProvider bus;
 
     @Inject
-    protected ButtonDao buttonDao;
+    ButtonDao buttonDao;
 
     // ButterKnife Injected Views
-    protected
-    @InjectView(R.id.buttonImageView)
-    ImageView imageView;
-
-    protected ButtonState buttonState = null;
-
-    protected ButtonState pendingButtonState = null;
+    protected @InjectView(R.id.buttonImageView) ImageView imageView;
+    protected @InjectView(R.id.progressView) ProgressView progressView;
+    protected @InjectView(R.id.buttonLabelTextView) TextView buttonLabelTextView;
 
     ButtonDetailsDialogFragment dialog = null;
 
@@ -56,15 +56,13 @@ public class ButtonFragment extends Fragment {
         RBApplication.getInstance().getGraph().inject(this);
     }
 
-    public static ButtonFragment newInstance(String buttonId, ButtonState buttonState) {
+    public static ButtonFragment newInstance(String buttonId) {
 
         ButtonFragment buttonFragment = new ButtonFragment();
         Bundle args = new Bundle();
         buttonFragment.setArguments(args);
 
         buttonFragment.setButtonId(buttonId);
-
-        buttonFragment.pendingButtonState = buttonState;
 
         return buttonFragment;
     }
@@ -76,14 +74,10 @@ public class ButtonFragment extends Fragment {
         // Use ButterKnife for view injection (http://jakewharton.github.io/butterknife/)
         Views.inject(this, rootView);
 
-        if (pendingButtonState != null) {
-            setButtonState(pendingButtonState);
-            pendingButtonState = null;
-        }
-
         rootView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ButtonState buttonState = getButton().getState();
                 if (buttonState != null && buttonState.enabled) {
                     Log.d(TAG, "Button Pressed!");
                     toggleButtonState();
@@ -109,19 +103,25 @@ public class ButtonFragment extends Fragment {
     public void toggleButtonState() {
 
         // We immediately change local state to pending...
-        if (buttonState.value) {
-            setButtonState(ButtonState.OFF_PENDING);
+        ButtonState currentButtonState = getButton().getState();
+        ButtonState proposedButtonState;
+        if (currentButtonState.value) {
+            proposedButtonState = ButtonState.OFF_PENDING;
         } else {
-            setButtonState(ButtonState.ON_PENDING);
+            proposedButtonState = ButtonState.ON_PENDING;
         }
 
-        bus.post(new ButtonStateChangeRequest(getButtonId(), buttonState));
+        updateButtonState(proposedButtonState);
+        bus.post(new ButtonStateChangeRequest(getButtonId(), proposedButtonState));
     }
 
     @Override
     public void onResume() {
         super.onResume();
+
         bus.register(this);
+
+        updateButtonState();
     }
 
     @Override
@@ -129,6 +129,10 @@ public class ButtonFragment extends Fragment {
         super.onPause();
 
         bus.unregister(this);
+    }
+
+    private Button getButton() {
+        return buttonDao.getButton(getButtonId());
     }
 
     private String getButtonId() {
@@ -139,16 +143,24 @@ public class ButtonFragment extends Fragment {
         getArguments().putString("buttonId", buttonId);
     }
 
-    private void setButtonState(ButtonState buttonState) {
-        this.buttonState = buttonState;
+    private void updateButtonState() {
+        updateButtonState(getButton().getState());
+    }
 
+    /**
+     * Use this when we want to force a local button state representation regardless reality
+     */
+    private void updateButtonState(ButtonState buttonState) {
+
+        buttonLabelTextView.setText(buttonState == null ? "" : getButton().getName());
         imageView.setImageResource(buttonState.drawableResourceId);
+        progressView.render(buttonState);
     }
 
     @Subscribe
-    public void onArduinoButtonStateChangeReportEvent(final ButtonStateChangeReport event) {
+    public void onButtonUpdatedEvent(final ButtonUpdatedEvent event) {
         if (event.getButtonId().equals(getButtonId())) {
-            setButtonState(event.getButtonState());
+            updateButtonState();
         }
     }
 }

@@ -1,19 +1,20 @@
 package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
-import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.util.Log;
 
-import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.enums.ButtonState;
+import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
-import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
+import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Produce;
@@ -36,41 +37,66 @@ public abstract class ButtonCommunicator {
     @Inject
     BusProvider bus;
 
+    @Inject BluetoothProvider bluetoothProvider;
+
+    @Inject ButtonDao buttonDao;
+
     protected boolean inBackground = false;
 
-    // This value will always be set by what is received from Button itself
-    protected ButtonState localButtonState = ButtonState.NEVER_CONNECTED;
+    protected String buttonId;
 
-    protected Button button;
+    protected BluetoothDevice bluetoothDevice;
 
     protected Context context;
 
     private BusProxy busProxy = new BusProxy();
 
-    BluetoothAdapter bluetoothAdapter = null;
+    public ButtonCommunicator(final Context context,
+                              final BluetoothDevice bluetoothDevice,
+                              final String buttonId) {
 
-    public ButtonCommunicator(final Context context, final Button button) {
-
-        Log.d(TAG, "Starting button communicator for '" + button.getId() + "'.");
+        Log.d(TAG, "Starting button communicator for '" + buttonId + "'.");
 
         this.context = context;
-        this.button = button;
+        this.buttonId = buttonId;
+        this.bluetoothDevice = bluetoothDevice;
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        RBApplication.getInstance().getGraph().inject(this);
 
-        ((RBApplication)context).getGraph().inject(this);
+        persistButton(buttonId);
     }
 
     protected abstract void setRemoteState(ButtonState buttonState);
     protected abstract void startCommunicating();
     protected abstract boolean isCommunicating();
 
+    protected Button persistButton(final String buttonAddress) {
+
+        Button discoveredButton;
+
+        Button persistedButton = buttonDao.getButton(buttonAddress);
+
+        if (persistedButton != null) {
+            discoveredButton = persistedButton;
+        } else {
+            discoveredButton = new Button(buttonAddress, buttonAddress, true);
+        }
+
+        buttonDao.createOrUpdateButton(discoveredButton);
+
+        return discoveredButton;
+    }
+
+
     public void start() {
 
         bus.register(busProxy);
 
-        if (bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
+        if (bluetoothProvider.isBluetoothSupported() && bluetoothProvider.isBluetoothEnabled()) {
             shouldRun = true;
+
+            setButtonPersistedState(ButtonState.NEVER_CONNECTED);
+
             startCommunicating();
         } else {
             bus.post(new BluetoothDisabledEvent());
@@ -79,10 +105,10 @@ public abstract class ButtonCommunicator {
     }
 
     public void shutdown() {
-        if (isAutoModeEnabled() && button.isAutoModeEnabled() && isCommunicating()) {
+        if (isAutoModeEnabled() && getButton().isAutoModeEnabled() && isCommunicating()) {
 
             if (shouldRun) {
-                if (localButtonState != ButtonState.OFF) {
+                if (getButton().getState() != ButtonState.OFF) {
                     Log.d(TAG, "Auto Shutdown!");
                     setRemoteState(ButtonState.OFF);
                 }
@@ -101,7 +127,7 @@ public abstract class ButtonCommunicator {
         Log.d(TAG, "stop()");
         shouldRun = false;
 
-        postButtonLostEvent(button.getId());
+        postButtonLostEvent(buttonId);
 
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
@@ -109,6 +135,12 @@ public abstract class ButtonCommunicator {
                 bus.unregister(busProxy);
             }
         });
+    }
+
+    protected void setButtonPersistedState(ButtonState buttonState) {
+        Button button = getButton();
+        button.setState(buttonState);
+        buttonDao.createOrUpdateButton(button);
     }
 
     protected boolean isAutoModeEnabled() {
@@ -119,26 +151,15 @@ public abstract class ButtonCommunicator {
         setLocalButtonState(buttonState, false);
     }
 
-    protected void setLocalButtonState(final ButtonState buttonState, boolean force) {
+    protected void setLocalButtonState(final ButtonState newButtonState, boolean force) {
 
         Log.d(TAG, "setLocalButtonState()");
 
-        if (force || (this.localButtonState == ButtonState.NEVER_CONNECTED || this.localButtonState != buttonState)) {
-            this.localButtonState = buttonState;
+        ButtonState currentButtonState = getButton().getState();
 
-            postButtonStateChangeReport(buttonState);
+        if (force || (currentButtonState == ButtonState.NEVER_CONNECTED || currentButtonState != newButtonState)) {
+            setButtonPersistedState(newButtonState);
         }
-    }
-
-    protected void postButtonStateChangeReport(final ButtonState buttonState) {
-        new Handler(context.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "State is '" + buttonState + "'");
-
-                bus.post(new ButtonStateChangeReport(getButton().getId(), buttonState));
-            }
-        });
     }
 
     protected void postButtonLostEvent(final String buttonId) {
@@ -150,18 +171,14 @@ public abstract class ButtonCommunicator {
         });
     }
 
-    public ButtonState getLocalButtonState() {
-        return localButtonState;
-    }
-
     public Button getButton() {
-        return button;
+        return buttonDao.getButton(buttonId);
     }
 
     protected void setRemoteAutoStateIfApplicable(final ButtonState remoteState) {
-        if (localButtonState == ButtonState.NEVER_CONNECTED) {
+        if (getButton().getState() == ButtonState.NEVER_CONNECTED) {
 
-            if (isAutoModeEnabled() && button.isAutoModeEnabled() && remoteState != ButtonState.ON) {
+            if (isAutoModeEnabled() && getButton().isAutoModeEnabled() && remoteState != ButtonState.ON) {
 
                 // Now that we've established we can communicate with newly discovered
                 // button, let's set its auto-state....
@@ -178,11 +195,6 @@ public abstract class ButtonCommunicator {
             inBackground = event.inBackground;
         }
 
-        @Produce
-        public ButtonStateChangeReport produceStateChangeReport() {
-            return new ButtonStateChangeReport(getButton().getId(), localButtonState);
-        }
-
         @Subscribe
         public void onArduinoButtonStateChangeRequestEvent(final ButtonStateChangeRequest event) {
 
@@ -190,7 +202,7 @@ public abstract class ButtonCommunicator {
             ButtonState requestedButtonState = event.requestedButtonState;
             if (requestedButtonState == null) {
                 toggle = true;
-                requestedButtonState = localButtonState;
+                requestedButtonState = getButton().getState();
             }
 
             if (requestedButtonState.value) {

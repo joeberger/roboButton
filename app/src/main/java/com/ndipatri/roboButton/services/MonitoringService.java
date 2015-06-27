@@ -13,27 +13,24 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
+import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.activities.MainControllerActivity;
 import com.ndipatri.roboButton.dagger.RBModule;
 import com.ndipatri.roboButton.dagger.annotations.Named;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.ButtonCommunicator;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
-import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.daos.ButtonDao;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
-import com.ndipatri.roboButton.events.ButtonStateChangeReport;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
+import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
-import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.ButtonCommunicator;
 import com.ndipatri.roboButton.utils.RegionUtils;
 import com.squareup.otto.Subscribe;
 
@@ -68,9 +65,6 @@ public class MonitoringService extends Service {
     protected RegionDiscoveryProvider regionDiscoveryProvider;
 
     @Inject
-    protected ButtonDao buttonDao;
-
-    @Inject
     @Named(RBModule.LIGHTBLUE_BUTTON)
     protected ButtonCommunicatorFactory lightBlueButtonCommunicatorFactory;
     @Inject
@@ -84,16 +78,10 @@ public class MonitoringService extends Service {
     @Named(RBModule.PURPLE_BUTTON)
     protected ButtonDiscoveryProvider purpleButtonDiscoveryProvider;
 
-    @Inject
-    protected BluetoothProvider bluetoothProvider;
-
     protected long buttonDiscoveryDurationMillis = -1;
 
     // Until we see a nearby beacon, this service does nothing...
     protected com.ndipatri.roboButton.models.Region nearbyRegion = null;
-
-    // This is a nearby button
-    Button nearbyButton = null;
 
     // This is the monitor associated with the nearby button
     ButtonCommunicator buttonCommunicator = null;
@@ -155,7 +143,7 @@ public class MonitoringService extends Service {
         }
 
         if (appBackgroundedWhileCommunicating(newRunInBackground)) {
-            sendNotification(buttonCommunicator.getButton().getId(), buttonCommunicator.getLocalButtonState());
+            sendNotification(buttonCommunicator.getButton().getId(), buttonCommunicator.getButton().getState());
         } else
         if (!newRunInBackground) {
             clearNotification();
@@ -183,7 +171,7 @@ public class MonitoringService extends Service {
 
         nearbyRegion = regionFoundEvent.getRegion();
 
-        if (nearbyButton == null) {
+        if (buttonCommunicator == null) {
             Log.d(TAG, ".. currently not talking to a button, so let's look for one!");
             stopRegionDiscovery();
             startButtonDiscovery(nearbyRegion);
@@ -199,8 +187,7 @@ public class MonitoringService extends Service {
         stopButtonDiscovery();
         clearNotification();
 
-        if (nearbyButton != null) {
-            nearbyButton = null;
+        if (buttonCommunicator != null) {
             stopButtonCommunication();
         }
     }
@@ -209,14 +196,9 @@ public class MonitoringService extends Service {
     public void onButtonDiscovered(ButtonDiscoveryEvent buttonDiscoveryEvent) {
 
         if (buttonDiscoveryEvent.isSuccess()) {
-
-            if (nearbyButton == null) {
-
+            if (buttonCommunicator == null) {
                 stopButtonDiscovery();
-
-                nearbyButton = persistButton(buttonDiscoveryEvent.getDevice(), buttonDiscoveryEvent.getDeviceAddress(), buttonDiscoveryEvent.getButtonType());
-
-                startButtonCommunication(nearbyButton);
+                buttonCommunicator = getButtonCommunicator(this, buttonDiscoveryEvent.getDeviceAddress(), buttonDiscoveryEvent.getButtonType(), buttonDiscoveryEvent.getDevice());
             }
         }
 
@@ -224,31 +206,13 @@ public class MonitoringService extends Service {
         startDelayedRegionDiscover();
     }
 
-    @Subscribe
-    public void onButtonStateChangeReport(ButtonStateChangeReport buttonStateChangeReport) {
-        if (runInBackground && lastNotifiedState != buttonStateChangeReport.buttonState) {
-            sendNotification(buttonStateChangeReport.buttonId, buttonStateChangeReport.buttonState);
-        }
-    }
+    public ButtonCommunicator getButtonCommunicator(final Context context, final String buttonId, final ButtonType type, final BluetoothDevice device) {
 
-    @Subscribe
-    public void onButtonLostEvent(ButtonLostEvent buttonLostEvent) {
-        nearbyButton = null;
-        buttonCommunicator = null;
-        startRegionDiscovery();
-    }
-
-    protected void startButtonCommunication(Button nearbyButton) {
-        buttonCommunicator = getButtonCommunicator(getApplicationContext(), nearbyButton);
-    }
-
-    public ButtonCommunicator getButtonCommunicator(final Context context, final Button nearbyButton) {
-
-        switch(ButtonType.getByType(nearbyButton.getType())) {
+        switch(type) {
             case PURPLE_BUTTON:
-                return purpleButtonCommunicatorFactory.getButtonCommunicator(context, nearbyButton);
+                return purpleButtonCommunicatorFactory.getButtonCommunicator(context, device, buttonId);
             case LIGHTBLUE_BUTTON:
-                return lightBlueButtonCommunicatorFactory.getButtonCommunicator(context, nearbyButton);
+                return lightBlueButtonCommunicatorFactory.getButtonCommunicator(context, device, buttonId);
         }
 
         return null;
@@ -259,6 +223,19 @@ public class MonitoringService extends Service {
             buttonCommunicator.shutdown();
             buttonCommunicator = null;
         }
+    }
+
+    @Subscribe
+    public void onButtonUpdatedEvent(ButtonUpdatedEvent event) {
+        if (buttonCommunicator != null && runInBackground && lastNotifiedState != buttonCommunicator.getButton().getState()) {
+            sendNotification(event.getButtonId(), buttonCommunicator.getButton().getState());
+        }
+    }
+
+    @Subscribe
+    public void onButtonLostEvent(ButtonLostEvent buttonLostEvent) {
+        buttonCommunicator = null;
+        startRegionDiscovery();
     }
 
     protected void startDelayedRegionDiscover() {
@@ -305,27 +282,6 @@ public class MonitoringService extends Service {
         lightBlueButtonDiscoveryProvider.stopButtonDiscovery();
     }
 
-    protected Button persistButton(final BluetoothDevice device, final String buttonAddress, final ButtonType buttonType) {
-
-        Button discoveredButton;
-
-        Button persistedButton = buttonDao.getButton(buttonAddress);
-
-        if (persistedButton != null) {
-            discoveredButton = persistedButton;
-        } else {
-            discoveredButton = new Button(buttonAddress, buttonAddress, true, buttonType);
-        }
-
-        if (device != null) {
-            discoveredButton.setBluetoothDevice(device);
-        }
-
-        buttonDao.createOrUpdateButton(discoveredButton);
-
-        return discoveredButton;
-    }
-
     public ButtonCommunicator getButtonCommunicator() {
         return buttonCommunicator;
     }
@@ -341,10 +297,8 @@ public class MonitoringService extends Service {
 
         lastNotifiedState = buttonState;
 
-        Button button = buttonDao.getButton(buttonId);
-
         StringBuilder sbuf = new StringBuilder("Tap here to toggle '");
-        sbuf.append(button.getName()).append("'.");
+        sbuf.append(buttonCommunicator.getButton().getName()).append("'.");
 
         int notifId = 1234;
 

@@ -13,17 +13,17 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.R;
+import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
-import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
-import com.ndipatri.roboButton.events.ButtonStateChangeReport;
+import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
+import com.ndipatri.roboButton.events.ButtonLostEvent;
+import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
-import butterknife.Views;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,6 +31,7 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import butterknife.InjectView;
+import butterknife.Views;
 
 public class MainControllerActivity extends Activity {
 
@@ -240,16 +241,16 @@ public class MainControllerActivity extends Activity {
     }
 
     @Subscribe
-    public void onButtonStateChangeReport(ButtonStateChangeReport buttonStateChangeReport) {
+    public void onButtonDiscoveredEvent(ButtonDiscoveryEvent buttonDiscoveryEvent) {
 
         // The button itself handles its own change of state.. We use this event as an indication that we need
         // to render the button if we haven't already done so.
 
-        String foundButtonId = buttonStateChangeReport.buttonId;
+        String foundButtonId = buttonDiscoveryEvent.getDeviceAddress();
 
         ButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
         if (existingButtonFragment == null) {
-            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId, buttonStateChangeReport.buttonState);
+            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId);
             getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
             buttonsWithFragments.add(foundButtonId);
         }

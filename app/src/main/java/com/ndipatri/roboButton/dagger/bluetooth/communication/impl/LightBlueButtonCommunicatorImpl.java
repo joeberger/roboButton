@@ -1,11 +1,13 @@
 package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 
 import com.ndipatri.roboButton.enums.ButtonState;
+import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.models.Button;
 
 import java.io.UnsupportedEncodingException;
@@ -24,10 +26,10 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
 
     private Bean discoveredBean;
 
-    public LightBlueButtonCommunicatorImpl(final Context context, final Button button) {
-        super(context, button);
+    public LightBlueButtonCommunicatorImpl(final Context context, final BluetoothDevice device, final String buttonId) {
+        super(context, device, buttonId);
 
-        Log.d(TAG, "Starting LightBlue button communicator for '" + button.getId() + "'.");
+        Log.d(TAG, "Starting LightBlue button communicator for '" + buttonId + "'.");
 
         start();
     }
@@ -49,7 +51,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         return new BeanDiscoveryListener() {
             @Override
             public void onBeanDiscovered(Bean discoveredBean) {
-                if (shouldRun && discoveredBean.getDevice().getAddress().equals(button.getId())) {
+                if (shouldRun && discoveredBean.getDevice().getAddress().equals(buttonId)) {
 
                     LightBlueButtonCommunicatorImpl.this.discoveredBean = discoveredBean;
                     getBeanManager().cancelDiscovery();
@@ -156,7 +158,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
             byte[] encodedButtonState = null;
 
-            if (this.localButtonState != buttonState) {
+            if (getButton().getState() != buttonState) {
                 if (buttonState.value) {
                     // For the LightBlue, 'ON' means unlocked
                     encodedButtonState = new byte[]{'U', '1', '2', '3', '4'};
