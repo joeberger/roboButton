@@ -27,7 +27,6 @@ import javax.inject.Inject;
 import butterknife.InjectView;
 
 /**
- * Created by ndipatri on 12/31/13.
  * <p/>
  * This fragment presents the user with a button which can be pressed to toggle on/off state.  When
  * the button is pressed, the state is 'pending' and the button is disabled. A single attempt is then
@@ -144,7 +143,13 @@ public class ButtonFragment extends Fragment {
     }
 
     private void updateButtonState() {
-        updateButtonState(getButton().getState());
+        Button button = getButton();
+
+        // If communications is just starting with the button, it might not be created yet and
+        // we're just waiting
+        if (button != null) {
+            updateButtonState(button.getState());
+        }
     }
 
     /**

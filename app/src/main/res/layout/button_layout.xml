@@ -22,6 +22,11 @@
     <TextView
         android:id="@+id/buttonLabelTextView"
 
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+
+        android:paddingBottom="40dp"
         android:layout_centerInParent="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
@@ -37,6 +42,6 @@
         android:layout_centerInParent="true"
 
         progressView:strokeWidth="7dp"
-        progressView:animationDurationMillis="2000"/>
+        progressView:animationDurationMillis="1000"/>
 
 </RelativeLayout>
