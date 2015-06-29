@@ -102,7 +102,7 @@ public class MainControllerActivityIntegrationTest extends MainControllerActivit
 
         onView(withId(R.id.buttonFragmentFrameLayout)).check(matches(isDisplayed()));
 
-        Drawable onDrawable = getActivity().getResources().getDrawable(R.drawable.red_button);
+        Drawable onDrawable = getActivity().getResources().getDrawable(R.drawable.green_button);
         onView(withId(R.id.buttonImageView)).check(matches(TestUtils.isBitmapTheSame(onDrawable)));
     }
 
