@@ -19,7 +19,6 @@ import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothPr
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
-import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.BusProvider;
@@ -33,7 +32,7 @@ import javax.inject.Inject;
 import butterknife.InjectView;
 import butterknife.Views;
 
-public class MainControllerActivity extends Activity {
+public class MainActivity extends Activity {
 
     @Inject
     BusProvider bus;
@@ -43,7 +42,7 @@ public class MainControllerActivity extends Activity {
 
     private static final int REQUEST_ENABLE_BT = -101;
 
-    private static final String TAG = MainControllerActivity.class.getCanonicalName();
+    private static final String TAG = MainActivity.class.getCanonicalName();
 
     // All buttons that have been rendered into fragments.
     private Set<String> buttonsWithFragments = new HashSet<String>();
@@ -150,7 +149,7 @@ public class MainControllerActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(MainControllerActivity.this, progressString, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, progressString, Toast.LENGTH_SHORT).show();
             }
         });
     }

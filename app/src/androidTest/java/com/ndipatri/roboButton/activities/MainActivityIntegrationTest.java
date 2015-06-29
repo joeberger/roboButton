@@ -29,7 +29,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @LargeTest
-public class MainControllerActivityIntegrationTest extends MainControllerActivityInstrumentation {
+public class MainActivityIntegrationTest extends MainActivityInstrumentation {
 
     @Before
     public void stubAllExternalIntents() {

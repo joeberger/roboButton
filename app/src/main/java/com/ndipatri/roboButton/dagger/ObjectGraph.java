@@ -3,8 +3,8 @@ package com.ndipatri.roboButton.dagger;
 import android.content.Context;
 
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.activities.MainControllerActivity;
-import com.ndipatri.roboButton.activities.MainControllerActivityInstrumentation;
+import com.ndipatri.roboButton.activities.MainActivity;
+import com.ndipatri.roboButton.activities.MainActivityInstrumentation;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.PurpleButtonCommunicatorImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.GenericButtonCommunicatorStub;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
@@ -49,7 +49,7 @@ public interface ObjectGraph {
 
     void inject(ButtonCommunicator thingy);
 
-    void inject(MainControllerActivity thingy);
+    void inject(MainActivity thingy);
 
     void inject(BluetoothProviderImpl thingy);
 
@@ -57,7 +57,7 @@ public interface ObjectGraph {
 
     void inject(PurpleButtonDiscoveryProviderImpl thingy);
 
-    void inject(MainControllerActivityInstrumentation thingy);
+    void inject(MainActivityInstrumentation thingy);
 
     void inject(LightBlueButtonDiscoveryProviderImpl thingy);
     void inject(LightBlueButtonDiscoveryProviderStub thingy);

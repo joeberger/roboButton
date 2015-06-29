@@ -8,7 +8,7 @@ import javax.inject.Inject;
 
 import static org.mockito.Mockito.when;
 
-public abstract class MainControllerActivityInstrumentation extends InjectableActivityInstrumentation<MainControllerActivity> {
+public abstract class MainActivityInstrumentation extends InjectableActivityInstrumentation<MainActivity> {
 
     @Inject protected BluetoothProvider bluetoothProvider;
 
@@ -16,8 +16,8 @@ public abstract class MainControllerActivityInstrumentation extends InjectableAc
 
     @Inject protected ButtonDao buttonDao;
 
-    public MainControllerActivityInstrumentation() {
-        super(MainControllerActivity.class);
+    public MainActivityInstrumentation() {
+        super(MainActivity.class);
     }
 
     protected void setUp() throws Exception {

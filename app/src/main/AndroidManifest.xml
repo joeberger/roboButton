@@ -34,7 +34,7 @@
             android:label="RoboButton">
 
         <activity
-                android:name=".activities.MainControllerActivity"
+                android:name=".activities.MainActivity"
                 android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

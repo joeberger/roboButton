@@ -15,7 +15,7 @@ import android.widget.RemoteViews;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.activities.MainControllerActivity;
+import com.ndipatri.roboButton.activities.MainActivity;
 import com.ndipatri.roboButton.dagger.RBModule;
 import com.ndipatri.roboButton.dagger.annotations.Named;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.ButtonCommunicator;
@@ -334,7 +334,7 @@ public class MonitoringService extends Service {
         serviceIntent.putExtra(SHOULD_TOGGLE_FLAG, true);
         PendingIntent togglePendingIntent = PendingIntent.getService(this, 0, serviceIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-        Intent activityIntent = new Intent(this, MainControllerActivity.class);
+        Intent activityIntent = new Intent(this, MainActivity.class);
         PendingIntent launchPendingIntent = PendingIntent.getActivity(this, 0, activityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
         contentView.setOnClickPendingIntent(R.id.detailTextView, togglePendingIntent);
