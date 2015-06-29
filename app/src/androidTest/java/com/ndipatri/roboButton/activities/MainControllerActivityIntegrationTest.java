@@ -7,8 +7,11 @@ import android.test.suitebuilder.annotation.LargeTest;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.enums.ButtonState;
+import com.ndipatri.roboButton.enums.ButtonType;
+import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
-import com.ndipatri.roboButton.events.ButtonStateChangeReport;
+import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
+import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.TestUtils;
 
 import org.junit.Before;
@@ -22,6 +25,8 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @LargeTest
 public class MainControllerActivityIntegrationTest extends MainControllerActivityInstrumentation {
@@ -39,68 +44,85 @@ public class MainControllerActivityIntegrationTest extends MainControllerActivit
         onView(withText("RoboButton")).check(matches(isDisplayed()));
     }
 
-    public void testButtonFound_Disconnected() {
+    public void testButtonFound_Disconnected() throws InterruptedException {
 
         getActivity();
 
-        bus.post(new ButtonStateChangeReport("1", ButtonState.DISCONNECTED));
+        bus.post(new ButtonDiscoveryEvent(true, ButtonType.LIGHTBLUE_BUTTON, "aa:bb:cc:dd:ee", null));
+
+        Button mockButton = mock(Button.class);
+        when(mockButton.getState()).thenReturn(ButtonState.DISCONNECTED);
+        when(buttonDao.getButton("aa:bb:cc:dd:ee")).thenReturn(mockButton);
+
+        bus.post(new ButtonUpdatedEvent("aa:bb:cc:dd:ee"));
+
+        Thread.sleep(2000);
 
         onView(withId(R.id.buttonFragmentFrameLayout)).check(matches(isDisplayed()));
 
         Drawable disconnectedDrawable = getActivity().getResources().getDrawable(R.drawable.yellow_button);
         onView(withId(R.id.buttonImageView)).check(matches(TestUtils.isBitmapTheSame(disconnectedDrawable)));
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
     }
 
-    public void testButtonFound_Off() {
+    public void testButtonFound_Off() throws InterruptedException {
 
         getActivity();
 
-        bus.post(new ButtonStateChangeReport("1", ButtonState.OFF));
+        bus.post(new ButtonDiscoveryEvent(true, ButtonType.LIGHTBLUE_BUTTON, "aa:bb:cc:dd:ee", null));
+
+        Button mockButton = mock(Button.class);
+        when(mockButton.getState()).thenReturn(ButtonState.OFF);
+        when(buttonDao.getButton("aa:bb:cc:dd:ee")).thenReturn(mockButton);
+
+        bus.post(new ButtonUpdatedEvent("aa:bb:cc:dd:ee"));
+
+        Thread.sleep(2000);
+
         onView(withId(R.id.buttonFragmentFrameLayout)).check(matches(isDisplayed()));
 
         Drawable offDrawable = getActivity().getResources().getDrawable(R.drawable.red_button);
         onView(withId(R.id.buttonImageView)).check(matches(TestUtils.isBitmapTheSame(offDrawable)));
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
-    public void testButtonFound_On() {
+    public void testButtonFound_On() throws InterruptedException{
 
         getActivity();
 
-        bus.post(new ButtonStateChangeReport("1", ButtonState.ON));
+        bus.post(new ButtonDiscoveryEvent(true, ButtonType.LIGHTBLUE_BUTTON, "aa:bb:cc:dd:ee", null));
+
+        Button mockButton = mock(Button.class);
+        when(mockButton.getState()).thenReturn(ButtonState.ON);
+        when(buttonDao.getButton("aa:bb:cc:dd:ee")).thenReturn(mockButton);
+
+        bus.post(new ButtonUpdatedEvent("aa:bb:cc:dd:ee"));
+
+        Thread.sleep(2000);
 
         onView(withId(R.id.buttonFragmentFrameLayout)).check(matches(isDisplayed()));
 
         Drawable onDrawable = getActivity().getResources().getDrawable(R.drawable.red_button);
         onView(withId(R.id.buttonImageView)).check(matches(TestUtils.isBitmapTheSame(onDrawable)));
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
-    public void testButtonLostRemovesButtonFragment() {
+    public void testButtonLostRemovesButtonFragment() throws InterruptedException {
 
         getActivity();
 
-        bus.post(new ButtonStateChangeReport("1", ButtonState.DISCONNECTED));
+        bus.post(new ButtonDiscoveryEvent(true, ButtonType.LIGHTBLUE_BUTTON, "aa:bb:cc:dd:ee", null));
+
+        Button mockButton = mock(Button.class);
+        when(mockButton.getState()).thenReturn(ButtonState.DISCONNECTED);
+        when(buttonDao.getButton("aa:bb:cc:dd:ee")).thenReturn(mockButton);
+
+        bus.post(new ButtonUpdatedEvent("aa:bb:cc:dd:ee"));
+
+        Thread.sleep(2000);
 
         onView(withId(R.id.buttonFragmentFrameLayout)).check(matches(isDisplayed()));
 
-        bus.post(new ButtonLostEvent("1"));
+        bus.post(new ButtonLostEvent("aa:bb:cc:dd:ee"));
 
         onView(withId(R.id.buttonFragmentFrameLayout)).check(doesNotExist());
     }

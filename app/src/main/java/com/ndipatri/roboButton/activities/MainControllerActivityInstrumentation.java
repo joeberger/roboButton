@@ -1,6 +1,7 @@
 package com.ndipatri.roboButton.activities;
 
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.utils.BusProvider;
 
 import javax.inject.Inject;
@@ -13,6 +14,8 @@ public abstract class MainControllerActivityInstrumentation extends InjectableAc
 
     @Inject protected BusProvider bus;
 
+    @Inject protected ButtonDao buttonDao;
+
     public MainControllerActivityInstrumentation() {
         super(MainControllerActivity.class);
     }
@@ -20,7 +23,6 @@ public abstract class MainControllerActivityInstrumentation extends InjectableAc
     protected void setUp() throws Exception {
         super.setUp();
 
-        // By creating the graph here BEFORE it's used by the activity, we can inject our mock collaborator.
         targetApplication.getGraph().inject(this);
 
         when(bluetoothProvider.isBluetoothEnabled()).thenReturn(true);
