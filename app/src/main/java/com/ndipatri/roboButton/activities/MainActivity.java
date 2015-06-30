@@ -10,16 +10,17 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
+import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
@@ -35,6 +36,9 @@ import butterknife.Views;
 public class MainActivity extends Activity {
 
     @Inject
+    ButtonDao buttonDao;
+
+    @Inject
     BusProvider bus;
 
     // region localVariables
@@ -47,10 +51,9 @@ public class MainActivity extends Activity {
     // All buttons that have been rendered into fragments.
     private Set<String> buttonsWithFragments = new HashSet<String>();
 
-    // The main ViewGroup to which all ArduinoButtonFragments are added.
     @InjectView(R.id.mainViewGroup) ViewGroup mainViewGroup;
 
-    @InjectView(R.id.enableBluetoothButton) Button enableBluetoothButton;
+    @InjectView(R.id.enableBluetoothButton) android.widget.Button enableBluetoothButton;
     //endregion
     
     @Override
@@ -87,6 +90,15 @@ public class MainActivity extends Activity {
     protected void resumeActivity() {
         registerWithOttoBus();
         promptUserForBluetoothActivationIfNecessary();
+        renderAnyConnectedButtons();
+    }
+
+    protected void renderAnyConnectedButtons() {
+        // TODO - For now, only consider a single connected Button
+        Button connectedButton = buttonDao.getConnectedButton();
+        if (connectedButton != null) {
+            renderButtonFragmentIfNotAlready(connectedButton.getId());
+        }
     }
 
     protected void promptUserForBluetoothActivationIfNecessary() {
@@ -246,18 +258,20 @@ public class MainActivity extends Activity {
         // to render the button if we haven't already done so.
 
         if (buttonDiscoveryEvent.isSuccess()) {
-            String foundButtonId = buttonDiscoveryEvent.getDeviceAddress();
-
-            ButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
-            if (existingButtonFragment == null) {
-                final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId);
-                getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
-                buttonsWithFragments.add(foundButtonId);
-            }
+            renderButtonFragmentIfNotAlready(buttonDiscoveryEvent.getDeviceAddress());
         }
     }
 
     //endregion
+
+    private void renderButtonFragmentIfNotAlready(final String buttonId) {
+        ButtonFragment existingButtonFragment = lookupButtonFragment(buttonId);
+        if (existingButtonFragment == null) {
+            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(buttonId);
+            getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(buttonId)).commitAllowingStateLoss();
+            buttonsWithFragments.add(buttonId);
+        }
+    }
 
     public BluetoothProvider getBluetoothProvider() {
         return bluetoothProvider;

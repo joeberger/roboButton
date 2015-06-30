@@ -11,6 +11,7 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.Where;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.database.OrmLiteDatabaseHelper;
+import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
@@ -51,7 +52,15 @@ public class ButtonDao {
         bus.post(new ButtonUpdatedEvent(dirtyButton.getId()));
     }
 
-    public Button getButton(String buttonId) {
+    public Button getConnectedButton() {
+        return getButton(null, true);
+    }
+
+    public Button getButton(final String buttonId) {
+        return getButton(buttonId, false);
+    }
+
+    private Button getButton(final String buttonId, final boolean connectedOnly) {
 
         Button button = null;
 
@@ -61,7 +70,21 @@ public class ButtonDao {
         QueryBuilder<Button, Long> queryBuilder = buttonDao.queryBuilder();
         try {
             Where<Button, Long> where = queryBuilder.where();
-            where.eq(Button.ID_COLUMN_NAME, buttonId);
+
+            if (buttonId != null) {
+                where.eq(Button.ID_COLUMN_NAME, buttonId);
+            }
+
+            if (connectedOnly) {
+                if (buttonId != null) {
+                    where.and();
+                }
+
+                where.or(where.eq(Button.STATE_COLUMN_NAME, ButtonState.OFF),
+                         where.eq(Button.STATE_COLUMN_NAME, ButtonState.ON),
+                         where.eq(Button.STATE_COLUMN_NAME, ButtonState.ON_PENDING),
+                         where.eq(Button.STATE_COLUMN_NAME, ButtonState.OFF_PENDING));
+            }
 
             PreparedQuery<Button> preparedQuery = queryBuilder.prepare();
             List<Button> buttons = buttonDao.query(preparedQuery);
