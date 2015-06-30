@@ -245,13 +245,15 @@ public class MainActivity extends Activity {
         // The button itself handles its own change of state.. We use this event as an indication that we need
         // to render the button if we haven't already done so.
 
-        String foundButtonId = buttonDiscoveryEvent.getDeviceAddress();
+        if (buttonDiscoveryEvent.isSuccess()) {
+            String foundButtonId = buttonDiscoveryEvent.getDeviceAddress();
 
-        ButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
-        if (existingButtonFragment == null) {
-            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId);
-            getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
-            buttonsWithFragments.add(foundButtonId);
+            ButtonFragment existingButtonFragment = lookupButtonFragment(foundButtonId);
+            if (existingButtonFragment == null) {
+                final ButtonFragment newButtonFragment = ButtonFragment.newInstance(foundButtonId);
+                getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(foundButtonId)).commitAllowingStateLoss();
+                buttonsWithFragments.add(foundButtonId);
+            }
         }
     }
 

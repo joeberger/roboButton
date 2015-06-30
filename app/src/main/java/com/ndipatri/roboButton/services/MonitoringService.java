@@ -197,12 +197,11 @@ public class MonitoringService extends Service {
 
         if (buttonDiscoveryEvent.isSuccess()) {
             if (buttonCommunicator == null) {
-                stopButtonDiscovery();
                 buttonCommunicator = getButtonCommunicator(this, buttonDiscoveryEvent.getDeviceAddress(), buttonDiscoveryEvent.getButtonType(), buttonDiscoveryEvent.getDevice());
             }
         }
 
-        // We've stopped button discovery, so now we go back to monitoring for region changes...
+        // Button discovery has ended, so now we go back to monitoring for region changes...
         startDelayedRegionDiscover();
     }
 

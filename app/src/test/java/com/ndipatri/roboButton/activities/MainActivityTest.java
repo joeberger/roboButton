@@ -15,12 +15,12 @@ import static org.hamcrest.Matchers.notNullValue;
 
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(manifest = "src/main/AndroidManifest.xml", constants = BuildConfig.class, emulateSdk = 19)
-public class MainControllerActivityTest {
+public class MainActivityTest {
 
     @Test
     public void mainControllerActivityResumes() {
-        ActivityController<MainControllerActivity> controller = Robolectric.buildActivity(MainControllerActivity.class);
-        MainControllerActivity activity = controller.create().start().resume().visible().get();
+        ActivityController<MainActivity> controller = Robolectric.buildActivity(MainActivity.class);
+        MainActivity activity = controller.create().start().resume().visible().get();
 
         assertThat(activity.findViewById(R.id.mainViewGroup), notNullValue());
     }

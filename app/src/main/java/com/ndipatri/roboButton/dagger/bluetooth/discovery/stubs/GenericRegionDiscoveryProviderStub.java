@@ -25,8 +25,16 @@ import javax.inject.Inject;
  * emit a RegionLost event.
  *
  * This behavior will continue regardless of background 'mode'
- *
  */
+
+
+/**
+modify this so it can stay in region .. becuase i want to test the case where i background
+the appa nd come back and see no fragment becuase the MainActivty only creates the fragment wit
+a ButtonDisvoeryEvent (not ButtonUpdateEvent as before)
+ **/
+
+
 public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvider {
 
     private static final String TAG = GenericRegionDiscoveryProviderStub.class.getCanonicalName();
@@ -42,6 +50,11 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
     private Context context;
 
     private boolean running = false;
+
+    private long beaconFoundInterval = -1; // if '-1', the beacon is always present.
+    //private long beaconFoundInterval = 20000; // how long the beacon is found
+
+    private long beaconLostInterval = 10000; // how long the beacon is lost
 
     @Inject
     BusProvider bus;
@@ -82,7 +95,9 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
                 Toast.makeText(context, "Beacon region found.", Toast.LENGTH_SHORT).show();
                 postRegionFoundEvent(new Region(1, 2, RegionUtils.ESTIMOTE_UUID));
 
-                new Handler().postDelayed(beaconLostRunnable, 20000);
+                if (beaconFoundInterval > -1) {
+                    new Handler().postDelayed(beaconLostRunnable, beaconFoundInterval);
+                }
             }
         }
     };
@@ -94,7 +109,7 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
                 Toast.makeText(context, "Beacon region lost.", Toast.LENGTH_SHORT).show();
                 postRegionLostEvent(new Region(1, 2, RegionUtils.ESTIMOTE_UUID));
 
-                new Handler().postDelayed(beaconFoundRunnable, 10000);
+                new Handler().postDelayed(beaconFoundRunnable, beaconLostInterval);
             }
         }
     };
