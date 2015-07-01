@@ -284,8 +284,8 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
     }
 
     protected int getBeaconScanRestPeriod() {
-        return RBApplication.getInstance().getAutoModeEnabledFlag() ? (inBackground ? beaconScanIntervalMillis/2  : 0) :
-                                                                      (inBackground ? beaconScanIntervalMillis : beaconScanIntervalMillis/2);
+        return RBApplication.getInstance().getAutoModeEnabledFlag() ? (inBackground ? beaconScanIntervalMillis/3  : 0) :
+                                                                      (inBackground ? beaconScanIntervalMillis : beaconScanIntervalMillis/3);
     }
     
     protected void postRegionFoundEvent(final com.ndipatri.roboButton.models.Region region) {
