@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="remote_state_check_interval_millis">1000</integer>
-    <integer name="button_discovery_duration_millis">15000</integer>
+    <!-- button parameters -->
+    <integer name="purple_button_remote_state_check_interval_millis">1000</integer>
+    <integer name="purple_button_discovery_duration_millis">15000</integer>
+    <integer name="purple_button_communications_grace_period_millis">20000</integer>
+
+    <!-- region parameters -->
     <integer name="beacon_scan_interval_millis">15000</integer>
+    <integer name="beacon_scan_duty_cyce_percent">75</integer>
     <integer name="beacon_lost_scan_intervals">1</integer>
     <integer name="beacon_inferior_rssi_count_threshold">2</integer>
-    <integer name="communications_grace_period_millis">20000</integer>
+    <integer name="beacon_scan_startup_delay_after_button_discovery_millis">5000</integer>
 
     <!-- this is intentionally without units as this is an implementation detail -->
     <integer name="estimote_beacon_detection_threshold">8</integer>

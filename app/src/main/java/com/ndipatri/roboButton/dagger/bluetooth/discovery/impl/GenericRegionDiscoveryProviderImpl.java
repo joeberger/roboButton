@@ -63,7 +63,8 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
     
     // This is how long we allow BLE to scan before resting.
     private int beaconScanIntervalMillis;
-    
+    private int beaconScanDutyCycePercent;
+
     // This is how many consecutive 'INFERIOR' RSSI measurements we need before declaring the region lost.
     private int beaconInferiorRSSICountThreshold;
     
@@ -105,6 +106,7 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
         beaconLostScanIntervals = context.getResources().getInteger(R.integer.beacon_lost_scan_intervals);
         beaconInferiorRSSICountThreshold = context.getResources().getInteger(R.integer.beacon_inferior_rssi_count_threshold);
         beaconScanIntervalMillis = context.getResources().getInteger(R.integer.beacon_scan_interval_millis);
+        beaconScanDutyCycePercent = context.getResources().getInteger(R.integer.beacon_scan_duty_cyce_percent);
 
         bus.register(this);
     }
@@ -284,8 +286,8 @@ public class GenericRegionDiscoveryProviderImpl implements RegionDiscoveryProvid
     }
 
     protected int getBeaconScanRestPeriod() {
-        return RBApplication.getInstance().getAutoModeEnabledFlag() ? (inBackground ? beaconScanIntervalMillis/3  : 0) :
-                                                                      (inBackground ? beaconScanIntervalMillis : beaconScanIntervalMillis/3);
+        return RBApplication.getInstance().getAutoModeEnabledFlag() ? (inBackground ? beaconScanIntervalMillis*(1-beaconScanDutyCycePercent)  : 0) :
+                                                                      (inBackground ? beaconScanIntervalMillis : beaconScanIntervalMillis*(1-beaconScanDutyCycePercent));
     }
     
     protected void postRegionFoundEvent(final com.ndipatri.roboButton.models.Region region) {

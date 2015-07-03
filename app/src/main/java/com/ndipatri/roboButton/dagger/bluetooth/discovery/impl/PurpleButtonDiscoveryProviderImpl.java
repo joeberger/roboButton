@@ -52,7 +52,7 @@ public class PurpleButtonDiscoveryProviderImpl implements ButtonDiscoveryProvide
         RBApplication.getInstance().getGraph().inject(this);
 
         discoverableButtonPatternString = context.getString(R.string.button_discovery_pattern);
-        buttonDiscoveryDurationMillis = context.getResources().getInteger(R.integer.button_discovery_duration_millis);
+        buttonDiscoveryDurationMillis = context.getResources().getInteger(R.integer.purple_button_discovery_duration_millis);
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 

@@ -13,14 +13,16 @@ import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.utils.BusProvider;
 
-import javax.inject.Inject;
+import com.punchthrough.bean.sdk.Bean;
+import com.punchthrough.bean.sdk.BeanDiscoveryListener;
+import com.punchthrough.bean.sdk.BeanListener;
+import com.punchthrough.bean.sdk.BeanManager;
+import com.punchthrough.bean.sdk.message.BeanError;
+import com.punchthrough.bean.sdk.message.Callback;
+import com.punchthrough.bean.sdk.message.ScratchBank;
+import com.punchthrough.bean.sdk.message.SketchMetadata;
 
-import nl.littlerobots.bean.Bean;
-import nl.littlerobots.bean.BeanDiscoveryListener;
-import nl.littlerobots.bean.BeanListener;
-import nl.littlerobots.bean.BeanManager;
-import nl.littlerobots.bean.message.Callback;
-import nl.littlerobots.bean.message.SketchMetaData;
+import javax.inject.Inject;
 
 /**
  * This class will look for LightBlue Bean 'beacons' and if confirmed that it is running the right Arduino 'sketch', we will
@@ -86,8 +88,9 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
     protected BeanDiscoveryListener getButtonDiscoveryListener() {
         return new BeanDiscoveryListener() {
             @Override
-            public void onBeanDiscovered(Bean discoveredBean) {
+            public void onBeanDiscovered(Bean discoveredBean, int receivedRSSI) {
                 Log.d(TAG, "onBeanDiscovered():");
+                stopButtonDiscovery();
                 LightBlueButtonDiscoveryProviderImpl.this.discoveredBean = discoveredBean;
                 discoveredBean.connect(context, getBeanConnectionListener());
             }
@@ -111,10 +114,10 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
             @Override
             public void onConnected() {
                 Log.d(TAG, "onConnected");
-                discoveredBean.readSketchMetaData(new Callback<SketchMetaData>() {
+                discoveredBean.readSketchMetadata(new Callback<SketchMetadata>() {
                     @Override
-                    public void onResult(SketchMetaData sketchMetaData) {
-                        if (sketchMetaData.name().equals(BUTTON_SKETCH_NAME)) {
+                    public void onResult(SketchMetadata sketchMetaData) {
+                        if (sketchMetaData.hexName().equals(BUTTON_SKETCH_NAME)) {
                             // We're confident we are talking to a LightBlue Bean that
                             // is running the Button sketch.
                             postButtonDiscoveredEvent(true, discoveredBean.getDevice());
@@ -140,7 +143,12 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
             }
 
             @Override
-            public void onScratchValueChanged(int i, byte[] bytes) {
+            public void onError(BeanError beanError) {
+                Log.d(TAG, "onError()");
+            }
+
+            @Override
+            public void onScratchValueChanged(ScratchBank scratchBank, byte[] bytes) {
                 Log.d(TAG, "onScratchValueChanged");
             }
         };

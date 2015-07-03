@@ -16,7 +16,6 @@ import com.ndipatri.roboButton.dagger.RBModule;
 import com.ndipatri.roboButton.dagger.annotations.Named;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonState;
-import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 
 import java.io.IOException;
@@ -68,7 +67,7 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
 
         RBApplication.getInstance().getGraph().inject(this);
 
-        communicationsGracePeriodMillis = context.getResources().getInteger(R.integer.communications_grace_period_millis);
+        communicationsGracePeriodMillis = context.getResources().getInteger(R.integer.purple_button_communications_grace_period_millis);
 
         // Create thread for handling communication with Bluetooth
         // This thread only runs if it's passed a message.. so no need worrying about if it's running or not after this point.
@@ -79,7 +78,7 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
         bluetoothMessageHandler = new MessageHandler(messageProcessingThread.getLooper());
 
         // Periodically query remote state...
-        queryStateIntervalMillis = context.getResources().getInteger(R.integer.remote_state_check_interval_millis);
+        queryStateIntervalMillis = context.getResources().getInteger(R.integer.purple_button_remote_state_check_interval_millis);
 
         start();
     }

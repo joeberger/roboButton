@@ -78,7 +78,7 @@ public class MonitoringService extends Service {
     @Named(RBModule.PURPLE_BUTTON)
     protected ButtonDiscoveryProvider purpleButtonDiscoveryProvider;
 
-    protected long buttonDiscoveryDurationMillis = -1;
+    protected long beaconScanStartupDelayAfterButtonDiscoveryMillis = -1;
 
     // Until we see a nearby beacon, this service does nothing...
     protected com.ndipatri.roboButton.models.Region nearbyRegion = null;
@@ -101,7 +101,7 @@ public class MonitoringService extends Service {
 
         ((RBApplication) getApplication()).getGraph().inject(this);
 
-        buttonDiscoveryDurationMillis = getResources().getInteger(R.integer.button_discovery_duration_millis);
+        beaconScanStartupDelayAfterButtonDiscoveryMillis = getResources().getInteger(R.integer.beacon_scan_startup_delay_after_button_discovery_millis);
 
         bus.register(this);
     }
@@ -243,7 +243,7 @@ public class MonitoringService extends Service {
             public void run() {
                 startRegionDiscovery();
             }
-        }, buttonDiscoveryDurationMillis);
+        }, beaconScanStartupDelayAfterButtonDiscoveryMillis);
     }
 
     protected void startRegionDiscovery() {

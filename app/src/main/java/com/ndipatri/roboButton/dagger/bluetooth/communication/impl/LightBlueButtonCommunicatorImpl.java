@@ -1,21 +1,20 @@
 package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 
 import com.ndipatri.roboButton.enums.ButtonState;
-import com.ndipatri.roboButton.enums.ButtonType;
-import com.ndipatri.roboButton.models.Button;
+import com.punchthrough.bean.sdk.Bean;
+import com.punchthrough.bean.sdk.BeanDiscoveryListener;
+import com.punchthrough.bean.sdk.BeanListener;
+import com.punchthrough.bean.sdk.BeanManager;
+import com.punchthrough.bean.sdk.message.BeanError;
+import com.punchthrough.bean.sdk.message.ScratchBank;
 
 import java.io.UnsupportedEncodingException;
 
-import nl.littlerobots.bean.Bean;
-import nl.littlerobots.bean.BeanDiscoveryListener;
-import nl.littlerobots.bean.BeanListener;
-import nl.littlerobots.bean.BeanManager;
 
 /**
  * Communicates with each individual LightBlue Bean Button
@@ -50,7 +49,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
     protected BeanDiscoveryListener getButtonDiscoveryListener() {
         return new BeanDiscoveryListener() {
             @Override
-            public void onBeanDiscovered(Bean discoveredBean) {
+            public void onBeanDiscovered(Bean discoveredBean, int receivedRSSI) {
                 if (shouldRun && discoveredBean.getDevice().getAddress().equals(buttonId)) {
 
                     LightBlueButtonCommunicatorImpl.this.discoveredBean = discoveredBean;
@@ -104,6 +103,11 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             }
 
             @Override
+            public void onError(BeanError beanError) {
+                Log.d(TAG, "onError()");
+            }
+
+            @Override
             public void onDisconnected() {
                 Log.d(TAG, "onDisconnected()");
 
@@ -148,8 +152,8 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             }
 
             @Override
-            public void onScratchValueChanged(int i, byte[] bytes) {
-
+            public void onScratchValueChanged(ScratchBank scratchBank, byte[] bytes) {
+                Log.d(TAG, "onScratchValueChanged()");
             }
         };
     }

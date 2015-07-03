@@ -60,10 +60,7 @@ android {
 
 dependencies {
 
-    //compile 'nl.littlerobots.bean:beanlib:0.9.2'
-    compile(name:'beanlib-debug', ext:'aar')
     compile 'com.squareup.okio:okio:1.4.0'
-
 
     compile 'com.android.support:support-v4:21.0.3'
     compile 'com.android.support:appcompat-v7:21.0.2'
