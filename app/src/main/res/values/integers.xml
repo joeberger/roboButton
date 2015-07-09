@@ -13,7 +13,7 @@
     <integer name="beacon_scan_startup_delay_after_button_discovery_millis">5000</integer>
 
     <!-- this is intentionally without units as this is an implementation detail -->
-    <integer name="estimote_beacon_detection_threshold">8</integer>
+    <integer name="estimote_beacon_detection_threshold">6</integer>
     
     <integer name="gele_beacon_detection_threshold">-80</integer>
 </resources>
