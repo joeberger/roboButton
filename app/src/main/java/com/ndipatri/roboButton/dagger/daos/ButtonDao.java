@@ -8,6 +8,7 @@ import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.stmt.Where;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.database.OrmLiteDatabaseHelper;
@@ -50,6 +51,21 @@ public class ButtonDao {
         OpenHelperManager.releaseHelper();
 
         bus.post(new ButtonUpdatedEvent(dirtyButton.getId()));
+    }
+
+    public void clearStateOfAllButtons() {
+
+        OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
+        RuntimeExceptionDao<Button, Long> buttonDao = helper.getButtonDao();
+
+        UpdateBuilder<Button, Long> updateBuilder = buttonDao.updateBuilder();
+        try {
+            updateBuilder.updateColumnValue(Button.STATE_COLUMN_NAME, ButtonState.NEVER_CONNECTED);
+            updateBuilder.update();
+        } catch (SQLException s) {
+            Log.e(TAG, "Exception while clearing state of all buttons.");
+        }
+        OpenHelperManager.releaseHelper();
     }
 
     public Button getConnectedButton() {

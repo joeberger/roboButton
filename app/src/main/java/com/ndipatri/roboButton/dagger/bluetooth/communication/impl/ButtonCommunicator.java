@@ -78,6 +78,8 @@ public abstract class ButtonCommunicator {
 
         if (persistedButton != null) {
             discoveredButton = persistedButton;
+
+            persistedButton.setState(ButtonState.NEVER_CONNECTED);
         } else {
             discoveredButton = new Button(buttonAddress, buttonAddress, true);
         }

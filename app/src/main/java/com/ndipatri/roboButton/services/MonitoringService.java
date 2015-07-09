@@ -22,6 +22,7 @@ import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.ButtonCommuni
 import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
@@ -60,6 +61,9 @@ public class MonitoringService extends Service {
 
     @Inject
     BusProvider bus;
+
+    @Inject
+    ButtonDao buttonDao;
 
     @Inject
     protected RegionDiscoveryProvider regionDiscoveryProvider;
@@ -102,6 +106,9 @@ public class MonitoringService extends Service {
         ((RBApplication) getApplication()).getGraph().inject(this);
 
         beaconScanStartupDelayAfterButtonDiscoveryMillis = getResources().getInteger(R.integer.beacon_scan_startup_delay_after_button_discovery_millis);
+
+        // We need to reset the monitored state of all buttons...
+        buttonDao.clearStateOfAllButtons();
 
         bus.register(this);
     }
