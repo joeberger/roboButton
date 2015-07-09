@@ -80,6 +80,8 @@ public class ButtonDao {
                     where.and();
                 }
 
+                // NJD TODO - When do we need to flush this data? Service startup???
+
                 where.or(where.eq(Button.STATE_COLUMN_NAME, ButtonState.OFF),
                          where.eq(Button.STATE_COLUMN_NAME, ButtonState.ON),
                          where.eq(Button.STATE_COLUMN_NAME, ButtonState.ON_PENDING),

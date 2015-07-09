@@ -70,7 +70,7 @@ void setup() {
 
   // Switch Setup
   pinMode(SW1, INPUT);
-  digitalWrite(SW1, HIGH); // Enable internal pullup .. while switch is open (unlocked), pin will read HIGH
+  digitalWrite(SW1, HIGH); // Enable internal pullup .. while switch is open (locked), pin will read HIGH
   digitalWrite(STBY, LOW); //enable standby
   
   Bean.attachChangeInterrupt(SW1, wakeUp); 
@@ -121,7 +121,7 @@ void loop() {
               if (DEBUG) Serial.println("Code completed!");
               Bean.setLed(0, 0, 255);
     
-              char unlocked = digitalRead(SW1);
+              char unlocked = !digitalRead(SW1);
     
               if (targetCode == lockCode) {
                   if (unlocked) {
@@ -160,7 +160,7 @@ void loop() {
 
   if (DEBUG) Serial.println("Done. (guess_index is '" + String(guess_index) + "')");
 
-  char unlocked = digitalRead(SW1);
+  char unlocked = !digitalRead(SW1);
   if (unlocked) {
       Bean.setLed(0, 255, 0);
   } else {
@@ -173,7 +173,7 @@ void loop() {
 void wakeUp() {}
 
 void sendLockState() {
-  char unlocked = digitalRead(SW1);
+  char unlocked = !digitalRead(SW1);
   if (unlocked) {
       Serial.print("unlocked");
    } else {
@@ -201,11 +201,11 @@ void move(int speed, int direction) {
 
 /*************************************************************************/
 void LockTheDoor(void) {
-  if(digitalRead(SW1) == HIGH){
+  if(digitalRead(SW1) == LOW){
      digitalWrite(STBY, HIGH); //disable standby
      Bean.detachChangeInterrupt(SW1);
-     move(255,0);
-     while(digitalRead(SW1) == HIGH);
+     move(255,1);
+     while(digitalRead(SW1) == LOW);
      delay(LOCK_TIMEOUT_MS);
      move(0,0);
      digitalWrite(STBY, LOW); //enable standby
@@ -214,11 +214,11 @@ void LockTheDoor(void) {
 }
 /*************************************************************************/
 void UnlockTheDoor(void) {
-  if(digitalRead(SW1) == LOW){
+  if(digitalRead(SW1) == HIGH){
      digitalWrite(STBY, HIGH); //disable 
      Bean.detachChangeInterrupt(SW1);
-     move(255,1);
-     while(digitalRead(SW1) == LOW);
+     move(255,0);
+     while(digitalRead(SW1) == HIGH);
      delay(UNLOCK_TIMEOUT_MS);
      move(0,1);
      digitalWrite(STBY, LOW); //enable standby
