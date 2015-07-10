@@ -47,7 +47,6 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
     protected boolean discovering = false;
 
     protected Bean discoveredBean;
-    protected boolean isConnectedBeanAButton = false;
 
     @Inject
     BusProvider bus;
@@ -101,7 +100,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
 
                 discovering = false;
 
-                if (discoveredBean == null || !isConnectedBeanAButton) {
+                if (discoveredBean == null) {
                     postButtonDiscoveredEvent(false, null);
                 }
             }
@@ -130,6 +129,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
             @Override
             public void onConnectionFailed() {
                 Log.d(TAG, "onConnectionFailed");
+                postButtonDiscoveredEvent(false, null);
             }
 
             @Override
@@ -145,6 +145,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
             @Override
             public void onError(BeanError beanError) {
                 Log.d(TAG, "onError()");
+                postButtonDiscoveredEvent(false, null);
             }
 
             @Override

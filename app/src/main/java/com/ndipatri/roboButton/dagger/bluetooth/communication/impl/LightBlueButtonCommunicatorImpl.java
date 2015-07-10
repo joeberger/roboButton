@@ -100,11 +100,17 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             @Override
             public void onConnectionFailed() {
                 Log.d(TAG, "onConnectionFailed()");
+
+                // try indefinitely until this communicator is explicitly stopped
+                startButtonConnect();
             }
 
             @Override
             public void onError(BeanError beanError) {
                 Log.d(TAG, "onError()");
+
+                // try indefinitely until this communicator is explicitly stopped
+                startButtonConnect();
             }
 
             @Override
