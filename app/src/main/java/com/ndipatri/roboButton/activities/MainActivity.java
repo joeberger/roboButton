@@ -267,6 +267,7 @@ public class MainActivity extends Activity {
     private void renderButtonFragmentIfNotAlready(final String buttonId) {
         ButtonFragment existingButtonFragment = lookupButtonFragment(buttonId);
         if (existingButtonFragment == null) {
+            Log.d(TAG, "Rendering fragment for '" + buttonId + "'.");
             final ButtonFragment newButtonFragment = ButtonFragment.newInstance(buttonId);
             getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(buttonId)).commitAllowingStateLoss();
             buttonsWithFragments.add(buttonId);

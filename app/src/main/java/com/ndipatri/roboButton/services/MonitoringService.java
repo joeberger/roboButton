@@ -110,6 +110,8 @@ public class MonitoringService extends Service {
         // We need to reset the monitored state of all buttons...
         buttonDao.clearStateOfAllButtons();
 
+        Log.d(TAG, "Connected button: '" + buttonDao.getConnectedButton() + "'.");
+
         bus.register(this);
     }
 

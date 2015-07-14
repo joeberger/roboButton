@@ -29,7 +29,7 @@
 /* Defines */
 /*************************************************************************/
 #define KEYCODE_SIZE         4
-#define DEBUG 1
+#define DEBUG 0
 #define UNLOCK_TIMEOUT_MS    300
 #define LOCK_TIMEOUT_MS      275
 

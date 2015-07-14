@@ -7,7 +7,7 @@
 
     <!-- region parameters -->
     <integer name="beacon_scan_interval_millis">15000</integer>
-    <integer name="beacon_scan_duty_cyce_percent">75</integer>
+    <integer name="beacon_scan_duty_cyce_percent">95</integer>
     <integer name="beacon_lost_scan_intervals">1</integer>
     <integer name="beacon_inferior_rssi_count_threshold">2</integer>
     <integer name="beacon_scan_startup_delay_after_button_discovery_millis">5000</integer>

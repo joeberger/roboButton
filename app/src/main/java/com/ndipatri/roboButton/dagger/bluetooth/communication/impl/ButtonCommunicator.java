@@ -131,6 +131,8 @@ public abstract class ButtonCommunicator {
 
         postButtonLostEvent(buttonId);
 
+        setLocalButtonState(ButtonState.DISCONNECTED, true);
+
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
