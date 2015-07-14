@@ -29,7 +29,7 @@
 /* Defines */
 /*************************************************************************/
 #define KEYCODE_SIZE         4
-#define DEBUG 0
+#define DEBUG 1
 #define UNLOCK_TIMEOUT_MS    300
 #define LOCK_TIMEOUT_MS      275
 
@@ -57,8 +57,6 @@ char queryCode[] = {'1', '2', '3', '4'};
 int guess_index = 0;
 char *targetCode;
 
-bool lockedState = false;
-
 /*************************************************************************/
 void setup() {
   Serial.begin(57600);
@@ -81,6 +79,9 @@ void setup() {
 void loop() {
 
   // wake up serial input (bluetooth module is connect to arduino's STBY pin)
+  bool lockedState = retrieveLockedState();
+
+  if (DEBUG) Serial.println("Current lockedState '" + String(lockedState) + "')");   
 
   size_t length = 10;
   char buffer[length];
@@ -123,79 +124,78 @@ void loop() {
               if (DEBUG) Serial.println("Code completed!");
               Bean.setLed(0, 0, 255);
     
-              char unlocked = !isLocked();
-    
               if (targetCode == lockCode) {
-                  if (unlocked) {
-                      if (DEBUG) Serial.println("Locking!");
-                      LockTheDoor();
+                  if (lockedState) {
+																						if (DEBUG) Serial.println("Already Locked!");
                   } else {
-                      if (DEBUG) Serial.println("Already Locked!");
+                  	   if (DEBUG) Serial.println("Locking!");
+                      lockedState = true;
                   }
-                  sendLockState();
+                  sendLockState(lockedState);
     
               } else if (targetCode == unlockCode) {
-                  if (unlocked) {
-                      if (DEBUG) Serial.println("Already Unlocked!");
-                  } else {
+                  if (lockedState) {
                       if (DEBUG) Serial.println("Unlocking!");
-                      UnlockTheDoor();
+                      lockedState = false;                	          
+                  } else {
+																						if (DEBUG) Serial.println("Already Unlocked!");
                   }
-                  sendLockState();
+                  sendLockState(lockedState);
         
               } else if (targetCode == queryCode) {
                   if (DEBUG) {
                       Serial.print("Replying to Query!");
                   }
     
-                  sendLockState();
-                  delay(1000);
-                  sendLockState();
+                  sendLockState(lockedState);
               } 
               
               guess_index = 0;
           } // end if code completed
       } // done with current buffer
   } else {
-      sendLockState(); 
+						if (lockedState) {
+						    lockedState = false;
+						    if (DEBUG) Serial.println("Toggle Unlocked!");
+						} else {
+							   lockedState = true;
+							   if (DEBUG) Serial.println("Toggle Locked!");
+						}
+  	
+      sendLockState(lockedState); 
   }
 
   if (DEBUG) Serial.println("Done. (guess_index is '" + String(guess_index) + "')");
 
-  char unlocked = !isLocked();
-  if (unlocked) {
-      Bean.setLed(0, 255, 0);
-  } else {
+  if (lockedState) {
       Bean.setLed(255, 0, 0);
+  } else {
+      Bean.setLed(0, 255, 0);
   }
 
+  saveLockedState(lockedState);
   Bean.sleep(0xFFFFFFFF); // Sleep until a serial message wakes us up
 }
 
 void wakeUp() {
-  lockedState = !lockedState;
 }
 
-bool isLocked() {
-  return lockedState;  
+//bool retrieveLockedState() {
+//				return Bean.readScratchNumber(4) > 0;
+//}
+bool retrieveLockedState() {
+				return digitalRead(SW1);
 }
 
-void sendLockState() {
-  char unlocked = !isLocked();
-  if (unlocked) {
-      Serial.print("unlocked");
-   } else {
+void saveLockedState(bool lockedState) {
+    //Bean.setScratchNumber(4, lockedState ? 1L : 0L);
+}
+
+void sendLockState(bool lockedState) {
+  if (lockedState) {
       Serial.print("locked");
+   } else {
+      Serial.print("unlocked");
    } 
 }
-
-/*************************************************************************/
-void LockTheDoor(void) {
-  lockedState = true;
-}
-/*************************************************************************/
-void UnlockTheDoor(void) {
-  lockedState = false;
-}
-/*************************************************************************/
 

@@ -48,7 +48,6 @@
             android:screenOrientation="portrait"/>
 
         <service android:name=".services.MonitoringService" android:exported="false"/>
-        <service android:name="com.estimote.sdk.service.BeaconService" android:exported="false"/>
 
         <receiver android:name=".receivers.BootReceiver" >
             <intent-filter>

@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;

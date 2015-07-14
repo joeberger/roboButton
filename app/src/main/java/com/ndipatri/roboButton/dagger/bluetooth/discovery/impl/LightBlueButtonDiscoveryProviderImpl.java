@@ -36,7 +36,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
 
     private static final String TAG = LightBlueButtonDiscoveryProviderImpl.class.getCanonicalName();
 
-    private static final String BUTTON_SKETCH_NAME = "lightBlueButton";
+    private static final String BUTTON_SKETCH_PREFIX = "lightBlueButton";
 
     private Context context;
 
@@ -116,7 +116,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
                 discoveredBean.readSketchMetadata(new Callback<SketchMetadata>() {
                     @Override
                     public void onResult(SketchMetadata sketchMetaData) {
-                        if (sketchMetaData.hexName().equals(BUTTON_SKETCH_NAME)) {
+                        if (sketchMetaData.hexName().contains(BUTTON_SKETCH_PREFIX)) {
                             // We're confident we are talking to a LightBlue Bean that
                             // is running the Button sketch.
                             postButtonDiscoveredEvent(true, discoveredBean.getDevice());
