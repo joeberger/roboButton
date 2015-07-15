@@ -5,8 +5,10 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -112,7 +114,29 @@ public class MonitoringService extends Service {
 
         Log.d(TAG, "Connected button: '" + buttonDao.getConnectedButton() + "'.");
 
+        registerForScreenWakeBroadcast();
+
         bus.register(this);
+    }
+
+    private BroadcastReceiver screenWakeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive()");
+            if (buttonCommunicator != null) {
+                sendNotification(buttonCommunicator.getButton().getId(), buttonCommunicator.getButton().getState());
+            }
+        }
+    };
+
+    private void registerForScreenWakeBroadcast() {
+        IntentFilter screenStateFilter = new IntentFilter();
+        screenStateFilter.addAction(Intent.ACTION_SCREEN_ON);
+        registerReceiver(screenWakeReceiver, screenStateFilter);
+    }
+
+    private void unRegisterForScreenWakeBroadcast() {
+        unregisterReceiver(screenWakeReceiver);
     }
 
     @Override
@@ -129,6 +153,8 @@ public class MonitoringService extends Service {
         if (buttonCommunicator != null) {
             buttonCommunicator.shutdown();
         }
+
+        unRegisterForScreenWakeBroadcast();
     }
 
     // Recall that this can be called multiple times during the lifetime of the app...
