@@ -270,6 +270,7 @@ public class MonitoringService extends Service {
     public void onButtonLostEvent(ButtonLostEvent buttonLostEvent) {
         buttonCommunicator = null;
         startRegionDiscovery();
+        clearNotification();
     }
 
     protected void startDelayedRegionDiscover() {

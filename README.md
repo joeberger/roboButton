@@ -20,6 +20,8 @@ With all this, you can have a light turn on and off automatically as you enter a
 3. Once in the [beacon edit screen](https://drive.google.com/file/d/0BxujY_Gv8MOgOHotMTU0NVB4U0E/view?usp=sharing), wait for the text below the beacon near the top to say 'Connected'.  Then edit the 'Major' value to 2112.
 4. By assigning the Major value to this beacon, you've created a specific 'region'.  Whenver the app detects this region, it will begin to look for a button.
 
+5. https://github.com/PunchThrough/Bean-Android-SDK/
+
 ### Build the Robo Button
 
 1. Here are the major parts you will need: [Arduino RedBoard](https://www.sparkfun.com/products/12757) , a [Bluetooth Classic IC](https://www.sparkfun.com/products/12576), and a [Solid State Relay](https://www.sparkfun.com/products/10684)
