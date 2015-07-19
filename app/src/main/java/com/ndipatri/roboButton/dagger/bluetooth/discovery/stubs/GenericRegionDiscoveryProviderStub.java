@@ -51,10 +51,10 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
 
     private boolean running = false;
 
-    private long beaconFoundInterval = -1; // if '-1', the beacon is always present.
-    //private long beaconFoundInterval = 20000; // how long the beacon is found
+    //private long beaconFoundInterval = -1; // if '-1', the beacon is always present.
+    private long beaconFoundInterval = 30000; // how long the beacon is found
 
-    private long beaconLostInterval = 10000; // how long the beacon is lost
+    private long beaconLostInterval = 5000; // how long the beacon is lost
 
     @Inject
     BusProvider bus;

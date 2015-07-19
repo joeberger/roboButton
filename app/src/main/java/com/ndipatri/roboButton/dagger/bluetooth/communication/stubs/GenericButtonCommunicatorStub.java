@@ -14,7 +14,7 @@ public class GenericButtonCommunicatorStub extends ButtonCommunicator {
 
     private static final String TAG = GenericButtonCommunicatorStub.class.getCanonicalName();
 
-    protected long STUB_DELAY_MILLIS = 3000;
+    protected long STUB_DELAY_MILLIS = 2000;
 
     // This is our fake remote button's state.. This needs to persist across various instances
     // of communicator (as we go in and out of region)

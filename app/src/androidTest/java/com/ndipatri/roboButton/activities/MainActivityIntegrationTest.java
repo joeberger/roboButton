@@ -1,7 +1,5 @@
 package com.ndipatri.roboButton.activities;
 
-import android.app.Activity;
-import android.app.Instrumentation;
 import android.graphics.drawable.Drawable;
 import android.test.suitebuilder.annotation.LargeTest;
 
@@ -14,29 +12,17 @@ import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.TestUtils;
 
-import org.junit.Before;
-
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.intent.Intents.intending;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.isInternal;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @LargeTest
 public class MainActivityIntegrationTest extends MainActivityInstrumentation {
-
-    @Before
-    public void stubAllExternalIntents() {
-        // By default Espresso Intents does not stub any Intents. Stubbing needs to be setup before
-        // every test run. In this case all external Intents will be blocked.
-        intending(not(isInternal())).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-    }
 
     public void testActivityTitle() {
         getActivity();
@@ -56,6 +42,7 @@ public class MainActivityIntegrationTest extends MainActivityInstrumentation {
 
         bus.post(new ButtonUpdatedEvent("aa:bb:cc:dd:ee"));
 
+        // Just to make the test look pretty for demonstration purposes
         Thread.sleep(2000);
 
         onView(withId(R.id.buttonFragmentFrameLayout)).check(matches(isDisplayed()));
@@ -78,6 +65,7 @@ public class MainActivityIntegrationTest extends MainActivityInstrumentation {
 
         bus.post(new ButtonUpdatedEvent("aa:bb:cc:dd:ee"));
 
+        // Just to make the test look pretty for demonstration purposes
         Thread.sleep(2000);
 
         onView(withId(R.id.buttonFragmentFrameLayout)).check(matches(isDisplayed()));
@@ -98,6 +86,7 @@ public class MainActivityIntegrationTest extends MainActivityInstrumentation {
 
         bus.post(new ButtonUpdatedEvent("aa:bb:cc:dd:ee"));
 
+        // Just to make the test look pretty for demonstration purposes
         Thread.sleep(2000);
 
         onView(withId(R.id.buttonFragmentFrameLayout)).check(matches(isDisplayed()));
@@ -118,6 +107,7 @@ public class MainActivityIntegrationTest extends MainActivityInstrumentation {
 
         bus.post(new ButtonUpdatedEvent("aa:bb:cc:dd:ee"));
 
+        // Just to make the test look pretty for demonstration purposes
         Thread.sleep(2000);
 
         onView(withId(R.id.buttonFragmentFrameLayout)).check(matches(isDisplayed()));
