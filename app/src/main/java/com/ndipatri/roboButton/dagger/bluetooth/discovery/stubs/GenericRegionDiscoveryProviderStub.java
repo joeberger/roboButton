@@ -52,9 +52,11 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
     private boolean running = false;
 
     //private long beaconFoundInterval = -1; // if '-1', the beacon is always present.
-    private long beaconFoundInterval = 30000; // how long the beacon is found
+    private long beaconFoundInterval = 20000; // how long the beacon is found
 
     private long beaconLostInterval = 5000; // how long the beacon is lost
+
+    private Handler mainThreadHandler = new Handler();
 
     @Inject
     BusProvider bus;
@@ -78,7 +80,13 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
 
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
 
-        new Handler().postDelayed(beaconFoundRunnable, 5000);
+        removeAllCallbacks();
+        mainThreadHandler.postDelayed(beaconFoundRunnable, 5000);
+    }
+
+    private void removeAllCallbacks() {
+        mainThreadHandler.removeCallbacks(beaconFoundRunnable);
+        mainThreadHandler.removeCallbacks(beaconLostRunnable);
     }
 
     @Override
@@ -89,6 +97,7 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
     }
 
     private Runnable beaconFoundRunnable = new Runnable() {
+
         @Override
         public void run() {
             if (running) {
@@ -96,7 +105,8 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
                 postRegionFoundEvent(new Region(1, 2, RegionUtils.ESTIMOTE_UUID));
 
                 if (beaconFoundInterval > -1) {
-                    new Handler().postDelayed(beaconLostRunnable, beaconFoundInterval);
+                    removeAllCallbacks();
+                    mainThreadHandler.postDelayed(beaconLostRunnable, beaconFoundInterval);
                 }
             }
         }
@@ -109,7 +119,8 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
                 Toast.makeText(context, "Beacon region lost.", Toast.LENGTH_SHORT).show();
                 postRegionLostEvent(new Region(1, 2, RegionUtils.ESTIMOTE_UUID));
 
-                new Handler().postDelayed(beaconFoundRunnable, beaconLostInterval);
+                removeAllCallbacks();
+                mainThreadHandler.postDelayed(beaconFoundRunnable, beaconLostInterval);
             }
         }
     };
