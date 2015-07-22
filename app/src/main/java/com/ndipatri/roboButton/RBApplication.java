@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.facebook.stetho.Stetho;
 import com.ndipatri.roboButton.dagger.ObjectGraph;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
 import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
@@ -47,6 +48,8 @@ public class RBApplication extends Application {
 
         getGraph().inject(this);
 
+        enableStetho();
+
         activityWatcher = new ActivityWatcher();
         activityWatcher.registerActivityWatcherCallbacks(new ActivityWatcher.ActivityWatcherCallbacks() {
 
@@ -66,6 +69,18 @@ public class RBApplication extends Application {
             }
         });
         registerActivityLifecycleCallbacks(activityWatcher);
+    }
+
+    private void enableStetho() {
+        if (BuildVariant.useStubs) {
+            Stetho.initialize(
+                    Stetho.newInitializerBuilder(this)
+                            .enableDumpapp(
+                                    Stetho.defaultDumperPluginsProvider(this))
+                            .enableWebKitInspector(
+                                    Stetho.defaultInspectorModulesProvider(this))
+                            .build());
+        }
     }
 
     public ActivityWatcher getActivityWatcher() {
