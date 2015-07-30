@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
 
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
 
     <title>Robo Button by ndipatri</title>
@@ -28,14 +28,27 @@
 
     <div class="container">
       <section id="main_content">
-        <p>This project is a ‘case study’ implementation of Bluetooth geo-fencing.  It’s open-source and freely available.  The project consists of Android and <a href="http://en.wikipedia.org/wiki/Arduino">Arduino</a> code and some hardware readily available online.  The major hardware components include a set of <a href="http://estimote.com/">Estimote</a> Bluetooth LE beacons, an <a href="https://www.sparkfun.com/products/12757">Arduino RedBoard</a> , a <a href="https://www.sparkfun.com/products/12576">Bluetooth Classic IC</a>, and a <a href="https://www.sparkfun.com/products/10684">Solid State Relay</a>, and an Android phone (4.3 API Level 18 or above) capable of operating as a Bluetooth LE client or ‘central device’.</p>
+        <p>This project is a ‘case study’ implementation of Bluetooth geo-fencing.  It’s open-source and freely available.  The project consists of Android and <a href="http://en.wikipedia.org/wiki/Arduino">Arduino</a> code and some hardware readily available online.  </p>
 
-<p>It's a work-in-progress.  At present, it's a simple demonstration:  An Android phone running the RoboButton application in the background will consume very little power as it monitors for nearby beacons (provided by Estimote and configure as described below).
-Once it detects a beacon, it then scans for any nearby 'buttons' (which you have to build with the aforementioned parts).  If a button is found, the application then initiates a more costly 'Bluetooth Classic' serial connection.
-While connected, the application presents the user with a simple UI button.  Toggling this button on the phone will toggle the state of the relay on the remote button using the Bluetooth Classic serial connection.  This relay can handle line-current; so you can power on and off an electric lamp, as an example.
-The application includes an 'auto' mode:  when a button is found, it is immediately turned on.  When a beacon is 'lost', it immediately turns off the button.  This auto-mode works because the range of the Beacon Classic is much greater than the configured range of the beacon.  Also, the application considers itself 'out of range' of the beacon well before actual communications with the beacon is lost.</p>
+<p>There are two different 'RobotButtons' that I've created.  The first employs Bluetooth Classic technology and the second uses Bluetooth LE (BLE).  Both use BLE as an iBeacon for proximal context.</p>
 
-<p>With all this, you can have a light turn on and off automatically as you enter and leave a room - all the while having your phone asleep in your pocket.</p>
+<p>It's a work-in-progress - meant to be used purely for inspiration and experimentation.  At present, it's a simple demonstration:  An Android phone running the RoboButton application in the background will consume very little power as it monitors for nearby beacons (provided by Estimote and configured as described below).
+Once the phone detects a beacon, it then scans for any nearby 'buttons' (which you have to build with the parts described below).  If a button is found, the application then initiates a more costly 'Bluetooth Classic' serial connection or a low-power BLE connection.</p>
+
+<p>While connected, the application presents the user with a simple UI button.  In the Bluetooth Classic RoboButton, toggling this button on the phone will toggle the state of the relay on the remote button using the Bluetooth Classic serial connection.  This relay can handle line-current; so you can power on and off an electric lamp, as an example.  In the BLE RoboButton, toggling this button will open and close a dead-bolt lock.</p>
+
+<p>The application includes an 'auto' mode:  when a button is found, it is immediately turned on.  When a beacon is 'lost', it immediately turns off the button.  This auto-mode works because the range of the RoboButton is much greater than the configured range of the beacon.  The application considers itself 'out of range' of the beacon well before actual communications with the beacon is lost.</p>
+
+<p>This application also uses notifications in conjunction with a background service to provide the user with the ability to control the button completely from the Android Notification Bar --&gt; without explicitly launching the application.</p>
+
+<h2>
+<a id="hardware" class="anchor" href="#hardware" aria-hidden="true"><span class="octicon octicon-link"></span></a>Hardware</h2>
+
+<p>For either RoboButton, you'll need to buy an <a href="http://estimote.com/">Estimote</a> Bluetooth LE beacons Devlopers Kit.</p>
+
+<p>For the Classic RoboButton, the major hardware components include an <a href="https://www.sparkfun.com/products/12757">Arduino RedBoard</a>, a <a href="https://www.sparkfun.com/products/12576">Bluetooth Classic IC</a>, a <a href="https://www.sparkfun.com/products/10684">Solid State Relay</a>, a 12V power supply, an extension cord you don't mind cutting up, and an Android phone (4.3 API Level 18 or above) capable of operating as a Bluetooth LE client or ‘central device’.  With this RoboButton, you can have a light turn on and off automatically as you enter and leave a room - all the while having your phone asleep in your pocket.</p>
+
+<p>For the BLE RoboButton, the major hardware components include a <a href="http://punchthrough.myshopify.com/products/bean">Light Blue Bean BLE/Microprocessor</a>, an <a href="https://www.sparkfun.com/products/9457">H-Bridge Motor Controller</a>, a keyfob-controlled <a href="http://www.amazon.com/gp/product/B000FBU2KW/ref=oh_aui_detailpage_o01_s00?ie=UTF8&amp;psc=1">remote controlled dead bolt</a> (don't worry, we're going to rip out any existing RF circuitry) and an Android phone (4.3 API Level 18 or above) capable of operating as a Bluetooth LE client or ‘central device’.  With this RoboButton, you can open and close a dead bolt automatically as you enter and leave a room - all the while having your phone asleep in your pocket.  This button was derived from one of the many great example projects from <a href="https://punchthrough.com/bean/examples/">PunchThrough Bean Examples</a></p>
 
 <h2>
 <a id="setup" class="anchor" href="#setup" aria-hidden="true"><span class="octicon octicon-link"></span></a>Setup</h2>
@@ -48,19 +61,23 @@ The application includes an 'auto' mode:  when a button is found, it is immediat
 <ol>
 <li>Purchase a pack of <a href="http://estimote.com/">Estimote</a> Bluetooth LE Beacons.  They're not cheap - $99.  Download the <a href="https://play.google.com/store/apps/details?id=com.estimote.apps.main&amp;hl=en">Esimote App</a> from the Google Play Store.  Launch the app and select the 'Beacons' item from the <a href="https://drive.google.com/file/d/0BxujY_Gv8MOgb0kxMlFWdHN6RU0/view?usp=sharing">opening screen</a>.</li>
 <li>You should <a href="https://drive.google.com/file/d/0BxujY_Gv8MOgVzc4a1dac3diZzg/view?usp=sharing">see your beacon in range</a>.  It will be the little 'estimote' shaped icon (duh).  Click on the beacon to edit.</li>
-<li>Once in the <a href="https://drive.google.com/file/d/0BxujY_Gv8MOgOHotMTU0NVB4U0E/view?usp=sharing">beacon edit screen</a>, wait for the text below the beacon near the top to say 'Connected'.  Then edit the 'Major' value to 2112.</li>
-<li>By assigning the Major value to this beacon, you've created a specific 'region'.  Whenver the app detects this region, it will begin to look for a button.</li>
+<li>Once in the <a href="https://drive.google.com/file/d/0BxujY_Gv8MOgOHotMTU0NVB4U0E/view?usp=sharing">beacon edit screen</a>, wait for the text below the beacon near the top to say 'Connected'.  Then edit the 'UUID' value to '<strong>b9407f30f5f8466e211225556b57fe6d</strong>'.</li>
+<li>By assigning the UUID value to this beacon, you've created a specific 'region' (by default, all Estimote beacons have the same UUID).  Whenver the app detects this region, it will begin to look for a button.</li>
 </ol>
 
 <h3>
-<a id="build-the-robo-button" class="anchor" href="#build-the-robo-button" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build the Robo Button</h3>
+<a id="build-the-classic-robo-button" class="anchor" href="#build-the-classic-robo-button" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build the Classic Robo Button</h3>
 
-<ol>
-<li>Here are the major parts you will need: <a href="https://www.sparkfun.com/products/12757">Arduino RedBoard</a> , a <a href="https://www.sparkfun.com/products/12576">Bluetooth Classic IC</a>, and a <a href="https://www.sparkfun.com/products/10684">Solid State Relay</a>
-</li>
-<li>Here is <a href="https://drive.google.com/file/d/0BxujY_Gv8MOgYXVsNDBoQ3pzRU0/view?usp=sharing">Schematic Diagram</a> of the Robo Button.</li>
-<li>Here is my first <a href="https://drive.google.com/file/d/0BxujY_Gv8MOgdEpTU0xvclEtLTg/view?usp=sharing">Robo Button Sample</a>.  On the left is where you can plug in an appliance to be controlled by the button.  The blue object in the foreground is the Estimote beacon.  This particular beacon was cut open so I could replace the CR2477N battery.  It only lasted about 8 months.</li>
-</ol>
+<p>I call this the 'Purple' button throughout the code because I printed its chassis with Purple PLA plastic.  Download <a href="http://www.openscad.org/">OpenScad</a> and open the <a href="media/purpleButtonChassis.scad">3D Printer design</a> for this button.</p>
+
+<p>Here is the <a href="media/purpleButtonSchematic.pdf">schematic diagram</a> for the purple button.</p>
+
+<h3>
+<a id="build-the-ble-robo-button" class="anchor" href="#build-the-ble-robo-button" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build the BLE Robo Button</h3>
+
+<p>I call this the 'Blue' button throughout the code because I printed its chassis with Blue PLA plastic.  Download <a href="http://www.openscad.org/">OpenScad</a> and open the <a href="media/blueButtonChassis.scad">3D Printer design</a> for this button.</p>
+
+<p>Here is the <a href="media/blueButtonSchematic.png">schematic diagram</a> for the blue button.</p>
 
 <h2>
 <a id="world-domination" class="anchor" href="#world-domination" aria-hidden="true"><span class="octicon octicon-link"></span></a>World Domination</h2>
@@ -72,19 +89,13 @@ The application includes an 'auto' mode:  when a button is found, it is immediat
 <h2>
 <a id="software-design" class="anchor" href="#software-design" aria-hidden="true"><span class="octicon octicon-link"></span></a>Software Design</h2>
 
-<p>The <a href="https://drive.google.com/file/d/0BxujY_Gv8MOgMUQzOW9qUVBiaEk/view?usp=sharing">MonitoringService</a> runs in the background and consumes very little power as it listen for BT LE devices.  When it detects a beacon with the appropriately defined 'Region', it then begins to search for instances of the Robo Button.  Communications with the button is established and maintained by the <a href="https://drive.google.com/file/d/0BxujY_Gv8MOgWU50ajl1Y2ZRN0k/view?usp=sharing">ButtonMonitor</a>.  Although the MonitoringService and the ButtonMonitor(s) are tightly coupled, they communicate relevant state changes (e.g. 'Button Found', 'Button State Change Detected', etc.) to the rest of the application's components using the Otto Message Button (an example of an Observer pattern).</p>
+<p>The MonitoringService runs in the background and consumes very little power as it listen for BT LE devices.  When it detects a beacon with the appropriately defined 'Region', it then begins to search for instances of the Robo Button.  Communications with the button is established and maintained by the ButtonCommunicator.  Although the MonitoringService and the ButtonCommunicator(s) are tightly coupled, they communicate relevant state changes (e.g. 'Button Found', 'Button State Change Detected', etc.) to the rest of the application's components using the Otto Message Button (an example of an Observer pattern).</p>
 
-<p>The <a href="https://drive.google.com/file/d/0BxujY_Gv8MOgNHZORHlOb2JYOVU/view?usp=sharing">MainControllerActivity</a> is a very light weight activity which observes incoming Otto Events (e.g. 'Button Found', 'Button Lost') and adds or removes instances of RoboButtonFragment when appropriate.</p>
+<p>The MainControllerActivity is a very light weight activity which observes incoming Otto Events (e.g. 'Button Found', 'Button Lost') and adds or removes instances of RoboButtonFragment when appropriate.</p>
 
 <ul>
 <li>Notes:  Although most of the application has been designed to handle the possibility of controlling multiple buttons at once, I don't support this behavior at this time as it makes the code more cumbersome and this is meant to be a case study (and it would really be silly to control more than one button at a time, really).</li>
-<li>Notes:  In the real world, the 'costly connection' wouldn't be to a Bluetooth Classic device, but more likely would be a connection (such as a WebSocket) to a enterprise resource.  Again, this is meant to be a case study that can be easily thrown together with some solder and duct tape.</li>
 </ul>
-
-<h2>
-<a id="testing" class="anchor" href="#testing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Testing</h2>
-
-<p>I run all unit tests on a local VM (Robolectric) and employ Dependency Injection (Dagger) and Mock collaborators (Mockito).</p>
       </section>
     </div>
 
