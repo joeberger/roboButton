@@ -2,12 +2,12 @@ This project is a ‘case study’ implementation of Bluetooth geo-fencing.  It�
 
 There are two different 'RobotButtons' that I've created.  The first employs Bluetooth Classic technology and the second uses Bluetooth LE (BLE).  Both use BLE as an iBeacon for proximal context.
 
-It's a work-in-progress - meant to be used purely for inspiration and experimentation.  At present, it's a simple demonstration:  An Android phone running the RoboButton application in the background will consume very little power as it monitors for nearby beacons (provided by Estimote and configure as described below).
-Once it detects a beacon, it then scans for any nearby 'buttons' (which you have to build with the parts described below).  If a button is found, the application then initiates a more costly 'Bluetooth Classic' serial connection or a low-power BLE connection.
+It's a work-in-progress - meant to be used purely for inspiration and experimentation.  At present, it's a simple demonstration:  An Android phone running the RoboButton application in the background will consume very little power as it monitors for nearby beacons (provided by Estimote and configured as described below).
+Once the phone detects a beacon, it then scans for any nearby 'buttons' (which you have to build with the parts described below).  If a button is found, the application then initiates a more costly 'Bluetooth Classic' serial connection or a low-power BLE connection.
 
 While connected, the application presents the user with a simple UI button.  In the Bluetooth Classic RoboButton, toggling this button on the phone will toggle the state of the relay on the remote button using the Bluetooth Classic serial connection.  This relay can handle line-current; so you can power on and off an electric lamp, as an example.  In the BLE RoboButton, toggling this button will open and close a dead-bolt lock.
 
-The application includes an 'auto' mode:  when a button is found, it is immediately turned on.  When a beacon is 'lost', it immediately turns off the button.  This auto-mode works because the range of the RoboButton is much greater than the configured range of the beacon.  Also, the application considers itself 'out of range' of the beacon well before actual communications with the beacon is lost.
+The application includes an 'auto' mode:  when a button is found, it is immediately turned on.  When a beacon is 'lost', it immediately turns off the button.  This auto-mode works because the range of the RoboButton is much greater than the configured range of the beacon.  The application considers itself 'out of range' of the beacon well before actual communications with the beacon is lost.
 
 This application also uses notifications in conjunction with a background service to provide the user with the ability to control the button completely from the Android Notification Bar --> without explicitly launching the application.
 
