@@ -1,4 +1,6 @@
-This project is a ‘case study’ implementation of Bluetooth geo-fencing.  It’s open-source and freely available.  The project consists of Android and [Arduino](http://en.wikipedia.org/wiki/Arduino) code and some hardware readily available online.  
+This project is a ‘case study’ implementation of Bluetooth geo-fencing.  It’s open-source and freely available.  The project consists of Android and [Arduino](http://en.wikipedia.org/wiki/Arduino) code and some hardware readily available online.
+
+See my [2015 AnDevCon Presentation](https://drive.google.com/file/d/0BxujY_Gv8MOgTkFzZHJQTnQwcGM/view?usp=sharing) on this project.
 
 There are two different 'RobotButtons' that I've created.  The first employs Bluetooth Classic technology and the second uses Bluetooth LE (BLE).  Both use BLE as an iBeacon for proximal context.
 
