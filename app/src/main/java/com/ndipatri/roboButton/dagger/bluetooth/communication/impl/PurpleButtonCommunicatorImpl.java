@@ -120,7 +120,7 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
             } catch (IOException ignored) {
             }
 
-            setLocalButtonState(ButtonState.DISCONNECTED);
+            setLocalButtonState(ButtonState.OFFLINE);
         }
     }
 
@@ -245,7 +245,7 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
                             scheduleConnectivityCheck();
                         } else {
                             stop();
-                            setButtonPersistedState(ButtonState.DISCONNECTED);
+                            setButtonPersistedState(ButtonState.OFFLINE);
                         }
                     }
 

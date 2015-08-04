@@ -20,6 +20,7 @@ import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.GenericRegionDis
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.LightBlueButtonDiscoveryProviderStub;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.utils.BusProvider;
+import com.ndipatri.roboButton.utils.NotificationHelper;
 import com.ndipatri.roboButton.utils.RegionUtils;
 
 import javax.inject.Singleton;
@@ -44,6 +45,16 @@ public class RBModule {
     @Singleton
     BusProvider provideBus() {
         return new BusProvider();
+    }
+
+    @Provides
+    @Singleton
+    NotificationHelper provideNotificationHelper() {
+        if (BuildVariant.useMocks) {
+            return mock(NotificationHelper.class);
+        } else {
+            return new NotificationHelper(context);
+        }
     }
 
     @Provides

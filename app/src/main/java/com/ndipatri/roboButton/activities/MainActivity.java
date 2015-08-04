@@ -26,6 +26,7 @@ import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -94,10 +95,9 @@ public class MainActivity extends Activity {
     }
 
     protected void renderAnyConnectedButtons() {
-        // TODO - For now, only consider a single connected Button
-        Button connectedButton = buttonDao.getConnectedButton();
-        if (connectedButton != null) {
-            renderButtonFragmentIfNotAlready(connectedButton.getId());
+        List<Button> connectedButtons = buttonDao.getCommunicatingButtons();
+        for (Button communicatingButton : connectedButtons) {
+            renderButtonFragmentIfNotAlready(communicatingButton.getId());
         }
     }
 

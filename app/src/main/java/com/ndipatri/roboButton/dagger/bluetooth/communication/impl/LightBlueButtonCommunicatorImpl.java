@@ -118,7 +118,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
                 Log.d(TAG, "onDisconnected()");
 
                 stop();
-                setLocalButtonState(ButtonState.DISCONNECTED);
+                setLocalButtonState(ButtonState.OFFLINE);
             }
 
             @Override

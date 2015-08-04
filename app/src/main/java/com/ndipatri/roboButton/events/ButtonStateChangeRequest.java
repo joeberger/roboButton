@@ -10,12 +10,6 @@ public class ButtonStateChangeRequest {
     public ButtonState requestedButtonState;
     public String buttonId;
 
-    // 'Toggle' Constructor
-    public ButtonStateChangeRequest(final String buttonId) {
-        this.buttonId = buttonId;
-        this.requestedButtonState = null;
-    }
-
     public ButtonStateChangeRequest(final String buttonId, final ButtonState requestedButtonState) {
         this.buttonId = buttonId;
         this.requestedButtonState = requestedButtonState;

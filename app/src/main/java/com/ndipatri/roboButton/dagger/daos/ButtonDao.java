@@ -18,6 +18,7 @@ import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -60,7 +61,7 @@ public class ButtonDao {
 
         UpdateBuilder<Button, Long> updateBuilder = buttonDao.updateBuilder();
         try {
-            updateBuilder.updateColumnValue(Button.STATE_COLUMN_NAME, ButtonState.NEVER_CONNECTED);
+            updateBuilder.updateColumnValue(Button.STATE_COLUMN_NAME, ButtonState.OFFLINE);
             updateBuilder.update();
         } catch (SQLException s) {
             Log.e(TAG, "Exception while clearing state of all buttons.");
@@ -68,17 +69,24 @@ public class ButtonDao {
         OpenHelperManager.releaseHelper();
     }
 
-    public Button getConnectedButton() {
-        return getButton(null, true);
+    public List<Button> getCommunicatingButtons() {
+        return getButtons(null, true);
     }
 
     public Button getButton(final String buttonId) {
-        return getButton(buttonId, false);
+        Button button = null;
+        List<Button> buttons = getButtons(Arrays.asList(new String[] {buttonId}), false);
+        if (buttons != null && !buttons.isEmpty()) {
+            button = buttons.get(0);
+        }
+
+        return button;
     }
 
-    private Button getButton(final String buttonId, final boolean connectedOnly) {
 
-        Button button = null;
+    private List<Button> getButtons(final List<String> buttonIdList, final boolean connectedOnly) {
+
+        List<Button> buttons;
 
         OrmLiteDatabaseHelper helper = OpenHelperManager.getHelper(context, OrmLiteDatabaseHelper.class);
         RuntimeExceptionDao<Button, Long> buttonDao = helper.getButtonDao();
@@ -87,16 +95,14 @@ public class ButtonDao {
         try {
             Where<Button, Long> where = queryBuilder.where();
 
-            if (buttonId != null) {
-                where.eq(Button.ID_COLUMN_NAME, buttonId);
+            if (buttonIdList != null && !buttonIdList.isEmpty()) {
+                where.in(Button.ID_COLUMN_NAME, buttonIdList);
             }
 
             if (connectedOnly) {
-                if (buttonId != null) {
+                if (buttonIdList != null && !buttonIdList.isEmpty()) {
                     where.and();
                 }
-
-                // NJD TODO - When do we need to flush this data? Service startup???
 
                 where.or(where.eq(Button.STATE_COLUMN_NAME, ButtonState.OFF),
                          where.eq(Button.STATE_COLUMN_NAME, ButtonState.ON),
@@ -105,17 +111,14 @@ public class ButtonDao {
             }
 
             PreparedQuery<Button> preparedQuery = queryBuilder.prepare();
-            List<Button> buttons = buttonDao.query(preparedQuery);
-            if (buttons != null && buttons.size() == 1) {
-                button = buttons.get(0);
-            }
+            buttons = buttonDao.query(preparedQuery);
         } catch (SQLException s) {
-            Log.e(TAG, "Exception while retrieving button for buttonId '" + buttonId + "'.");
-            button = null;
+            Log.e(TAG, "Exception while retrieving button.", s);
+            buttons = null;
         }
         OpenHelperManager.releaseHelper();
 
-        return button;
+        return buttons;
     }
 
     public void delete(Button button) {

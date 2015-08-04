@@ -1,7 +1,10 @@
 package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.util.Log;
 
@@ -9,24 +12,25 @@ import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.enums.ButtonState;
-import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
-import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
+import com.ndipatri.roboButton.events.MonitoringServiceDestroyedEvent;
+import com.ndipatri.roboButton.events.RegionLostEvent;
+import com.ndipatri.roboButton.events.ToggleAllButtonsRequest;
+import com.ndipatri.roboButton.events.ToggleButtonStateRequest;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
-import com.squareup.otto.Produce;
+import com.ndipatri.roboButton.utils.NotificationHelper;
 import com.squareup.otto.Subscribe;
 
 import javax.inject.Inject;
 
 /**
  * Communicates with each individual Button.
- *
+ * <p/>
  * Implementations are expected to call 'setLocalButtonState(ButtonState)' when a new button state has been detected.
- *
  */
 public abstract class ButtonCommunicator {
 
@@ -34,12 +38,19 @@ public abstract class ButtonCommunicator {
 
     protected boolean shouldRun = false;
 
+    protected ButtonState lastNotifiedState;
+
     @Inject
     BusProvider bus;
 
-    @Inject BluetoothProvider bluetoothProvider;
+    @Inject
+    BluetoothProvider bluetoothProvider;
 
-    @Inject ButtonDao buttonDao;
+    @Inject
+    ButtonDao buttonDao;
+
+    @Inject
+    NotificationHelper notificationHelper;
 
     protected boolean inBackground = false;
 
@@ -67,7 +78,9 @@ public abstract class ButtonCommunicator {
     }
 
     protected abstract void setRemoteState(ButtonState buttonState);
+
     protected abstract void startCommunicating();
+
     protected abstract boolean isCommunicating();
 
     protected Button persistButton(final String buttonAddress) {
@@ -79,12 +92,14 @@ public abstract class ButtonCommunicator {
         if (persistedButton != null) {
             discoveredButton = persistedButton;
 
-            persistedButton.setState(ButtonState.NEVER_CONNECTED);
+            persistedButton.setState(ButtonState.CONNECTING);
         } else {
             discoveredButton = new Button(buttonAddress, buttonAddress, true);
         }
 
         buttonDao.createOrUpdateButton(discoveredButton);
+
+        sendButtonStateNotificationIfChanged();
 
         return discoveredButton;
     }
@@ -97,13 +112,15 @@ public abstract class ButtonCommunicator {
         if (bluetoothProvider.isBluetoothSupported() && bluetoothProvider.isBluetoothEnabled()) {
             shouldRun = true;
 
-            setButtonPersistedState(ButtonState.NEVER_CONNECTED);
+            setButtonPersistedState(ButtonState.CONNECTING);
 
             startCommunicating();
         } else {
             bus.post(new BluetoothDisabledEvent());
             shouldRun = false;
         }
+
+        registerForScreenWakeBroadcast();
     }
 
     public void shutdown() {
@@ -116,6 +133,8 @@ public abstract class ButtonCommunicator {
                 }
             }
         }
+
+        unRegisterForScreenWakeBroadcast();
 
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -131,7 +150,9 @@ public abstract class ButtonCommunicator {
 
         postButtonLostEvent(buttonId);
 
-        setLocalButtonState(ButtonState.DISCONNECTED, true);
+        clearNotification();
+
+        setLocalButtonState(ButtonState.OFFLINE, true);
 
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
@@ -145,6 +166,8 @@ public abstract class ButtonCommunicator {
         Button button = getButton();
         button.setState(buttonState);
         buttonDao.createOrUpdateButton(button);
+
+        sendButtonStateNotificationIfChanged();
     }
 
     protected boolean isAutoModeEnabled() {
@@ -161,7 +184,7 @@ public abstract class ButtonCommunicator {
 
         ButtonState currentButtonState = getButton().getState();
 
-        if (force || (currentButtonState == ButtonState.NEVER_CONNECTED || currentButtonState != newButtonState)) {
+        if (force || (currentButtonState == ButtonState.CONNECTING || currentButtonState != newButtonState)) {
             setButtonPersistedState(newButtonState);
         }
     }
@@ -180,7 +203,7 @@ public abstract class ButtonCommunicator {
     }
 
     protected void setRemoteAutoStateIfApplicable(final ButtonState remoteState) {
-        if (getButton().getState() == ButtonState.NEVER_CONNECTED) {
+        if (getButton().getState() == ButtonState.CONNECTING) {
 
             if (isAutoModeEnabled() && getButton().isAutoModeEnabled() && remoteState != ButtonState.ON) {
 
@@ -194,29 +217,87 @@ public abstract class ButtonCommunicator {
     private class BusProxy {
 
         @Subscribe
+        public void onRegionLost(final RegionLostEvent event) {
+            shutdown();
+            clearNotification();
+        }
+
+        @Subscribe
+        public void onMonitoringServiceDestroyedEvent(final MonitoringServiceDestroyedEvent event) {
+            shutdown();
+        }
+
+        @Subscribe
         public void onApplicationFocusChangeEvent(final ApplicationFocusChangeEvent event) {
             // TODO - currently not using this w.r.t. our comms with LightBlue Bean
             inBackground = event.inBackground;
         }
 
         @Subscribe
-        public void onArduinoButtonStateChangeRequestEvent(final ButtonStateChangeRequest event) {
-
-            boolean toggle = false;
-            ButtonState requestedButtonState = event.requestedButtonState;
-            if (requestedButtonState == null) {
-                toggle = true;
-                requestedButtonState = getButton().getState();
+        public void onToggleButtonStateRequest(final ToggleButtonStateRequest event) {
+            if (event.buttonId.equals(ButtonCommunicator.this.buttonId)) {
+                toggleButtonState();
             }
-
-            if (requestedButtonState.value) {
-                requestedButtonState = toggle ? ButtonState.OFF : ButtonState.ON;
-            } else {
-                requestedButtonState = toggle ? ButtonState.ON : ButtonState.OFF;
-            }
-
-
-            setRemoteState(requestedButtonState);
         }
+
+        @Subscribe
+        public void onToggleAllButtonsRequest(final ToggleAllButtonsRequest event) {
+            toggleButtonState();
+        }
+
+        @Subscribe
+        public void onArduinoButtonStateChangeRequestEvent(final ButtonStateChangeRequest event) {
+            if (event.buttonId.equals(ButtonCommunicator.this.buttonId)) {
+                setRemoteState(event.requestedButtonState);
+            }
+        }
+
+        @Subscribe
+        public void onApplicationFocusChanged(final ApplicationFocusChangeEvent event) {
+            if (event.inBackground) {
+                sendButtonStateNotificationIfChanged();
+            }
+        }
+    }
+
+    protected void toggleButtonState() {
+        ButtonState requestedButtonState = getButton().getState();
+
+        if (requestedButtonState.value) {
+            requestedButtonState = ButtonState.OFF;
+        } else {
+            requestedButtonState = ButtonState.ON;
+        }
+
+        setRemoteState(requestedButtonState);
+    }
+
+    private void registerForScreenWakeBroadcast() {
+        IntentFilter screenStateFilter = new IntentFilter();
+        screenStateFilter.addAction(Intent.ACTION_SCREEN_ON);
+        context.registerReceiver(screenWakeReceiver, screenStateFilter);
+    }
+
+    private void unRegisterForScreenWakeBroadcast() {
+        context.unregisterReceiver(screenWakeReceiver);
+    }
+
+    private BroadcastReceiver screenWakeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive()");
+            sendButtonStateNotificationIfChanged();
+        }
+    };
+
+    protected void sendButtonStateNotificationIfChanged() {
+        if (getButton().getState() != lastNotifiedState) {
+            lastNotifiedState = getButton().getState();
+            notificationHelper.sendNotification(getButton().getId(), getButton().getName(), getButton().getState());
+        }
+    }
+
+    protected void clearNotification() {
+        notificationHelper.clearNotification(getButton().getId());
     }
 }

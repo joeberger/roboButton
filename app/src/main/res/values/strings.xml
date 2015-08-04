@@ -17,10 +17,10 @@
     <string name="robo_button_found">RoboButton Found!</string>
     <string name="new_robo_button">New Robo Button</string>
     <string name="found">Found</string>
-    <string name="never_connected">nevet connected</string>
+    <string name="offline">offline</string>
     <string name="on">on</string>
     <string name="off">off</string>
-    <string name="disconnected">disconnected</string>
+    <string name="connecting">connecting</string>
     <string name="unknown">Unknown</string>
     <string name="is_connecting">is connecting</string>
     <string name="view_nearby_beacons">View Nearby Beacons</string>
