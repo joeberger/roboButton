@@ -14,7 +14,8 @@ import com.ndipatri.roboButton.utils.BusProvider;
 import javax.inject.Inject;
 
 /**
- * After 10 seconds, this stub will emit a ButtonFound even for the LightBlue Bean button type.
+ * After 5 seconds, this stub will emit a ButtonFound even for the LightBlue Bean button type.
+ * 5 seconds after that, this stub will emit another ButtonFound even for the LightBlue Bean button type.
  */
 public class LightBlueButtonDiscoveryProviderStub implements ButtonDiscoveryProvider {
 
@@ -23,6 +24,11 @@ public class LightBlueButtonDiscoveryProviderStub implements ButtonDiscoveryProv
     private Context context;
 
     protected boolean discovering = false;
+
+    protected int DISCOVERY_DELAY_MILLIS = 5000;
+    protected int NUMBER_OF_DISCOVERED_BUTTONS = 5;
+
+    protected int buttonCount = 0;
 
     @Inject
     BusProvider bus;
@@ -43,8 +49,13 @@ public class LightBlueButtonDiscoveryProviderStub implements ButtonDiscoveryProv
         }
 
         discovering = true;
+        buttonCount = 0;
 
-        new Handler().postDelayed(buttonFoundRunnable, 5000);
+        discoverButtonAfterDelay();
+    }
+
+    protected void discoverButtonAfterDelay() {
+        new Handler().postDelayed(buttonFoundRunnable, DISCOVERY_DELAY_MILLIS);
     }
 
     private Runnable buttonFoundRunnable = new Runnable() {
@@ -52,7 +63,12 @@ public class LightBlueButtonDiscoveryProviderStub implements ButtonDiscoveryProv
         public void run() {
             if (discovering) {
                 Toast.makeText(context, "LightBlue Button Found.", Toast.LENGTH_LONG).show();
-                bus.post(new ButtonDiscoveryEvent(true, ButtonType.LIGHTBLUE_BUTTON, "aa:bb:cc:dd:ee", null));
+                buttonCount++;
+                bus.post(new ButtonDiscoveryEvent(true, ButtonType.LIGHTBLUE_BUTTON, getButtonId(), null));
+
+                if (buttonCount < NUMBER_OF_DISCOVERED_BUTTONS) {
+                    discoverButtonAfterDelay();
+                }
             }
         }
     };
@@ -61,6 +77,24 @@ public class LightBlueButtonDiscoveryProviderStub implements ButtonDiscoveryProv
         Log.d(TAG, "Stopping Button Discovery...");
 
         discovering = false;
+
     }
 
+    private String[] octets = new String[] {"aa", "bb", "cc", "dd", "ee"};
+
+    private String getButtonId() {
+
+        StringBuilder buttonIdBuf = new StringBuilder();
+
+        for (int i=0; i < octets.length; i++) {
+            int index = (int)(Math.random()*5.0);
+
+            buttonIdBuf.append(octets[index]);
+
+            if (i < octets.length-1) {
+                buttonIdBuf.append(":");
+            }
+        }
+        return buttonIdBuf.toString();
+    }
 }

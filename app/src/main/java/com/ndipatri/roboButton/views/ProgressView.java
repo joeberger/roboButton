@@ -113,7 +113,6 @@ public class ProgressView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        Log.d(TAG, "onDraw()");
 
         Paint arcPaint = getPaint(buttonState);
         if (arcPaint != null) {
@@ -129,7 +128,6 @@ public class ProgressView extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        Log.d(TAG, "onMeasure()");
 
         width = MeasureSpec.getSize(widthMeasureSpec);
         height = MeasureSpec.getSize(heightMeasureSpec);
@@ -139,7 +137,6 @@ public class ProgressView extends View {
 
     // This will draw an arc given the current fuel level
     private Path renderPath(int percentage) {
-        Log.d(TAG, "createPath(percentage:'" + percentage + "')");
         Path path = new Path();
 
         RectF boundingRectangle = new RectF(strokeWidth + getPaddingLeft(),
@@ -167,24 +164,20 @@ public class ProgressView extends View {
         arcAnimator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
-                Log.d(TAG, "onAnimationStart()");
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                Log.d(TAG, "onAnimationEnd()");
 
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
-                Log.d(TAG, "onAnimationCancel()");
 
             }
 
             @Override
             public void onAnimationRepeat(Animator animation) {
-                Log.d(TAG, "onAnimationRepeat()");
 
             }
         });
@@ -207,7 +200,6 @@ public class ProgressView extends View {
 
     public synchronized void setCurrentValue(int currentValue) {
         this.currentValue = currentValue;
-        Log.d(TAG, "setCurrentValue(currentValue='" + getCurrentValue() + "')");
 
         postInvalidate();
     }

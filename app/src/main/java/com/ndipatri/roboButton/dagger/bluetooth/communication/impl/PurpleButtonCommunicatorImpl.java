@@ -245,7 +245,7 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
                             scheduleConnectivityCheck();
                         } else {
                             stop();
-                            setButtonPersistedState(ButtonState.OFFLINE);
+                            setButtonPersistedStateAndNotify(ButtonState.OFFLINE);
                         }
                     }
 

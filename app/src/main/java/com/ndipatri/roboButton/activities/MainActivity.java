@@ -19,13 +19,16 @@ import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
+import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.services.MonitoringService;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.squareup.otto.Subscribe;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -50,7 +53,7 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getCanonicalName();
 
     // All buttons that have been rendered into fragments.
-    private Set<String> buttonsWithFragments = new HashSet<String>();
+    private Set<String> buttonsWithFragments = Collections.synchronizedSet(new HashSet<String>());
 
     @InjectView(R.id.mainViewGroup) ViewGroup mainViewGroup;
 
@@ -68,11 +71,6 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
 
@@ -82,6 +80,8 @@ public class MainActivity extends Activity {
     @Override
     public void onPause() {
         super.onPause();
+
+        Log.d(TAG, "onPause()");
 
         bus.unregister(this);
 
@@ -219,9 +219,16 @@ public class MainActivity extends Activity {
         return (ButtonFragment) getFragmentManager().findFragmentByTag(getButtonFragmentTag(buttonId));
     }
 
-    private synchronized void forgetAllArduinoButtons() {
-        for (final String buttonFragmentId : buttonsWithFragments) {
-            forgetArduinoButton(buttonFragmentId);
+    private void forgetAllArduinoButtons() {
+        Iterator<String> fragIter = buttonsWithFragments.iterator();
+        while(fragIter.hasNext()) {
+            String buttonId = fragIter.next();
+
+            ButtonFragment ButtonFragment = lookupButtonFragment(buttonId);
+            if (ButtonFragment != null) {
+                getFragmentManager().beginTransaction().remove(ButtonFragment).commitAllowingStateLoss();
+                fragIter.remove();
+            }
         }
     }
 
@@ -229,19 +236,17 @@ public class MainActivity extends Activity {
         startActivity(new Intent(this, ViewNearbyBeaconsActivity.class));
     }
 
-    private synchronized void forgetArduinoButton(final String lostButtonId) {
+    @Subscribe
+    public void onButtonLostEvent(ButtonLostEvent ButtonLostEvent) {
+        Log.d(TAG, "onButtonLostEvent()");
+
+        String lostButtonId = ButtonLostEvent.getButtonId();
+
         final ButtonFragment ButtonFragment = lookupButtonFragment(lostButtonId);
         if (ButtonFragment != null) {
             getFragmentManager().beginTransaction().remove(ButtonFragment).commitAllowingStateLoss();
             buttonsWithFragments.remove(lostButtonId);
         }
-    }
-
-    @Subscribe
-    public void onButtonLostEvent(ButtonLostEvent ButtonLostEvent) {
-        String lostButtonId = ButtonLostEvent.getButtonId();
-
-        forgetArduinoButton(lostButtonId);
     }
 
     @Subscribe
@@ -252,25 +257,23 @@ public class MainActivity extends Activity {
     }
 
     @Subscribe
-    public void onButtonDiscoveredEvent(ButtonDiscoveryEvent buttonDiscoveryEvent) {
+    public void onButtonUpdatedEvent(ButtonUpdatedEvent buttonUpdatedEvent) {
 
-        // The button itself handles its own change of state.. We use this event as an indication that we need
-        // to render the button if we haven't already done so.
+        Button updatedButton = buttonDao.getButton(buttonUpdatedEvent.getButtonId());
 
-        if (buttonDiscoveryEvent.isSuccess()) {
-            renderButtonFragmentIfNotAlready(buttonDiscoveryEvent.getDeviceAddress());
-        }
+        Log.d(TAG, "onButtonUpdatedEvent('" + updatedButton + ").')");
+
+        renderButtonFragmentIfNotAlready(buttonUpdatedEvent.buttonId);
     }
 
     //endregion
 
     private void renderButtonFragmentIfNotAlready(final String buttonId) {
-        ButtonFragment existingButtonFragment = lookupButtonFragment(buttonId);
-        if (existingButtonFragment == null) {
+        if (!buttonsWithFragments.contains(buttonId)) {
             Log.d(TAG, "Rendering fragment for '" + buttonId + "'.");
+            buttonsWithFragments.add(buttonId);
             final ButtonFragment newButtonFragment = ButtonFragment.newInstance(buttonId);
             getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(buttonId)).commitAllowingStateLoss();
-            buttonsWithFragments.add(buttonId);
         }
     }
 

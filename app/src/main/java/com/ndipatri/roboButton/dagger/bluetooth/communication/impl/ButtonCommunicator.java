@@ -91,11 +91,10 @@ public abstract class ButtonCommunicator {
 
         if (persistedButton != null) {
             discoveredButton = persistedButton;
-
-            persistedButton.setState(ButtonState.CONNECTING);
         } else {
             discoveredButton = new Button(buttonAddress, buttonAddress, true);
         }
+        discoveredButton.setState(ButtonState.OFFLINE);
 
         buttonDao.createOrUpdateButton(discoveredButton);
 
@@ -112,7 +111,7 @@ public abstract class ButtonCommunicator {
         if (bluetoothProvider.isBluetoothSupported() && bluetoothProvider.isBluetoothEnabled()) {
             shouldRun = true;
 
-            setButtonPersistedState(ButtonState.CONNECTING);
+            setButtonPersistedStateAndNotify(ButtonState.OFFLINE);
 
             startCommunicating();
         } else {
@@ -152,7 +151,7 @@ public abstract class ButtonCommunicator {
 
         clearNotification();
 
-        setLocalButtonState(ButtonState.OFFLINE, true);
+        setLocalButtonState(ButtonState.OFFLINE);
 
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
@@ -162,7 +161,14 @@ public abstract class ButtonCommunicator {
         });
     }
 
-    protected void setButtonPersistedState(ButtonState buttonState) {
+    protected void setLocalButtonState(final ButtonState buttonState) {
+
+        Log.d(TAG, "setLocalButtonState(): " + buttonState);
+
+        setButtonPersistedStateAndNotify(buttonState);
+    }
+
+    protected void setButtonPersistedStateAndNotify(ButtonState buttonState) {
         Button button = getButton();
         button.setState(buttonState);
         buttonDao.createOrUpdateButton(button);
@@ -172,21 +178,6 @@ public abstract class ButtonCommunicator {
 
     protected boolean isAutoModeEnabled() {
         return RBApplication.getInstance().getAutoModeEnabledFlag();
-    }
-
-    protected void setLocalButtonState(final ButtonState buttonState) {
-        setLocalButtonState(buttonState, false);
-    }
-
-    protected void setLocalButtonState(final ButtonState newButtonState, boolean force) {
-
-        Log.d(TAG, "setLocalButtonState()");
-
-        ButtonState currentButtonState = getButton().getState();
-
-        if (force || (currentButtonState == ButtonState.CONNECTING || currentButtonState != newButtonState)) {
-            setButtonPersistedState(newButtonState);
-        }
     }
 
     protected void postButtonLostEvent(final String buttonId) {
@@ -246,7 +237,8 @@ public abstract class ButtonCommunicator {
         }
 
         @Subscribe
-        public void onArduinoButtonStateChangeRequestEvent(final ButtonStateChangeRequest event) {
+        public void onButtonStateChangeRequest(final ButtonStateChangeRequest event) {
+            Log.d(TAG, "onButtonStateChangeRequest()");
             if (event.buttonId.equals(ButtonCommunicator.this.buttonId)) {
                 setRemoteState(event.requestedButtonState);
             }
@@ -291,7 +283,7 @@ public abstract class ButtonCommunicator {
     };
 
     protected void sendButtonStateNotificationIfChanged() {
-        if (getButton().getState() != lastNotifiedState) {
+        if (lastNotifiedState == null || getButton().getState() != lastNotifiedState) {
             lastNotifiedState = getButton().getState();
             notificationHelper.sendNotification(getButton().getId(), getButton().getName(), getButton().getState());
         }

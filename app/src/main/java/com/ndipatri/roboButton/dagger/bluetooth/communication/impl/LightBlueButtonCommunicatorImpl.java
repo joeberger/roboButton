@@ -151,7 +151,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
                         if (newButtonState != null) {
                             setRemoteAutoStateIfApplicable(newButtonState);
 
-                            setLocalButtonState(newButtonState, true);
+                            setLocalButtonState(newButtonState);
                         }
                     }
                 }

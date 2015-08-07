@@ -10,18 +10,36 @@ import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.enums.ButtonType;
 import com.ndipatri.roboButton.models.Button;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.TreeSet;
+
 public class GenericButtonCommunicatorStub extends ButtonCommunicator {
 
     private static final String TAG = GenericButtonCommunicatorStub.class.getCanonicalName();
 
-    protected long STUB_DELAY_MILLIS = 2000;
+    protected long STUB_DELAY_MILLIS = 1000;
 
     // This is our fake remote button's state.. This needs to persist across various instances
     // of communicator (as we go in and out of region)
     //
     // We maintain a separate notion of the remote button state as synchronizing this and 'localButtonState'
     // is the main job of a ButtonCommunicator.
-    private static ButtonState remoteButtonState = ButtonState.OFF;
+    private static HashMap<String, ButtonState> remoteButtonStates = new HashMap<>();
+
+    private ButtonState getRemoteButtonState() {
+        ButtonState localButtonState = remoteButtonStates.get(buttonId);
+        if (localButtonState == null) {
+            localButtonState = ButtonState.OFF;
+            remoteButtonStates.put(buttonId, localButtonState);
+        }
+
+        return localButtonState;
+    }
+
+    private void setRemoteButtonState(ButtonState buttonState) {
+        remoteButtonStates.put(buttonId, buttonState);
+    }
 
     public GenericButtonCommunicatorStub(final Context context, final BluetoothDevice device, final String buttonId) {
         super(context, device, buttonId);
@@ -32,7 +50,7 @@ public class GenericButtonCommunicatorStub extends ButtonCommunicator {
     @Override
     public void startCommunicating() {
         // Here we assume we've communicated with remote button and determined its current state, without changing it.
-        setLocalButtonState(remoteButtonState);
+        setLocalButtonState(getRemoteButtonState());
     }
 
     @Override
@@ -44,7 +62,7 @@ public class GenericButtonCommunicatorStub extends ButtonCommunicator {
     protected void setRemoteState(final ButtonState requestedButtonState) {
 
         Toast.makeText(context, "Sending '" + (requestedButtonState.value ? "ON" : "OFF") + "' request to Button.", Toast.LENGTH_SHORT).show();
-        GenericButtonCommunicatorStub.remoteButtonState = requestedButtonState;
+        setRemoteButtonState(requestedButtonState);
 
         new Handler().postDelayed(new Runnable() {
             @Override
