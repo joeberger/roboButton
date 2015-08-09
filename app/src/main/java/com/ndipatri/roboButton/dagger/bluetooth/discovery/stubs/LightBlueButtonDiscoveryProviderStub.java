@@ -26,7 +26,7 @@ public class LightBlueButtonDiscoveryProviderStub implements ButtonDiscoveryProv
     protected boolean discovering = false;
 
     protected int DISCOVERY_DELAY_MILLIS = 5000;
-    protected int NUMBER_OF_DISCOVERED_BUTTONS = 5;
+    protected int NUMBER_OF_DISCOVERED_BUTTONS = 2;
 
     protected int buttonCount = 0;
 
@@ -62,7 +62,7 @@ public class LightBlueButtonDiscoveryProviderStub implements ButtonDiscoveryProv
         @Override
         public void run() {
             if (discovering) {
-                Toast.makeText(context, "LightBlue Button Found.", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "LightBlue Button Found.", Toast.LENGTH_SHORT).show();
                 buttonCount++;
                 bus.post(new ButtonDiscoveryEvent(true, ButtonType.LIGHTBLUE_BUTTON, getButtonId(), null));
 

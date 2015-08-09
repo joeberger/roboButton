@@ -16,6 +16,7 @@ import com.ndipatri.roboButton.events.ApplicationFocusChangeEvent;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.ButtonStateChangeRequest;
+import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
 import com.ndipatri.roboButton.events.MonitoringServiceDestroyedEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
 import com.ndipatri.roboButton.events.ToggleAllButtonsRequest;
@@ -36,7 +37,13 @@ public abstract class ButtonCommunicator {
 
     private static final String TAG = ButtonCommunicator.class.getCanonicalName();
 
-    protected boolean shouldRun = false;
+    protected enum STATE {
+        RUNNING,
+        SHUTTING_DOWN,
+        STOPPED,;
+    }
+
+    protected STATE state = STATE.STOPPED;
 
     protected ButtonState lastNotifiedState;
 
@@ -98,8 +105,6 @@ public abstract class ButtonCommunicator {
 
         buttonDao.createOrUpdateButton(discoveredButton);
 
-        sendButtonStateNotificationIfChanged();
-
         return discoveredButton;
     }
 
@@ -109,14 +114,15 @@ public abstract class ButtonCommunicator {
         bus.register(busProxy);
 
         if (bluetoothProvider.isBluetoothSupported() && bluetoothProvider.isBluetoothEnabled()) {
-            shouldRun = true;
+            state = STATE.RUNNING;
 
-            setButtonPersistedStateAndNotify(ButtonState.OFFLINE);
+            setButtonPersistedState(ButtonState.OFFLINE);
+            sendButtonStateNotificationIfChanged();
 
             startCommunicating();
         } else {
             bus.post(new BluetoothDisabledEvent());
-            shouldRun = false;
+            state = STATE.STOPPED;
         }
 
         registerForScreenWakeBroadcast();
@@ -125,7 +131,8 @@ public abstract class ButtonCommunicator {
     public void shutdown() {
         if (isAutoModeEnabled() && getButton().isAutoModeEnabled() && isCommunicating()) {
 
-            if (shouldRun) {
+            if (state == STATE.RUNNING) {
+                state = STATE.SHUTTING_DOWN;
                 if (getButton().getState() != ButtonState.OFF) {
                     Log.d(TAG, "Auto Shutdown!");
                     setRemoteState(ButtonState.OFF);
@@ -133,25 +140,20 @@ public abstract class ButtonCommunicator {
             }
         }
 
-        unRegisterForScreenWakeBroadcast();
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                stop();
-            }
-        }, 3000);
+        stop();
     }
 
     protected void stop() {
         Log.d(TAG, "stop()");
-        shouldRun = false;
+        state = STATE.STOPPED;
 
         postButtonLostEvent(buttonId);
 
         clearNotification();
 
         setLocalButtonState(ButtonState.OFFLINE);
+
+        unRegisterForScreenWakeBroadcast();
 
         new Handler(context.getMainLooper()).post(new Runnable() {
             @Override
@@ -165,15 +167,18 @@ public abstract class ButtonCommunicator {
 
         Log.d(TAG, "setLocalButtonState(): " + buttonState);
 
-        setButtonPersistedStateAndNotify(buttonState);
+        setButtonPersistedState(buttonState);
+        sendButtonStateNotificationIfChanged();
     }
 
-    protected void setButtonPersistedStateAndNotify(ButtonState buttonState) {
+    protected void setButtonPersistedState(ButtonState buttonState) {
         Button button = getButton();
         button.setState(buttonState);
         buttonDao.createOrUpdateButton(button);
 
-        sendButtonStateNotificationIfChanged();
+        if (state == STATE.RUNNING) {
+            bus.post(new ButtonUpdatedEvent(buttonId));
+        }
     }
 
     protected boolean isAutoModeEnabled() {
@@ -247,7 +252,9 @@ public abstract class ButtonCommunicator {
         @Subscribe
         public void onApplicationFocusChanged(final ApplicationFocusChangeEvent event) {
             if (event.inBackground) {
-                sendButtonStateNotificationIfChanged();
+                sendButtonStateNotificationIfChanged(true);
+            } else {
+                clearNotification();
             }
         }
     }
@@ -283,7 +290,12 @@ public abstract class ButtonCommunicator {
     };
 
     protected void sendButtonStateNotificationIfChanged() {
-        if (lastNotifiedState == null || getButton().getState() != lastNotifiedState) {
+        sendButtonStateNotificationIfChanged(false);
+    }
+
+    protected void sendButtonStateNotificationIfChanged(boolean force) {
+        if (RBApplication.getInstance().isBackgrounded() &&
+                (force || lastNotifiedState == null || getButton().getState() != lastNotifiedState)) {
             lastNotifiedState = getButton().getState();
             notificationHelper.sendNotification(getButton().getId(), getButton().getName(), getButton().getState());
         }

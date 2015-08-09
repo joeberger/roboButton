@@ -21,7 +21,7 @@ import javax.inject.Inject;
 
 /**
  * This class will perform a Bluetooth Classic 'Discovery' operation.  After a defined timeout period, the scan will
- * be stopped.  At that time a 'success' or 'failure' event will be emitted based on whether a device matching the
+ * be running.  At that time a 'success' or 'failure' event will be emitted based on whether a device matching the
  * defined 'discoveryPattern' was found.
  */
 public class PurpleButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {

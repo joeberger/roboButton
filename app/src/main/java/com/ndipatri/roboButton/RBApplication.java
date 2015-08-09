@@ -103,6 +103,10 @@ public class RBApplication extends Application {
         return instance;
     }
 
+    public boolean isBackgrounded() {
+        return inBackground;
+    }
+
     protected void onForeground() {
         Log.d(TAG, "Application foregrounded...");
 

@@ -51,10 +51,13 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
 
     private boolean running = false;
 
-    private long beaconFoundInterval = -1; // if '-1', the beacon is always present.
-    //private long beaconFoundInterval = 20000; // how long the beacon is found
+    // If true, will repeat the 'lost-found-lost' cycle... otherwise, will only do once.
+    private boolean shouldCycle = true;
 
-    private long beaconLostInterval = 5000; // how long the beacon is lost
+    //private long beaconFoundInterval = -1; // if '-1', the beacon is always present.
+    private long beaconFoundInterval = 10000; // how long the beacon is found
+
+    private long beaconLostInterval = 10000; // how long the beacon is lost
 
     private Handler mainThreadHandler = new Handler();
 
@@ -81,7 +84,7 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
 
         removeAllCallbacks();
-        mainThreadHandler.postDelayed(beaconFoundRunnable, 5000);
+        mainThreadHandler.postDelayed(beaconFoundRunnable, beaconLostInterval);
     }
 
     private void removeAllCallbacks() {
@@ -120,7 +123,9 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
                 postRegionLostEvent(new Region(1, 2, RegionUtils.ESTIMOTE_UUID));
 
                 removeAllCallbacks();
-                mainThreadHandler.postDelayed(beaconFoundRunnable, beaconLostInterval);
+                if (shouldCycle) {
+                    mainThreadHandler.postDelayed(beaconFoundRunnable, beaconLostInterval);
+                }
             }
         }
     };

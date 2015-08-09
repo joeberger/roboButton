@@ -210,7 +210,7 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
 
                 case QUERY_STATE_MESSAGE:
 
-                    if (shouldRun) {
+                    if (state == STATE.RUNNING) {
 
                         Log.d(TAG, "queryRemoteState()");
                         ButtonState newRemoteState = getRemoteState();
@@ -229,7 +229,7 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
 
                 case SET_STATE_MESSAGE:
 
-                    if (shouldRun) {
+                    if (state == STATE.RUNNING || state == STATE.SHUTTING_DOWN) {
                         Log.d(TAG, "sendSerialDataToButton()");
                         sendSerialDataToButton(candidateButtonState);
                     }
@@ -239,13 +239,14 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
                 case CONNECTIVITY_CHECK_MESSAGE:
 
                     Log.d(TAG, "checkingConnectivity...");
-                    if (shouldRun) {
+                    if (state == STATE.RUNNING ) {
 
                         if (isCommunicating()) {
                             scheduleConnectivityCheck();
                         } else {
                             stop();
-                            setButtonPersistedStateAndNotify(ButtonState.OFFLINE);
+                            setButtonPersistedState(ButtonState.OFFLINE);
+                            sendButtonStateNotificationIfChanged();
                         }
                     }
 

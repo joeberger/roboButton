@@ -50,8 +50,6 @@ public class ButtonDao {
         buttonDao.createOrUpdate(dirtyButton);
 
         OpenHelperManager.releaseHelper();
-
-        bus.post(new ButtonUpdatedEvent(dirtyButton.getId()));
     }
 
     public void clearStateOfAllButtons() {

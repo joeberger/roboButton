@@ -50,7 +50,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         return new BeanDiscoveryListener() {
             @Override
             public void onBeanDiscovered(Bean discoveredBean, int receivedRSSI) {
-                if (shouldRun && discoveredBean.getDevice().getAddress().equals(buttonId)) {
+                if (state == STATE.RUNNING && discoveredBean.getDevice().getAddress().equals(buttonId)) {
 
                     LightBlueButtonCommunicatorImpl.this.discoveredBean = discoveredBean;
                     getBeanManager().cancelDiscovery();
@@ -60,8 +60,8 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
 
             @Override
             public void onDiscoveryComplete() {
-                if (shouldRun && LightBlueButtonCommunicatorImpl.this.discoveredBean == null) {
-                    // try indefinitely until this communicator is explicitly stopped
+                if (state == STATE.RUNNING && LightBlueButtonCommunicatorImpl.this.discoveredBean == null) {
+                    // try indefinitely until this communicator is explicitly running
                     startButtonConnect();
                 }
             }
@@ -101,7 +101,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             public void onConnectionFailed() {
                 Log.d(TAG, "onConnectionFailed()");
 
-                // try indefinitely until this communicator is explicitly stopped
+                // try indefinitely until this communicator is explicitly running
                 startButtonConnect();
             }
 
@@ -109,7 +109,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             public void onError(BeanError beanError) {
                 Log.d(TAG, "onError()");
 
-                // try indefinitely until this communicator is explicitly stopped
+                // try indefinitely until this communicator is explicitly running
                 startButtonConnect();
             }
 
@@ -126,7 +126,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
 
                 Log.d(TAG, "onSerialMessageReceived()");
 
-                if (shouldRun) {
+                if (state == STATE.RUNNING) {
                     ButtonState newButtonState;
 
                     String lightBlueButtonValue = null;
@@ -165,7 +165,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
     }
 
     protected void setRemoteState(ButtonState buttonState) {
-        if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
+        if ((state == STATE.RUNNING || state == STATE.SHUTTING_DOWN) && discoveredBean != null & discoveredBean.isConnected()) {
             byte[] encodedButtonState = null;
 
             if (getButton().getState() != buttonState) {
@@ -186,7 +186,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
     }
 
     protected void sendRemoteStateQuery() {
-        if (shouldRun && discoveredBean != null & discoveredBean.isConnected()) {
+        if (state == STATE.RUNNING && discoveredBean != null & discoveredBean.isConnected()) {
             discoveredBean.sendSerialMessage(new byte[]{'Q', '1', '2', '3', '4'});
             // The LightBlue will respond with a serial message..
         }
