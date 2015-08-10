@@ -88,8 +88,6 @@ public abstract class ButtonCommunicator {
 
     protected abstract void startCommunicating();
 
-    protected abstract boolean isCommunicating();
-
     protected Button persistButton(final String buttonAddress) {
 
         Button discoveredButton;
@@ -129,7 +127,7 @@ public abstract class ButtonCommunicator {
     }
 
     public void shutdown() {
-        if (isAutoModeEnabled() && getButton().isAutoModeEnabled() && isCommunicating()) {
+        if (isAutoModeEnabled() && getButton().isAutoModeEnabled()) {
 
             if (state == STATE.RUNNING) {
                 state = STATE.SHUTTING_DOWN;

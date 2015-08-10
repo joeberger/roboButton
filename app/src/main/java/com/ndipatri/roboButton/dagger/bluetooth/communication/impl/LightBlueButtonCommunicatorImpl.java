@@ -37,11 +37,6 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         startButtonConnect();
     }
 
-    @Override
-    protected boolean isCommunicating() {
-        return discoveredBean != null && discoveredBean.isConnected();
-    }
-
     public synchronized void startButtonConnect() {
         getBeanManager().startDiscovery(getButtonDiscoveryListener());
     }

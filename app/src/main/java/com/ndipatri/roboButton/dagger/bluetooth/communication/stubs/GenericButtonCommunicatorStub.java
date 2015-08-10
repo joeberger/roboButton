@@ -53,11 +53,6 @@ public class GenericButtonCommunicatorStub extends ButtonCommunicator {
         setLocalButtonState(getRemoteButtonState());
     }
 
-    @Override
-    protected boolean isCommunicating() {
-        return true;
-    }
-
     // We will assume this is always successful with a slight delay..
     protected void setRemoteState(final ButtonState requestedButtonState) {
 
@@ -68,10 +63,12 @@ public class GenericButtonCommunicatorStub extends ButtonCommunicator {
             @Override
             public void run() {
                 Toast.makeText(context, "Received '" + (requestedButtonState.value ? "ON" : "OFF") + "' response from Button.", Toast.LENGTH_SHORT).show();
-                if (requestedButtonState.value) {
-                    setLocalButtonState(ButtonState.ON);
-                } else {
-                    setLocalButtonState(ButtonState.OFF);
+                if (state == STATE.RUNNING) {
+                    if (requestedButtonState.value) {
+                        setLocalButtonState(ButtonState.ON);
+                    } else {
+                        setLocalButtonState(ButtonState.OFF);
+                    }
                 }
             }
         }, STUB_DELAY_MILLIS);
