@@ -1,6 +1,5 @@
 package com.ndipatri.roboButton.dagger.bluetooth.discovery.impl;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,50 +10,44 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.dagger.RBModule;
+import com.ndipatri.roboButton.dagger.annotations.Named;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonType;
-import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
-import com.ndipatri.roboButton.utils.BusProvider;
 
 import javax.inject.Inject;
 
 /**
- * This class will perform a Bluetooth Classic 'Discovery' operation.  After a defined timeout period, the scan will
- * be running.  At that time a 'success' or 'failure' event will be emitted based on whether a device matching the
+ * This class will perform a Bluetooth Classic 'Discovery' operation.  After a defined timeout period,
+ * a 'success' or 'failure' event will be emitted based on whether a device matching the
  * defined 'discoveryPattern' was found.
  */
-public class PurpleButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
+public class PurpleButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
 
     private static final String TAG = PurpleButtonDiscoveryProviderImpl.class.getCanonicalName();
-
-    private Context context;
-
-    BluetoothAdapter bluetoothAdapter = null;
 
     protected int buttonDiscoveryDurationMillis;
 
     String discoverableButtonPatternString;
 
-    protected boolean discovering = false;
-
-    protected BluetoothDevice discoveredButton;
-
-    @Inject
-    BusProvider bus;
+    boolean beansDiscovered = false;
 
     @Inject
     ButtonDao buttonDao;
 
+    @Inject
+    @Named(RBModule.PURPLE_BUTTON)
+    protected ButtonCommunicatorFactory purpleButtonCommunicatorFactory;
+
     public PurpleButtonDiscoveryProviderImpl(Context context) {
-        this.context = context;
+        super(context);
 
         RBApplication.getInstance().getGraph().inject(this);
 
         discoverableButtonPatternString = context.getString(R.string.button_discovery_pattern);
         buttonDiscoveryDurationMillis = context.getResources().getInteger(R.integer.purple_button_discovery_duration_millis);
-
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         // Register the BroadcastReceiver
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
@@ -62,27 +55,15 @@ public class PurpleButtonDiscoveryProviderImpl implements ButtonDiscoveryProvide
     }
 
     @Override
-    public synchronized void startButtonDiscovery() {
+    public synchronized void _startButtonDiscovery() {
 
         Log.d(TAG, "Beginning Purple Button Monitoring Process...");
-        if (discovering) {
-            // make this request idempotent
-            return;
-        }
 
-        //Check to see if the device supports Bluetooth and that it's turned on
-        if (!discovering && bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
+        // This is an idempotent operation
+        bluetoothAdapter.startDiscovery();
 
-            discovering = true;
-
-            // This is an idempotent operation
-            bluetoothAdapter.startDiscovery();
-
-            // We should not let scan run indefinitely as it consumes POWER!
-            new Handler().postDelayed(discoveryTimeoutRunnable, buttonDiscoveryDurationMillis);
-        } else {
-            discovering = false;
-        }
+        // We should not let scan run indefinitely as it consumes POWER!
+        new Handler().postDelayed(discoveryTimeoutRunnable, buttonDiscoveryDurationMillis);
     }
 
     private Runnable discoveryTimeoutRunnable = new Runnable() {
@@ -90,24 +71,21 @@ public class PurpleButtonDiscoveryProviderImpl implements ButtonDiscoveryProvide
         public void run() {
             if (discovering) {
 
-                stopButtonDiscovery();
-
-                if (discoveredButton == null) {
-                    postButtonDiscoveredEvent(false, null);
-                }
+                buttonDiscoveryFinished();
             }
         }
     };
 
     @Override
-    public synchronized void stopButtonDiscovery() {
+    public synchronized void _stopButtonDiscovery() {
         Log.d(TAG, "Stopping Button Discovery...");
 
-        discovering = false;
+        bluetoothAdapter.cancelDiscovery();
+    }
 
-        if (bluetoothAdapter != null && bluetoothAdapter.isDiscovering()) {
-            bluetoothAdapter.cancelDiscovery();
-        }
+    @Override
+    public ButtonType getButtonType() {
+        return ButtonType.PURPLE_BUTTON;
     }
 
     // Create a BroadcastReceiver for ACTION_FOUND
@@ -119,16 +97,17 @@ public class PurpleButtonDiscoveryProviderImpl implements ButtonDiscoveryProvide
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
                 if (device.getName() != null && device.getName().matches(discoverableButtonPatternString)) {
-                    Log.d(TAG, "We have a nearby ArduinoButton device! + '" + device + "'.");
+                    Log.d(TAG, "We have a nearby Purple RoboButton! + '" + device + "'.");
 
-                    discoveredButton = device;
-                    postButtonDiscoveredEvent(true, device);
+                    beansDiscovered = true;
+                    startButtonCommunicator(device);
                 }
             }
         }
     };
 
-    protected void postButtonDiscoveredEvent(final boolean success, final BluetoothDevice device) {
-        bus.post(new ButtonDiscoveryEvent(success, ButtonType.PURPLE_BUTTON, device == null ? null : device.getAddress(), device));
+    @Override
+    protected void startButtonCommunicator(BluetoothDevice discoveredDevice) {
+        purpleButtonCommunicatorFactory.getButtonCommunicator(context, discoveredDevice, discoveredDevice.getAddress());
     }
 }

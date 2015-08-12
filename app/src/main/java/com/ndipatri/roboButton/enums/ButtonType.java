@@ -4,6 +4,7 @@ public enum ButtonType {
 
     PURPLE_BUTTON(1),
     LIGHTBLUE_BUTTON(2),
+    COMPOSITE_BUTTON(3),
     UNKNOWN(3);
 
     private int type;

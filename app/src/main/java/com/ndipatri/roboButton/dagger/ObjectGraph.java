@@ -7,6 +7,8 @@ import com.ndipatri.roboButton.activities.MainActivity;
 import com.ndipatri.roboButton.activities.MainActivityInstrumentation;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.PurpleButtonCommunicatorImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.GenericButtonCommunicatorStub;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.ButtonDiscoveryManager;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.BluetoothProviderImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.GenericRegionDiscoveryProviderImpl;
@@ -59,8 +61,12 @@ public interface ObjectGraph {
 
     void inject(MainActivityInstrumentation thingy);
 
+    void inject(ButtonDiscoveryProvider thingy);
+
     void inject(LightBlueButtonDiscoveryProviderImpl thingy);
     void inject(LightBlueButtonDiscoveryProviderStub thingy);
+
+    void inject(ButtonDiscoveryManager thingy);
 
     void inject(LightBlueButtonCommunicatorImpl thingy);
     void inject(GenericButtonCommunicatorStub thingy);

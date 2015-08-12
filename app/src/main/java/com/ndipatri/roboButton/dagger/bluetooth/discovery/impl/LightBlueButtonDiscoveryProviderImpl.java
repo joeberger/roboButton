@@ -1,17 +1,17 @@
 package com.ndipatri.roboButton.dagger.bluetooth.discovery.impl;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
+import com.ndipatri.roboButton.dagger.RBModule;
+import com.ndipatri.roboButton.dagger.annotations.Named;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.enums.ButtonType;
-import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
-import com.ndipatri.roboButton.utils.BusProvider;
 
 import com.punchthrough.bean.sdk.Bean;
 import com.punchthrough.bean.sdk.BeanDiscoveryListener;
@@ -28,60 +28,38 @@ import javax.inject.Inject;
  * This class will look for LightBlue Bean 'beacons' and if confirmed that it is running the right Arduino 'sketch', we will
  * declare this a button as well.
  *
- * After a defined timeout period, the scan will
- * be running.  At that time a 'success' or 'failure' event will be emitted based on whether a device matching the
+ * After a defined timeout period a 'success' or 'failure' event will be emitted based on whether a device matching the
  * defined 'discoveryPattern' was found.
  */
-public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProvider {
+public class LightBlueButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
 
     private static final String TAG = LightBlueButtonDiscoveryProviderImpl.class.getCanonicalName();
 
     private static final String BUTTON_SKETCH_PREFIX = "lightBlueButton";
 
-    private Context context;
-
-    BluetoothAdapter bluetoothAdapter = null;
-
     String discoverableButtonPatternString;
 
-    protected boolean discovering = false;
-
-    protected Bean discoveredBean;
-
     @Inject
-    BusProvider bus;
+    @Named(RBModule.LIGHTBLUE_BUTTON)
+    protected ButtonCommunicatorFactory lightBlueButtonCommunicatorFactory;
 
     @Inject
     ButtonDao buttonDao;
 
     public LightBlueButtonDiscoveryProviderImpl(Context context) {
-        this.context = context;
+        super(context);
 
         RBApplication.getInstance().getGraph().inject(this);
 
         discoverableButtonPatternString = context.getString(R.string.button_discovery_pattern);
-
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
     @Override
-    public synchronized void startButtonDiscovery() {
+    public synchronized void _startButtonDiscovery() {
 
         Log.d(TAG, "Beginning LightBlue Button Discovery Process...");
-        if (discovering) {
-            // make this request idempotent
-            return;
-        }
 
-        //Check to see if the device supports Bluetooth and that it's turned on
-        if (!discovering && bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
-
-            discovering = true;
-
-            getBeanManager().startDiscovery(getButtonDiscoveryListener());
-        } else {
-            discovering = false;
-        }
+        getBeanManager().startDiscovery(getButtonDiscoveryListener());
     }
 
     protected BeanDiscoveryListener getButtonDiscoveryListener() {
@@ -89,25 +67,19 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
             @Override
             public void onBeanDiscovered(Bean discoveredBean, int receivedRSSI) {
                 Log.d(TAG, "onBeanDiscovered():");
-                stopButtonDiscovery();
-                LightBlueButtonDiscoveryProviderImpl.this.discoveredBean = discoveredBean;
-                discoveredBean.connect(context, getBeanConnectionListener());
+                discoveredBean.connect(context, getBeanConnectionListener(discoveredBean));
             }
 
             @Override
             public void onDiscoveryComplete() {
                 Log.d(TAG, "onBeanDiscoveryComplete():");
 
-                discovering = false;
-
-                if (discoveredBean == null) {
-                    postButtonDiscoveredEvent(false, null);
-                }
+                buttonDiscoveryFinished();
             }
         };
     }
 
-    protected BeanListener getBeanConnectionListener() {
+    protected BeanListener getBeanConnectionListener(final Bean discoveredBean) {
         return new BeanListener() {
 
             @Override
@@ -119,7 +91,7 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
                         if (sketchMetaData.hexName().contains(BUTTON_SKETCH_PREFIX)) {
                             // We're confident we are talking to a LightBlue Bean that
                             // is running the Button sketch.
-                            postButtonDiscoveredEvent(true, discoveredBean.getDevice());
+                            startButtonCommunicator(discoveredBean.getDevice());
                         }
                         discoveredBean.disconnect();
                     }
@@ -129,7 +101,6 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
             @Override
             public void onConnectionFailed() {
                 Log.d(TAG, "onConnectionFailed");
-                postButtonDiscoveredEvent(false, null);
             }
 
             @Override
@@ -145,7 +116,6 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
             @Override
             public void onError(BeanError beanError) {
                 Log.d(TAG, "onError()");
-                postButtonDiscoveredEvent(false, null);
             }
 
             @Override
@@ -156,21 +126,22 @@ public class LightBlueButtonDiscoveryProviderImpl implements ButtonDiscoveryProv
     }
 
     @Override
-    public synchronized void stopButtonDiscovery() {
+    public synchronized void _stopButtonDiscovery() {
         Log.d(TAG, "Stopping Button Discovery...");
-
-        discovering = false;
 
         getBeanManager().cancelDiscovery();
     }
 
-
-    protected void postButtonDiscoveredEvent(final boolean success, final BluetoothDevice device) {
-        bus.post(new ButtonDiscoveryEvent(success, ButtonType.LIGHTBLUE_BUTTON, device == null ? null : device.getAddress(), device));
+    @Override
+    public ButtonType getButtonType() {
+        return ButtonType.LIGHTBLUE_BUTTON;
     }
-
 
     protected BeanManager getBeanManager() {
         return BeanManager.getInstance();
+    }
+
+    protected void startButtonCommunicator(BluetoothDevice discoveredDevice) {
+        lightBlueButtonCommunicatorFactory.getButtonCommunicator(context, discoveredDevice, discoveredDevice.getAddress());
     }
 }

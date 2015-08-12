@@ -10,6 +10,7 @@ import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.PurpleButtonC
 import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.LightBlueButtonCommunicatorFactoryStub;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.PurpleButtonCommunicatorFactoryStub;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.ButtonDiscoveryManager;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.GenericRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.LightBlueButtonDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.PurpleButtonDiscoveryProviderImpl;
@@ -108,6 +109,16 @@ public class RBModule {
             return new GenericRegionDiscoveryProviderStub(context, regionUUIDPatternArray, regionUUIDOffsetArray);
         } else {
             return new GenericRegionDiscoveryProviderImpl(context, regionUUIDPatternArray, regionUUIDOffsetArray);
+        }
+    }
+
+    @Provides
+    @Singleton
+    ButtonDiscoveryManager provideButtonManager() {
+        if (BuildVariant.useMocks) {
+            return mock(ButtonDiscoveryManager.class);
+        } else {
+            return new ButtonDiscoveryManager(context);
         }
     }
 

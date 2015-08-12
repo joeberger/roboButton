@@ -1,8 +1,6 @@
 package com.ndipatri.roboButton.services;
 
 import android.app.Service;
-import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
@@ -11,16 +9,11 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.dagger.RBModule;
-import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.ButtonCommunicator;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
-import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.ButtonDiscoveryManager;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.enums.ButtonState;
-import com.ndipatri.roboButton.enums.ButtonType;
-import com.ndipatri.roboButton.events.ButtonDiscoveryEvent;
+import com.ndipatri.roboButton.events.ButtonDiscoveryFinished;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
@@ -29,7 +22,6 @@ import com.ndipatri.roboButton.events.ToggleButtonStateRequest;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.ndipatri.roboButton.utils.NotificationHelper;
-import com.ndipatri.roboButton.utils.RegionUtils;
 import com.squareup.otto.Subscribe;
 
 import java.util.List;
@@ -72,23 +64,9 @@ public class MonitoringService extends Service {
     protected RegionDiscoveryProvider regionDiscoveryProvider;
 
     @Inject
-    @Named(RBModule.LIGHTBLUE_BUTTON)
-    protected ButtonCommunicatorFactory lightBlueButtonCommunicatorFactory;
-    @Inject
-    @Named(RBModule.LIGHTBLUE_BUTTON)
-    protected ButtonDiscoveryProvider lightBlueButtonDiscoveryProvider;
-
-    @Inject
-    @Named(RBModule.PURPLE_BUTTON)
-    protected ButtonCommunicatorFactory purpleButtonCommunicatorFactory;
-    @Inject
-    @Named(RBModule.PURPLE_BUTTON)
-    protected ButtonDiscoveryProvider purpleButtonDiscoveryProvider;
+    protected ButtonDiscoveryManager buttonDiscoveryManager;
 
     protected long beaconScanStartupDelayAfterButtonDiscoveryMillis = -1;
-
-    // Until we see a nearby beacon, this service does nothing...
-    protected com.ndipatri.roboButton.models.Region nearbyRegion = null;
 
     public IBinder onBind(Intent intent) {
         return null;
@@ -160,17 +138,19 @@ public class MonitoringService extends Service {
         return START_STICKY;
     }
 
+    protected void startRegionDiscovery() {
+        regionDiscoveryProvider.startRegionDiscovery(runInBackground);
+    }
+
     @Subscribe
     public void onRegionFound(RegionFoundEvent regionFoundEvent) {
 
         Log.d(TAG, "RegionFound: ('" + regionFoundEvent.getRegion().toString() + "'.)");
 
-        nearbyRegion = regionFoundEvent.getRegion();
-
         if (notCommunicatingWithButtons()) {
             Log.d(TAG, ".. currently not talking to a button, so let's look for one!");
             stopRegionDiscovery();
-            startButtonDiscovery(nearbyRegion);
+            startButtonDiscovery();
         }
     }
 
@@ -179,35 +159,18 @@ public class MonitoringService extends Service {
 
         Log.d(TAG, "RegionLost: ('" + regionLostEvent.getRegion().toString() + "'.)");
 
-        nearbyRegion = null;
         stopButtonDiscovery();
     }
 
     @Subscribe
-    public void onButtonDiscovered(ButtonDiscoveryEvent buttonDiscoveryEvent) {
-
-        if (buttonDiscoveryEvent.isSuccess()) {
-            startButtonCommunicator(this, buttonDiscoveryEvent.getDeviceAddress(), buttonDiscoveryEvent.getButtonType(), buttonDiscoveryEvent.getDevice());
-        }
+    public void onButtonDiscoveryFinished(ButtonDiscoveryFinished buttonDiscoveryFinished) {
 
         // Button discovery has ended, so now we go back to monitoring for region changes...
         startDelayedRegionDiscover();
     }
 
-    public ButtonCommunicator startButtonCommunicator(final Context context, final String buttonId, final ButtonType type, final BluetoothDevice device) {
-
-        switch (type) {
-            case PURPLE_BUTTON:
-                return purpleButtonCommunicatorFactory.getButtonCommunicator(context, device, buttonId);
-            case LIGHTBLUE_BUTTON:
-                return lightBlueButtonCommunicatorFactory.getButtonCommunicator(context, device, buttonId);
-        }
-
-        return null;
-    }
-
     @Subscribe
-    public void onButtonLostEvent(ButtonLostEvent buttonLostEvent) {
+    public void onButtonLostEvent(ButtonLostEvent buttonLostEvent){
         startRegionDiscovery();
     }
 
@@ -220,9 +183,6 @@ public class MonitoringService extends Service {
         }, beaconScanStartupDelayAfterButtonDiscoveryMillis);
     }
 
-    protected void startRegionDiscovery() {
-        regionDiscoveryProvider.startRegionDiscovery(runInBackground);
-    }
 
     protected void stopRegionDiscovery() {
         try {
@@ -232,27 +192,12 @@ public class MonitoringService extends Service {
         }
     }
 
-    // This is a costly operation and should only be done when we have confidence button will
-    // be found... (e.g. we've already detected a beacon)
-    //
-    // TODO - For simplicity, assume a region type implies a button type...This is mostly so we don't have to
-    // deal with multiple simulateneous button communications.  Which is problemetically particularly because we have
-    // classic and BLE buttons
-    protected void startButtonDiscovery(com.ndipatri.roboButton.models.Region nearbyRegion) {
-        switch (nearbyRegion.getUuid()) {
-            case RegionUtils.GELO_UUID:
-                purpleButtonDiscoveryProvider.startButtonDiscovery();
-                break;
-
-            case RegionUtils.ESTIMOTE_UUID:
-                lightBlueButtonDiscoveryProvider.startButtonDiscovery();
-                break;
-        }
+    protected void startButtonDiscovery() {
+        buttonDiscoveryManager.startButtonDiscovery();
     }
 
     private void stopButtonDiscovery() {
-        purpleButtonDiscoveryProvider.stopButtonDiscovery();
-        lightBlueButtonDiscoveryProvider.stopButtonDiscovery();
+        buttonDiscoveryManager.stopButtonDiscovery();
     }
 
     protected boolean notCommunicatingWithButtons() {
