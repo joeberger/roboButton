@@ -10,12 +10,9 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.dagger.RBModule;
-import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
-import com.ndipatri.roboButton.dagger.daos.ButtonDao;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.PurpleButtonCommunicatorImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
-import com.ndipatri.roboButton.enums.ButtonType;
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 
 import javax.inject.Inject;
 
@@ -36,10 +33,6 @@ public class PurpleButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
 
     @Inject
     ButtonDao buttonDao;
-
-    @Inject
-    @Named(RBModule.PURPLE_BUTTON)
-    protected ButtonCommunicatorFactory purpleButtonCommunicatorFactory;
 
     public PurpleButtonDiscoveryProviderImpl(Context context) {
         super(context);
@@ -83,11 +76,6 @@ public class PurpleButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
         bluetoothAdapter.cancelDiscovery();
     }
 
-    @Override
-    public ButtonType getButtonType() {
-        return ButtonType.PURPLE_BUTTON;
-    }
-
     // Create a BroadcastReceiver for ACTION_FOUND
     // These are always sent on UI thread from BluetoothAdapter.
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -106,8 +94,7 @@ public class PurpleButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
         }
     };
 
-    @Override
     protected void startButtonCommunicator(BluetoothDevice discoveredDevice) {
-        purpleButtonCommunicatorFactory.getButtonCommunicator(context, discoveredDevice, discoveredDevice.getAddress());
+        new PurpleButtonCommunicatorImpl(context, discoveredDevice, discoveredDevice.getAddress());
     }
 }

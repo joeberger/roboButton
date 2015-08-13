@@ -6,13 +6,9 @@ import android.util.Log;
 
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
-import com.ndipatri.roboButton.dagger.RBModule;
-import com.ndipatri.roboButton.dagger.annotations.Named;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
-import com.ndipatri.roboButton.dagger.daos.ButtonDao;
+import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.LightBlueButtonCommunicatorImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
-import com.ndipatri.roboButton.enums.ButtonType;
-
+import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.punchthrough.bean.sdk.Bean;
 import com.punchthrough.bean.sdk.BeanDiscoveryListener;
 import com.punchthrough.bean.sdk.BeanListener;
@@ -38,10 +34,6 @@ public class LightBlueButtonDiscoveryProviderImpl extends ButtonDiscoveryProvide
     private static final String BUTTON_SKETCH_PREFIX = "lightBlueButton";
 
     String discoverableButtonPatternString;
-
-    @Inject
-    @Named(RBModule.LIGHTBLUE_BUTTON)
-    protected ButtonCommunicatorFactory lightBlueButtonCommunicatorFactory;
 
     @Inject
     ButtonDao buttonDao;
@@ -132,16 +124,12 @@ public class LightBlueButtonDiscoveryProviderImpl extends ButtonDiscoveryProvide
         getBeanManager().cancelDiscovery();
     }
 
-    @Override
-    public ButtonType getButtonType() {
-        return ButtonType.LIGHTBLUE_BUTTON;
-    }
 
     protected BeanManager getBeanManager() {
         return BeanManager.getInstance();
     }
 
     protected void startButtonCommunicator(BluetoothDevice discoveredDevice) {
-        lightBlueButtonCommunicatorFactory.getButtonCommunicator(context, discoveredDevice, discoveredDevice.getAddress());
+        new LightBlueButtonCommunicatorImpl(context, discoveredDevice, discoveredDevice.getAddress());
     }
 }

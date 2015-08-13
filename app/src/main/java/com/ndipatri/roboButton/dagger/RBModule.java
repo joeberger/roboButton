@@ -5,11 +5,6 @@ import android.content.Context;
 import com.ndipatri.roboButton.BuildVariant;
 import com.ndipatri.roboButton.dagger.annotations.Named;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.BluetoothProviderImpl;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.LightBlueButtonCommunicatorFactoryImpl;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.PurpleButtonCommunicatorFactoryImpl;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.interfaces.ButtonCommunicatorFactory;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.LightBlueButtonCommunicatorFactoryStub;
-import com.ndipatri.roboButton.dagger.bluetooth.communication.stubs.PurpleButtonCommunicatorFactoryStub;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.ButtonDiscoveryManager;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.GenericRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.LightBlueButtonDiscoveryProviderImpl;
@@ -17,8 +12,8 @@ import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.PurpleButtonDisco
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.BluetoothProviderStub;
+import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.GenericButtonDiscoveryProviderStub;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.GenericRegionDiscoveryProviderStub;
-import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.LightBlueButtonDiscoveryProviderStub;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.ndipatri.roboButton.utils.BusProvider;
 import com.ndipatri.roboButton.utils.NotificationHelper;
@@ -130,7 +125,7 @@ public class RBModule {
             return mock(ButtonDiscoveryProvider.class);
         } else
         if (BuildVariant.useStubs) {
-                return new LightBlueButtonDiscoveryProviderStub(context);
+                return new GenericButtonDiscoveryProviderStub(context);
         } else {
             return new LightBlueButtonDiscoveryProviderImpl(context);
         }
@@ -142,36 +137,11 @@ public class RBModule {
     ButtonDiscoveryProvider providePurpleButtonDiscoveryProvider() {
         if (BuildVariant.useMocks) {
             return mock(ButtonDiscoveryProvider.class);
+        } else
+        if (BuildVariant.useStubs) {
+            return new GenericButtonDiscoveryProviderStub(context);
         } else {
             return new PurpleButtonDiscoveryProviderImpl(context);
-        }
-    }
-
-    @Provides
-    @Singleton
-    @Named(LIGHTBLUE_BUTTON)
-    ButtonCommunicatorFactory provideLightBlueButtonCommunicatorFactory() {
-        if (BuildVariant.useMocks) {
-            return mock(ButtonCommunicatorFactory.class);
-        } else
-        if (BuildVariant.useStubs) {
-            return new LightBlueButtonCommunicatorFactoryStub();
-        } else {
-            return new LightBlueButtonCommunicatorFactoryImpl();
-        }
-    }
-
-    @Provides
-    @Singleton
-    @Named(PURPLE_BUTTON)
-    ButtonCommunicatorFactory providePurpleButtonCommunicatorFactory() {
-        if (BuildVariant.useMocks) {
-            return mock(ButtonCommunicatorFactory.class);
-        } else
-        if (BuildVariant.useStubs) {
-            return new PurpleButtonCommunicatorFactoryStub();
-        } else {
-            return new PurpleButtonCommunicatorFactoryImpl();
         }
     }
 }

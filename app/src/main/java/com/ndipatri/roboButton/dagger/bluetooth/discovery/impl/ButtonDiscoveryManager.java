@@ -15,7 +15,7 @@ import javax.inject.Inject;
 /**
  * This provider will alternately scan for Blue (BLE) and Purple (BT Classic)
  * Buttons.  Due to Android specs, these scans cannot occur simultaneously, but
- * the Blue will be given priority here due to its prevalance.
+ * the Blue will be given priority here due to its prevalence.
  */
 public class ButtonDiscoveryManager {
 
