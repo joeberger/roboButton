@@ -11,12 +11,11 @@ import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.ButtonDiscoveryManager;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.RegionDiscoveryProvider;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
-import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.ButtonDiscoveryFinished;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
+import com.ndipatri.roboButton.events.MonitoringServiceDestroyedEvent;
 import com.ndipatri.roboButton.events.RegionFoundEvent;
 import com.ndipatri.roboButton.events.RegionLostEvent;
-import com.ndipatri.roboButton.events.MonitoringServiceDestroyedEvent;
 import com.ndipatri.roboButton.events.ToggleButtonStateRequest;
 import com.ndipatri.roboButton.models.Button;
 import com.ndipatri.roboButton.utils.BusProvider;
@@ -70,9 +69,6 @@ public class MonitoringService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-
-    // The last button state for which we sent a notification.
-    ButtonState lastNotifiedState = null;
 
     @Override
     public void onCreate() {

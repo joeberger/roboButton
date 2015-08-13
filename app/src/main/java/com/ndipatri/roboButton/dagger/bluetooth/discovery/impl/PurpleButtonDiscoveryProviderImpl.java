@@ -29,11 +29,6 @@ public class PurpleButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
 
     String discoverableButtonPatternString;
 
-    boolean beansDiscovered = false;
-
-    @Inject
-    ButtonDao buttonDao;
-
     public PurpleButtonDiscoveryProviderImpl(Context context) {
         super(context);
 
@@ -63,7 +58,6 @@ public class PurpleButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
         @Override
         public void run() {
             if (discovering) {
-
                 buttonDiscoveryFinished();
             }
         }
@@ -87,7 +81,6 @@ public class PurpleButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
                 if (device.getName() != null && device.getName().matches(discoverableButtonPatternString)) {
                     Log.d(TAG, "We have a nearby Purple RoboButton! + '" + device + "'.");
 
-                    beansDiscovered = true;
                     startButtonCommunicator(device);
                 }
             }

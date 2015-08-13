@@ -3,7 +3,6 @@ package com.ndipatri.roboButton.dagger.bluetooth.discovery.impl;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.util.Log;
-
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.LightBlueButtonCommunicatorImpl;
@@ -34,9 +33,6 @@ public class LightBlueButtonDiscoveryProviderImpl extends ButtonDiscoveryProvide
     private static final String BUTTON_SKETCH_PREFIX = "lightBlueButton";
 
     String discoverableButtonPatternString;
-
-    @Inject
-    ButtonDao buttonDao;
 
     public LightBlueButtonDiscoveryProviderImpl(Context context) {
         super(context);
