@@ -43,7 +43,7 @@ public class ViewNearbyBeaconsActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.activity_view_nearby_beacons);
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
         // Configure device list.

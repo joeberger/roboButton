@@ -59,6 +59,8 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
 
     private long beaconLostInterval = 10000; // how long the beacon is lost
 
+    private long startupInterval = 1000; // how long the beacon is found first
+
     private Handler mainThreadHandler = new Handler();
 
     @Inject
@@ -84,7 +86,7 @@ public class GenericRegionDiscoveryProviderStub implements RegionDiscoveryProvid
         Log.d(TAG, "Beginning Beacon Monitoring Process...");
 
         removeAllCallbacks();
-        mainThreadHandler.postDelayed(beaconFoundRunnable, beaconLostInterval);
+        mainThreadHandler.postDelayed(beaconFoundRunnable, startupInterval);
     }
 
     private void removeAllCallbacks() {

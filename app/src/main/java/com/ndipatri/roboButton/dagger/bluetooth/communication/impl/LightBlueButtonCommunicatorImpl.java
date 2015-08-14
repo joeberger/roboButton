@@ -45,7 +45,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         return new BeanDiscoveryListener() {
             @Override
             public void onBeanDiscovered(Bean discoveredBean, int receivedRSSI) {
-                if (state == STATE.RUNNING && discoveredBean.getDevice().getAddress().equals(buttonId)) {
+                if (discoveredBean != null && state == STATE.RUNNING && discoveredBean.getDevice().getAddress().equals(buttonId)) {
 
                     LightBlueButtonCommunicatorImpl.this.discoveredBean = discoveredBean;
                     getBeanManager().cancelDiscovery();
@@ -81,8 +81,8 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
                 // it once here.. after that, changes in state are pushed down to us.
                 //sendRemoteStateQuery();
 
-                setRemoteState(ButtonState.ON); // 'ON' is unlocked
-                setLocalButtonState(ButtonState.ON);
+                //setRemoteState(ButtonState.ON); // 'ON' is unlocked
+                //setLocalButtonState(ButtonState.ON);
 
                 new Handler().postDelayed(new Runnable() {
                     @Override
@@ -160,7 +160,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
     }
 
     protected void setRemoteState(ButtonState buttonState) {
-        if ((state == STATE.RUNNING || state == STATE.SHUTTING_DOWN) && discoveredBean != null & discoveredBean.isConnected()) {
+        if ((state == STATE.RUNNING || state == STATE.SHUTTING_DOWN) && discoveredBean != null && discoveredBean.isConnected()) {
             byte[] encodedButtonState = null;
 
             if (getButton().getState() != buttonState) {

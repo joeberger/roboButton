@@ -59,7 +59,7 @@ public class NotificationHelper {
 
         Notification notification = builder.build();
 
-        RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification_layout);
+        RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification);
         contentView.setImageViewResource(R.id.buttonImageView, buttonState.smallDrawableResourceId);
         contentView.setTextViewText(R.id.detailTextView, sbuf.toString());
         notification.contentView = contentView;

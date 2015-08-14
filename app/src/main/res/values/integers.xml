@@ -4,6 +4,7 @@
     <integer name="purple_button_remote_state_check_interval_millis">1000</integer>
     <integer name="purple_button_discovery_duration_millis">15000</integer>
     <integer name="purple_button_communications_grace_period_millis">20000</integer>
+
     <integer name="light_blue_button_discovery_period_millis">20000</integer>
 
     <!-- region parameters -->

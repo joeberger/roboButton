@@ -68,7 +68,7 @@ public class ButtonFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.button_layout, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_button, container, false);
 
         // Use ButterKnife for view injection (http://jakewharton.github.io/butterknife/)
         Views.inject(this, rootView);

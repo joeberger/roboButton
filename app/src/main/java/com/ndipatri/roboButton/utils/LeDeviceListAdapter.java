@@ -86,7 +86,7 @@ public class LeDeviceListAdapter extends BaseAdapter {
 
     private View inflateIfRequired(View view, int position, ViewGroup parent) {
         if (view == null) {
-            view = inflater.inflate(R.layout.device_item, null);
+            view = inflater.inflate(R.layout.beacon_row, null);
             view.setTag(new ViewHolder(view));
         }
         return view;

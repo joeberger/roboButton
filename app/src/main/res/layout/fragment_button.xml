@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/buttonFragmentFrameLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:progressView="http://schemas.android.com/apk/res-auto"
+    android:layout_width="190dp"
+    android:layout_height="190dp"
+    android:layout_margin="20dp"
+    android:layout_gravity="center">
+
+    <ImageView
+        android:id="@+id/buttonImageView"
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="3dp"
+        android:src="@drawable/yellow_button"/>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/grey_circle"/>
+
+    <TextView
+        android:id="@+id/buttonLabelTextView"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+
+        android:paddingBottom="40dp"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"/>
+
+    <com.ndipatri.roboButton.views.ProgressView
+        android:id="@+id/progressView"
+
+        android:layout_width="match_parent"
+
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+
+        android:layout_margin="5dp"
+
+        progressView:animationDurationMillis="1000"
+        progressView:strokeWidth="7dp"/>
+
+</RelativeLayout>

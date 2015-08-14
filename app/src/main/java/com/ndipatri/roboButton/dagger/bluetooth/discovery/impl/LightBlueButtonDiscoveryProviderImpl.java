@@ -84,12 +84,14 @@ public class LightBlueButtonDiscoveryProviderImpl extends ButtonDiscoveryProvide
                 discoveredBean.readSketchMetadata(new Callback<SketchMetadata>() {
                     @Override
                     public void onResult(SketchMetadata sketchMetaData) {
-                        if (sketchMetaData.hexName().contains(BUTTON_SKETCH_PREFIX)) {
+                        String sketchName = sketchMetaData.hexName();
+                        discoveredBean.disconnect();
+
+                        if (sketchName.contains(BUTTON_SKETCH_PREFIX)) {
                             // We're confident we are talking to a LightBlue Bean that
                             // is running the Button sketch.
                             startButtonCommunicator(discoveredBean.getDevice());
                         }
-                        discoveredBean.disconnect();
                     }
                 });
             }
