@@ -25,16 +25,32 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
 
     private Bean discoveredBean;
 
-    public LightBlueButtonCommunicatorImpl(final Context context, final BluetoothDevice device, final String buttonId) {
+    public LightBlueButtonCommunicatorImpl(final Context context, Bean discoveredBean) {
+        super(context, discoveredBean.getDevice(), discoveredBean.getDevice().getAddress());
+
+        Log.d(TAG, "Starting LightBlue button communicator for '" + buttonId + "' (already connected.");
+
+        // NJD TODO - need to clean this up
+        this.discoveredBean = discoveredBean;
+        this.discoveredBean.connect(context, getBeanConnectionListener());
+
+        startAssumingAlreadyConnected();
+    }
+
+    public LightBlueButtonCommunicatorImpl(final Context context, final BluetoothDevice device, final String buttonId, final boolean assumeAlreadyConnected) {
         super(context, device, buttonId);
 
         Log.d(TAG, "Starting LightBlue button communicator for '" + buttonId + "'.");
 
-        start();
+        startAssumingNotAlreadyConnected();
     }
 
-    public void startCommunicating() {
-        startButtonConnect();
+    public void startCommunicating(final boolean assumeAlreadyConnected) {
+        if (assumeAlreadyConnected) {
+            sendDelayedRemoteStateQuery();
+        } else {
+            startButtonConnect();
+        }
     }
 
     public synchronized void startButtonConnect() {
@@ -84,12 +100,7 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
                 //setRemoteState(ButtonState.ON); // 'ON' is unlocked
                 //setLocalButtonState(ButtonState.ON);
 
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendRemoteStateQuery();
-                    }
-                }, 10000);
+                sendDelayedRemoteStateQuery();
             }
 
             @Override
@@ -180,8 +191,17 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         }
     }
 
+    protected void sendDelayedRemoteStateQuery() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                sendRemoteStateQuery();
+            }
+        }, 10000);
+    }
+
     protected void sendRemoteStateQuery() {
-        if (state == STATE.RUNNING && discoveredBean != null & discoveredBean.isConnected()) {
+        if (state == STATE.RUNNING && discoveredBean != null && discoveredBean.isConnected()) {
             discoveredBean.sendSerialMessage(new byte[]{'Q', '1', '2', '3', '4'});
             // The LightBlue will respond with a serial message..
         }

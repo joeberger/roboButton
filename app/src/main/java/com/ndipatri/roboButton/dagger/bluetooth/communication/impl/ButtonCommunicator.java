@@ -86,7 +86,7 @@ public abstract class ButtonCommunicator {
 
     protected abstract void setRemoteState(ButtonState buttonState);
 
-    protected abstract void startCommunicating();
+    protected abstract void startCommunicating(boolean assumeAlreadyConnected);
 
     protected Button persistButton(final String buttonAddress) {
 
@@ -106,8 +106,15 @@ public abstract class ButtonCommunicator {
         return discoveredButton;
     }
 
+    public void startAssumingAlreadyConnected() {
+        start(true);
+    }
 
-    public void start() {
+    public void startAssumingNotAlreadyConnected() {
+        start(false);
+    }
+
+    private void start(final boolean assumeAlreadyConnected) {
 
         bus.register(busProxy);
 
@@ -117,7 +124,7 @@ public abstract class ButtonCommunicator {
             setButtonPersistedState(ButtonState.OFFLINE);
             sendButtonStateNotificationIfChanged();
 
-            startCommunicating();
+            startCommunicating(assumeAlreadyConnected);
         } else {
             bus.post(new BluetoothDisabledEvent());
             state = STATE.STOPPED;

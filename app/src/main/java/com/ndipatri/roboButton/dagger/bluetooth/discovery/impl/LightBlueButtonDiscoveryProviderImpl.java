@@ -85,12 +85,11 @@ public class LightBlueButtonDiscoveryProviderImpl extends ButtonDiscoveryProvide
                     @Override
                     public void onResult(SketchMetadata sketchMetaData) {
                         String sketchName = sketchMetaData.hexName();
-                        discoveredBean.disconnect();
 
                         if (sketchName.contains(BUTTON_SKETCH_PREFIX)) {
                             // We're confident we are talking to a LightBlue Bean that
                             // is running the Button sketch.
-                            startButtonCommunicator(discoveredBean.getDevice());
+                            startButtonCommunicator(discoveredBean);
                         }
                     }
                 });
@@ -130,12 +129,11 @@ public class LightBlueButtonDiscoveryProviderImpl extends ButtonDiscoveryProvide
         getBeanManager().cancelDiscovery();
     }
 
-
     protected BeanManager getBeanManager() {
         return BeanManager.getInstance();
     }
 
-    protected void startButtonCommunicator(BluetoothDevice discoveredDevice) {
-        new LightBlueButtonCommunicatorImpl(context, discoveredDevice, discoveredDevice.getAddress());
+    protected void startButtonCommunicator(Bean discoveredBean) {
+        new LightBlueButtonCommunicatorImpl(context, discoveredBean);
     }
 }

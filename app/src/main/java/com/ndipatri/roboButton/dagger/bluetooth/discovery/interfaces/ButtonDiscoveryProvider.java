@@ -70,6 +70,4 @@ public abstract class ButtonDiscoveryProvider {
     protected abstract void _startButtonDiscovery();
 
     protected abstract void _stopButtonDiscovery();
-
-    protected abstract void startButtonCommunicator(BluetoothDevice bluetoothDevice);
 }

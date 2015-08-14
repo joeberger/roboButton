@@ -80,11 +80,13 @@ public class PurpleButtonCommunicatorImpl extends ButtonCommunicator {
         // Periodically query remote state...
         queryStateIntervalMillis = context.getResources().getInteger(R.integer.purple_button_remote_state_check_interval_millis);
 
-        start();
+        startAssumingNotAlreadyConnected();
     }
 
     @Override
-    public void startCommunicating() {
+    public void startCommunicating(final boolean assumeAlreadyConnected) {
+
+        // we know this button will never be started having already been connected
 
         // The '0' means the last time we spoke to this button was in 1970.. which essentially means too long ago.
         lastButtonStateUpdateTimeMillis = 0;
