@@ -160,6 +160,8 @@ public class MonitoringService extends Service {
     @Subscribe
     public void onButtonDiscoveryFinished(ButtonDiscoveryFinished buttonDiscoveryFinished) {
 
+        Log.d(TAG, "onButtonDiscoveryFinished()");
+
         // Button discovery has ended, so now we go back to monitoring for region changes...
         startDelayedRegionDiscover();
     }

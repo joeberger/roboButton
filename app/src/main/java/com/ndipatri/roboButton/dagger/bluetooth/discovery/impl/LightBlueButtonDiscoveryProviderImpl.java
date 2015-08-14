@@ -2,6 +2,7 @@ package com.ndipatri.roboButton.dagger.bluetooth.discovery.impl;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
@@ -48,6 +49,13 @@ public class LightBlueButtonDiscoveryProviderImpl extends ButtonDiscoveryProvide
         Log.d(TAG, "Beginning LightBlue Button Discovery Process...");
 
         getBeanManager().startDiscovery(getButtonDiscoveryListener());
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                buttonDiscoveryFinished();
+            }
+        }, context.getResources().getInteger(R.integer.light_blue_button_discovery_period_millis));
     }
 
     protected BeanDiscoveryListener getButtonDiscoveryListener() {
