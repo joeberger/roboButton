@@ -12,9 +12,6 @@ import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.PurpleButtonCommunicatorImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.daos.ButtonDao;
-
-import javax.inject.Inject;
 
 /**
  * This class will perform a Bluetooth Classic 'Discovery' operation.  After a defined timeout period,
@@ -48,7 +45,7 @@ public class PurpleButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
         Log.d(TAG, "Beginning Purple Button Monitoring Process...");
 
         // This is an idempotent operation
-        bluetoothAdapter.startDiscovery();
+        bluetoothProvider.startDiscovery();
 
         // We should not let scan run indefinitely as it consumes POWER!
         new Handler().postDelayed(discoveryTimeoutRunnable, buttonDiscoveryDurationMillis);
@@ -67,7 +64,7 @@ public class PurpleButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
     public synchronized void _stopButtonDiscovery() {
         Log.d(TAG, "Stopping Button Discovery...");
 
-        bluetoothAdapter.cancelDiscovery();
+        bluetoothProvider.cancelDiscovery();
     }
 
     // Create a BroadcastReceiver for ACTION_FOUND

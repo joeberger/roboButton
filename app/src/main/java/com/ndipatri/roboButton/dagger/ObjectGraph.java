@@ -16,7 +16,6 @@ import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.LightBlueButtonDi
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.EstimoteRegionDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.impl.PurpleButtonDiscoveryProviderImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.GenericRegionDiscoveryProviderStub;
-import com.ndipatri.roboButton.dagger.bluetooth.discovery.stubs.LightBlueButtonDiscoveryProviderStub;
 import com.ndipatri.roboButton.fragments.ButtonDetailsDialogFragment;
 import com.ndipatri.roboButton.fragments.ButtonFragment;
 import com.ndipatri.roboButton.services.MonitoringService;
@@ -64,7 +63,6 @@ public interface ObjectGraph {
     void inject(ButtonDiscoveryProvider thingy);
 
     void inject(LightBlueButtonDiscoveryProviderImpl thingy);
-    void inject(LightBlueButtonDiscoveryProviderStub thingy);
 
     void inject(ButtonDiscoveryManager thingy);
 

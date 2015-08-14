@@ -4,6 +4,8 @@ package com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces;
  * Created by ndipatri on 5/29/14.
  */
 public interface BluetoothProvider {
-    public boolean isBluetoothSupported();
-    public boolean isBluetoothEnabled();
+    boolean isBluetoothSupported();
+    boolean isBluetoothEnabled();
+    void startDiscovery();
+    void cancelDiscovery();
 }

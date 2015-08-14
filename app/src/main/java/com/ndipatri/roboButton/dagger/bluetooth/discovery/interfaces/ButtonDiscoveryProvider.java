@@ -14,20 +14,20 @@ public abstract class ButtonDiscoveryProvider {
 
     protected boolean discovering = false;
 
-    protected BluetoothAdapter bluetoothAdapter = null;
+    @Inject
+    protected BluetoothProvider bluetoothProvider;
 
     private ButtonDiscoveryListener listener = null;
 
     protected Context context;
 
     @Inject
-    BusProvider bus;
+    protected BusProvider bus;
 
     public ButtonDiscoveryProvider(Context context) {
         this.context = context;
 
         RBApplication.getInstance().getGraph().inject(this);
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
     public void startButtonDiscovery(ButtonDiscoveryListener listener) {
@@ -40,7 +40,7 @@ public abstract class ButtonDiscoveryProvider {
         }
         this.discovering = true;
 
-        if (bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
+        if (bluetoothProvider.isBluetoothSupported() && bluetoothProvider.isBluetoothEnabled()) {
             _startButtonDiscovery();
         } else {
             discovering = false;
@@ -51,7 +51,7 @@ public abstract class ButtonDiscoveryProvider {
         this.listener = null;
         this.discovering = false;
 
-        if (bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
+        if (bluetoothProvider.isBluetoothSupported() && bluetoothProvider.isBluetoothEnabled()) {
             _stopButtonDiscovery();
         }
     }

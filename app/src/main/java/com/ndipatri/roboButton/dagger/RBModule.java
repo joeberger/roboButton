@@ -125,7 +125,7 @@ public class RBModule {
             return mock(ButtonDiscoveryProvider.class);
         } else
         if (BuildVariant.useStubs) {
-                return new GenericButtonDiscoveryProviderStub(context);
+                return new GenericButtonDiscoveryProviderStub(context, "lightBlue");
         } else {
             return new LightBlueButtonDiscoveryProviderImpl(context);
         }
@@ -139,7 +139,7 @@ public class RBModule {
             return mock(ButtonDiscoveryProvider.class);
         } else
         if (BuildVariant.useStubs) {
-            return new GenericButtonDiscoveryProviderStub(context);
+            return new GenericButtonDiscoveryProviderStub(context, "purple");
         } else {
             return new PurpleButtonDiscoveryProviderImpl(context);
         }

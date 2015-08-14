@@ -16,4 +16,14 @@ public class BluetoothProviderStub implements com.ndipatri.roboButton.dagger.blu
     public boolean isBluetoothEnabled() {
         return true;
     }
+
+    @Override
+    public void startDiscovery() {
+        // NO OP
+    }
+
+    @Override
+    public void cancelDiscovery() {
+        // NO OP
+    }
 }

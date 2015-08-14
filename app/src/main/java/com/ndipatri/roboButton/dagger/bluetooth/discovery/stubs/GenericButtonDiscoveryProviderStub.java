@@ -23,16 +23,20 @@ public class GenericButtonDiscoveryProviderStub extends ButtonDiscoveryProvider 
 
     protected int buttonCount = 0;
 
-    public GenericButtonDiscoveryProviderStub(Context context) {
+    private String buttonLabelPrefix;
+
+    public GenericButtonDiscoveryProviderStub(Context context, String buttonLabelPrefix) {
         super(context);
 
         RBApplication.getInstance().getGraph().inject(this);
+
+        this.buttonLabelPrefix = buttonLabelPrefix;
     }
 
     @Override
     public synchronized void _startButtonDiscovery() {
 
-        Log.d(TAG, "Beginning Generic Button Monitoring Process...");
+        Log.d(TAG, "Beginning '" + buttonLabelPrefix + "' Button Monitoring Process...");
         buttonCount = 0;
 
         discoverButtonAfterDelay();
@@ -46,7 +50,7 @@ public class GenericButtonDiscoveryProviderStub extends ButtonDiscoveryProvider 
         @Override
         public void run() {
             if (discovering) {
-                Toast.makeText(context, "Generic Button Found.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "'" + buttonLabelPrefix + "' Button Found.", Toast.LENGTH_SHORT).show();
                 buttonCount++;
                 startButtonCommunicator(null);
 
@@ -62,16 +66,16 @@ public class GenericButtonDiscoveryProviderStub extends ButtonDiscoveryProvider 
     public synchronized void _stopButtonDiscovery() {}
 
     protected void startButtonCommunicator(BluetoothDevice discoveredDevice) {
-        new GenericButtonCommunicatorStub(context, discoveredDevice, discoveredDevice.getAddress());
+        new GenericButtonCommunicatorStub(context, discoveredDevice, getButtonId());
     }
 
-    private String[] octets = new String[] {"aa", "bb", "cc", "dd", "ee"};
+    private String[] octets = new String[] {"aa", "bb", "cc"};
     private String getButtonId() {
 
-        StringBuilder buttonIdBuf = new StringBuilder();
+        StringBuilder buttonIdBuf = new StringBuilder(buttonLabelPrefix).append(":");
 
         for (int i=0; i < octets.length; i++) {
-            int index = (int)(Math.random()*5.0);
+            int index = (int)(Math.random()*octets.length);
 
             buttonIdBuf.append(octets[index]);
 

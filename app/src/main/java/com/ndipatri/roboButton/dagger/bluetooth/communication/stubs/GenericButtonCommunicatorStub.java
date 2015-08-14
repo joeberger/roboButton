@@ -56,13 +56,11 @@ public class GenericButtonCommunicatorStub extends ButtonCommunicator {
     // We will assume this is always successful with a slight delay..
     protected void setRemoteState(final ButtonState requestedButtonState) {
 
-        Toast.makeText(context, "Sending '" + (requestedButtonState.value ? "ON" : "OFF") + "' request to Button.", Toast.LENGTH_SHORT).show();
         setRemoteButtonState(requestedButtonState);
 
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(context, "Received '" + (requestedButtonState.value ? "ON" : "OFF") + "' response from Button.", Toast.LENGTH_SHORT).show();
                 if (state == STATE.RUNNING) {
                     if (requestedButtonState.value) {
                         setLocalButtonState(ButtonState.ON);
