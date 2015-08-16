@@ -20,6 +20,7 @@ import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.BluetoothProvider;
 import com.ndipatri.roboButton.dagger.daos.ButtonDao;
+import com.ndipatri.roboButton.enums.ButtonState;
 import com.ndipatri.roboButton.events.BluetoothDisabledEvent;
 import com.ndipatri.roboButton.events.ButtonLostEvent;
 import com.ndipatri.roboButton.events.ButtonUpdatedEvent;
@@ -42,6 +43,8 @@ import butterknife.Views;
 
 public class MainActivity extends Activity {
 
+    // Because MainActivity depends on the correctness of the MonitoringService state,
+    // we want this Activity to wait until the service is started before resuming, itself.
     boolean monitoringServiceStarted = false;
 
     @Inject
@@ -127,6 +130,7 @@ public class MainActivity extends Activity {
     protected void renderAnyConnectedButtons() {
         List<Button> connectedButtons = buttonDao.getCommunicatingButtons();
         for (Button communicatingButton : connectedButtons) {
+            Log.d(TAG, "Rendering fragment for button '" + communicatingButton + "'.");
             renderButtonFragmentIfNotAlready(communicatingButton.getId());
         }
     }
@@ -300,10 +304,15 @@ public class MainActivity extends Activity {
 
     private void renderButtonFragmentIfNotAlready(final String buttonId) {
         if (!buttonsWithFragments.contains(buttonId)) {
-            Log.d(TAG, "Rendering fragment for '" + buttonId + "'.");
-            buttonsWithFragments.add(buttonId);
-            final ButtonFragment newButtonFragment = ButtonFragment.newInstance(buttonId);
-            getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(buttonId)).commitAllowingStateLoss();
+
+            Button button = buttonDao.getButton(buttonId);
+
+            // We don't want to render a button in a transient state...
+            if (button.getState() == ButtonState.ON || button.getState() == ButtonState.OFF) {
+                buttonsWithFragments.add(buttonId);
+                final ButtonFragment newButtonFragment = ButtonFragment.newInstance(buttonId);
+                getFragmentManager().beginTransaction().add(R.id.mainViewGroup, newButtonFragment, getButtonFragmentTag(buttonId)).commitAllowingStateLoss();
+            }
         }
     }
 

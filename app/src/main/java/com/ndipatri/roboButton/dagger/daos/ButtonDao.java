@@ -104,9 +104,7 @@ public class ButtonDao {
                 }
 
                 where.or(where.eq(Button.STATE_COLUMN_NAME, ButtonState.OFF),
-                         where.eq(Button.STATE_COLUMN_NAME, ButtonState.ON),
-                         where.eq(Button.STATE_COLUMN_NAME, ButtonState.ON_PENDING),
-                         where.eq(Button.STATE_COLUMN_NAME, ButtonState.OFF_PENDING));
+                         where.eq(Button.STATE_COLUMN_NAME, ButtonState.ON));
             }
 
             PreparedQuery<Button> preparedQuery = queryBuilder.prepare();
