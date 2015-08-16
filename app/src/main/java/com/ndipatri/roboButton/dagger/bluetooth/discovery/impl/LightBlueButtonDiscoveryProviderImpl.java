@@ -1,14 +1,13 @@
 package com.ndipatri.roboButton.dagger.bluetooth.discovery.impl;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
+
 import com.ndipatri.roboButton.R;
 import com.ndipatri.roboButton.RBApplication;
 import com.ndipatri.roboButton.dagger.bluetooth.communication.impl.LightBlueButtonCommunicatorImpl;
 import com.ndipatri.roboButton.dagger.bluetooth.discovery.interfaces.ButtonDiscoveryProvider;
-import com.ndipatri.roboButton.dagger.daos.ButtonDao;
 import com.punchthrough.bean.sdk.Bean;
 import com.punchthrough.bean.sdk.BeanDiscoveryListener;
 import com.punchthrough.bean.sdk.BeanListener;
@@ -18,15 +17,6 @@ import com.punchthrough.bean.sdk.message.Callback;
 import com.punchthrough.bean.sdk.message.ScratchBank;
 import com.punchthrough.bean.sdk.message.SketchMetadata;
 
-import javax.inject.Inject;
-
-/**
- * This class will look for LightBlue Bean 'beacons' and if confirmed that it is running the right Arduino 'sketch', we will
- * declare this a button as well.
- *
- * After a defined timeout period a 'success' or 'failure' event will be emitted based on whether a device matching the
- * defined 'discoveryPattern' was found.
- */
 public class LightBlueButtonDiscoveryProviderImpl extends ButtonDiscoveryProvider {
 
     private static final String TAG = LightBlueButtonDiscoveryProviderImpl.class.getCanonicalName();

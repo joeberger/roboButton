@@ -1,15 +1,12 @@
 package com.ndipatri.roboButton.dagger.bluetooth.communication.impl;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 
 import com.ndipatri.roboButton.enums.ButtonState;
 import com.punchthrough.bean.sdk.Bean;
-import com.punchthrough.bean.sdk.BeanDiscoveryListener;
 import com.punchthrough.bean.sdk.BeanListener;
-import com.punchthrough.bean.sdk.BeanManager;
 import com.punchthrough.bean.sdk.message.BeanError;
 import com.punchthrough.bean.sdk.message.ScratchBank;
 
@@ -25,58 +22,29 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
 
     private Bean discoveredBean;
 
+    private static final int BEAN_STARTUP_DELAY = 10000;
+
     public LightBlueButtonCommunicatorImpl(final Context context, Bean discoveredBean) {
         super(context, discoveredBean.getDevice(), discoveredBean.getDevice().getAddress());
 
-        Log.d(TAG, "Starting LightBlue button communicator for '" + buttonId + "' (already connected.");
-
-        // NJD TODO - need to clean this up
-        this.discoveredBean = discoveredBean;
-        this.discoveredBean.connect(context, getBeanConnectionListener());
-
-        startAssumingAlreadyConnected();
-    }
-
-    public LightBlueButtonCommunicatorImpl(final Context context, final BluetoothDevice device, final String buttonId, final boolean assumeAlreadyConnected) {
-        super(context, device, buttonId);
-
-        Log.d(TAG, "Starting LightBlue button communicator for '" + buttonId + "'.");
-
-        startAssumingNotAlreadyConnected();
-    }
-
-    public void startCommunicating(final boolean assumeAlreadyConnected) {
-        if (assumeAlreadyConnected) {
-            sendDelayedRemoteStateQuery();
-        } else {
-            startButtonConnect();
+        if (discoveredBean == null) {
+            throw new NullPointerException();
         }
+
+        Log.d(TAG, "Starting LightBlue button communicator for '" + buttonId + "' (already connected).");
+
+        this.discoveredBean = discoveredBean;
+
+        start();
+    }
+
+    public void startCommunicating() {
+        startButtonConnect();
+        sendDelayedRemoteStateQuery();
     }
 
     public synchronized void startButtonConnect() {
-        getBeanManager().startDiscovery(getButtonDiscoveryListener());
-    }
-
-    protected BeanDiscoveryListener getButtonDiscoveryListener() {
-        return new BeanDiscoveryListener() {
-            @Override
-            public void onBeanDiscovered(Bean discoveredBean, int receivedRSSI) {
-                if (discoveredBean != null && state == STATE.RUNNING && discoveredBean.getDevice().getAddress().equals(buttonId)) {
-
-                    LightBlueButtonCommunicatorImpl.this.discoveredBean = discoveredBean;
-                    getBeanManager().cancelDiscovery();
-                    discoveredBean.connect(context, getBeanConnectionListener());
-                }
-            }
-
-            @Override
-            public void onDiscoveryComplete() {
-                if (state == STATE.RUNNING && LightBlueButtonCommunicatorImpl.this.discoveredBean == null) {
-                    // try indefinitely until this communicator is explicitly running
-                    startButtonConnect();
-                }
-            }
-        };
+        discoveredBean.connect(context, getBeanConnectionListener());
     }
 
     protected BeanListener getBeanConnectionListener() {
@@ -85,20 +53,6 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             @Override
             public void onConnected() {
                 Log.d(TAG, "onConnected()");
-
-                // TODO - The following is done purely due to a limitation of the LightBlueButton. Specifically, for the first 10
-                // seconds of a connection, this button cannot send back data.  Normally, upon connection we would immediately
-                // send a query message (sendRemoteStateQuery()), but the button won't respond to this.  So for now, we will
-                // send an 'unlock' command, assume it works, and post that as an immediate fake response so we can update
-                // our local state immediately... Once the button is fixed, we should just do a 'seendRemoteStateQuery()' call
-                // here and not do this set nonsense.
-                //
-                // The LightBlue Button doesn't send its state upon BT connect, so we query
-                // it once here.. after that, changes in state are pushed down to us.
-                //sendRemoteStateQuery();
-
-                //setRemoteState(ButtonState.ON); // 'ON' is unlocked
-                //setLocalButtonState(ButtonState.ON);
 
                 sendDelayedRemoteStateQuery();
             }
@@ -197,11 +151,12 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
             public void run() {
                 sendRemoteStateQuery();
             }
-        }, 10000);
+        }, BEAN_STARTUP_DELAY);
     }
 
     protected void sendRemoteStateQuery() {
         if (state == STATE.RUNNING && discoveredBean != null && discoveredBean.isConnected()) {
+            Log.d(TAG, "Sending remote state query...");
             discoveredBean.sendSerialMessage(new byte[]{'Q', '1', '2', '3', '4'});
             // The LightBlue will respond with a serial message..
         }
@@ -217,10 +172,6 @@ public class LightBlueButtonCommunicatorImpl extends ButtonCommunicator {
         if (discoveredBean != null) {
             discoveredBean.disconnect();
         }
-    }
-
-    protected BeanManager getBeanManager() {
-        return BeanManager.getInstance();
     }
 }
 

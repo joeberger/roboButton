@@ -44,11 +44,11 @@ public class GenericButtonCommunicatorStub extends ButtonCommunicator {
     public GenericButtonCommunicatorStub(final Context context, final BluetoothDevice device, final String buttonId) {
         super(context, device, buttonId);
 
-        startAssumingAlreadyConnected();
+        start();
     }
 
     @Override
-    public void startCommunicating(final boolean assumeAlreadyConnected) {
+    public void startCommunicating() {
         // Here we assume we've communicated with remote button and determined its current state, without changing it.
         setLocalButtonState(getRemoteButtonState());
     }

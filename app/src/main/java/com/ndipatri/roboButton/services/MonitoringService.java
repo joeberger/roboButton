@@ -2,6 +2,7 @@ package com.ndipatri.roboButton.services;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -49,6 +50,8 @@ public class MonitoringService extends Service {
     public static final String SHOULD_TOGGLE_FLAG = "should_toggle_flag";
     public static final String BUTTON_ID = "button_id";
 
+    private final IBinder binder = new LocalBinder();
+
     @Inject
     BusProvider bus;
 
@@ -66,8 +69,9 @@ public class MonitoringService extends Service {
 
     protected long beaconScanStartupDelayAfterButtonDiscoveryMillis = -1;
 
+    @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
     }
 
     @Override
@@ -200,5 +204,11 @@ public class MonitoringService extends Service {
     protected boolean notCommunicatingWithButtons() {
         List<Button> communicatingButtons = buttonDao.getCommunicatingButtons();
         return (communicatingButtons == null || communicatingButtons.isEmpty());
+    }
+
+    public class LocalBinder extends Binder {
+        MonitoringService getService() {
+            return MonitoringService.this;
+        }
     }
 }

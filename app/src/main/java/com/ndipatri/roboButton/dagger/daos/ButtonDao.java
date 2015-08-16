@@ -60,7 +60,8 @@ public class ButtonDao {
         UpdateBuilder<Button, Long> updateBuilder = buttonDao.updateBuilder();
         try {
             updateBuilder.updateColumnValue(Button.STATE_COLUMN_NAME, ButtonState.OFFLINE);
-            updateBuilder.update();
+            int clearedButtons = updateBuilder.update();
+            Log.d(TAG, "Cleared state of '" + clearedButtons + "' buttons.");
         } catch (SQLException s) {
             Log.e(TAG, "Exception while clearing state of all buttons.");
         }

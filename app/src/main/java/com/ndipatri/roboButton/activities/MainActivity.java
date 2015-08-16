@@ -2,8 +2,12 @@ package com.ndipatri.roboButton.activities;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -38,6 +42,8 @@ import butterknife.Views;
 
 public class MainActivity extends Activity {
 
+    boolean monitoringServiceStarted = false;
+
     @Inject
     ButtonDao buttonDao;
 
@@ -62,6 +68,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.d(TAG, "onCreate()");
+
         setContentView(R.layout.activity_main);
 
         Views.inject(this);
@@ -70,10 +79,30 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+        Intent intent = new Intent(this, MonitoringService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (monitoringServiceStarted) {
+            unbindService(serviceConnection);
+            monitoringServiceStarted = false;
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
 
-        resumeActivity();
+        if (monitoringServiceStarted) {
+            resumeActivity();
+        }
     }
 
     @Override
@@ -88,9 +117,11 @@ public class MainActivity extends Activity {
     }
 
     protected void resumeActivity() {
-        registerWithOttoBus();
-        promptUserForBluetoothActivationIfNecessary();
-        renderAnyConnectedButtons();
+        if (monitoringServiceStarted) {
+            registerWithOttoBus();
+            promptUserForBluetoothActivationIfNecessary();
+            renderAnyConnectedButtons();
+        }
     }
 
     protected void renderAnyConnectedButtons() {
@@ -287,5 +318,20 @@ public class MainActivity extends Activity {
     protected void setAutoModeEnabled(boolean enabled) {
         RBApplication.getInstance().setAutoModeEnabledFlag(enabled);
     }
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            monitoringServiceStarted = true;
+            resumeActivity();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            monitoringServiceStarted = false;
+        }
+    };
 }
 
